@@ -1,5 +1,5 @@
 {
-  "name": "mel-logistics",
+  "name": "simayi-erp",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -25,5 +25,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+
+  }
 }
