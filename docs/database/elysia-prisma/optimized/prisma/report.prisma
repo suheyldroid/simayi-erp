@@ -1,0 +1,87 @@
+// Rapor ve etiket şablonları
+
+/// Class representing the ReportTemplate database model.
+/// Source: src/backend/InvenTree/report/models.py:362
+model ReportTemplate {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  updated DateTime? @db.Timestamptz(6)
+  updatedById String? @db.Uuid @map("updated_by_id")
+  metadata Json? @db.JsonB
+  name String @db.VarChar(100)
+  description String @db.VarChar(250)
+  /// Source application default: 1
+  revision Int @default(1)
+  /// Source application default: False
+  attachToModel Boolean @default(false) @map("attach_to_model")
+  /// Source application default: output.pdf
+  filenamePattern String @default("output.pdf") @db.VarChar(100) @map("filename_pattern")
+  /// Source application default: True
+  enabled Boolean @default(true)
+  modelType String @db.VarChar(100) @map("model_type")
+  filters String @default("") @db.VarChar(250)
+  template String @db.VarChar(100)
+  /// Source application default: report.helpers.report_page_size_default
+  pageSize String @db.VarChar(20) @map("page_size")
+  /// Source application default: False
+  landscape Boolean @default(false)
+  /// Source application default: False
+  merge Boolean @default(false)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  updatedBy User? @relation("ReportTemplate_updatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  @@unique([name, modelType])
+  @@index([updatedById])
+  @@map("report_template")
+}
+
+/// Class representing the LabelTemplate database model.
+/// Source: src/backend/InvenTree/report/models.py:704
+model LabelTemplate {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  updated DateTime? @db.Timestamptz(6)
+  updatedById String? @db.Uuid @map("updated_by_id")
+  metadata Json? @db.JsonB
+  name String @db.VarChar(100)
+  description String @db.VarChar(250)
+  /// Source application default: 1
+  revision Int @default(1)
+  /// Source application default: False
+  attachToModel Boolean @default(false) @map("attach_to_model")
+  /// Source application default: output.pdf
+  filenamePattern String @default("output.pdf") @db.VarChar(100) @map("filename_pattern")
+  /// Source application default: True
+  enabled Boolean @default(true)
+  modelType String @db.VarChar(100) @map("model_type")
+  filters String @default("") @db.VarChar(250)
+  template String @db.VarChar(100)
+  /// Source application default: 50
+  width Float @default(50) @db.DoublePrecision
+  /// Source application default: 20
+  height Float @default(20) @db.DoublePrecision
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  updatedBy User? @relation("LabelTemplate_updatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  @@unique([name, modelType])
+  @@index([updatedById])
+  @@map("label_template")
+}
+
+/// Report template 'snippet' which can be used to make templates that can then be included in other reports.
+/// Source: src/backend/InvenTree/report/models.py:854
+model ReportSnippet {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  snippet String @db.VarChar(100)
+  description String @db.VarChar(250)
+  @@map("report_snippet")
+}
+
+/// Asset file for use in report templates.
+/// Source: src/backend/InvenTree/report/models.py:877
+model ReportAsset {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  asset String @db.VarChar(100)
+  description String @db.VarChar(250)
+  @@map("report_asset")
+}

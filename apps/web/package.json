@@ -10,13 +10,7 @@
     "preview": "vite preview",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "knip": "knip",
-    "test": "vitest run --browser.headless",
-    "test:watch": "vitest --browser.headless",
-    "test:ui": "vitest --ui --browser.headless",
-    "test:browser": "vitest",
-    "test:coverage": "vitest run --coverage --browser.headless",
-    "test:browser:install": "playwright install chromium --with-deps"
+    "knip": "knip"
   },
   "dependencies": {
     "@clerk/react": "^6.4.3",
@@ -44,6 +38,7 @@
     "@tanstack/react-router": "^1.168.22",
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.15.0",
+    "better-auth": "1.7.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.1.1",

@@ -1,0 +1,98 @@
+// Kullanıcı profili, grup ve yetki
+
+/// Extends the default token model provided by djangorestframework.authtoken.
+/// Source: src/backend/InvenTree/users/models.py:59
+model ApiToken {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: default_token
+  key String @unique @db.VarChar(100)
+  user_id Int
+  name String @db.VarChar(100)
+  /// Source application default: default_token_expiry
+  expiry DateTime @db.Date
+  last_seen DateTime? @db.Date
+  /// Source application default: False
+  revoked Boolean
+  /// rest_framework.authtoken.Token.created (abstract parent)
+  created DateTime @db.Timestamptz(6)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("ApiToken_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([user_id])
+  @@map("users_apitoken")
+}
+
+/// A RuleSet is somewhat like a superset of the django permission class, in that in encapsulates a bunch of permissions.
+/// Source: src/backend/InvenTree/users/models.py:175
+model RuleSet {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(50)
+  group_id Int
+  /// Source application default: False
+  can_view Boolean
+  /// Source application default: False
+  can_add Boolean
+  /// Source application default: False
+  can_change Boolean
+  /// Source application default: False
+  can_delete Boolean
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  group Group @relation("RuleSet_group", fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([name, group_id])
+  @@index([group_id])
+  @@map("users_ruleset")
+}
+
+/// The Owner class is a proxy for a Group or User instance.
+/// Source: src/backend/InvenTree/users/models.py:270
+model Owner {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  owner_type_id Int?
+  owner_id Int?
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  owner_type ContentType? @relation("Owner_owner_type", fields: [owner_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromBuildResponsible Build[] @relation("Build_responsible")
+  fromProjectCodeResponsible ProjectCode[] @relation("ProjectCode_responsible")
+  fromPurchaseOrderResponsible PurchaseOrder[] @relation("PurchaseOrder_responsible")
+  fromSalesOrderResponsible SalesOrder[] @relation("SalesOrder_responsible")
+  fromReturnOrderResponsible ReturnOrder[] @relation("ReturnOrder_responsible")
+  fromTransferOrderResponsible TransferOrder[] @relation("TransferOrder_responsible")
+  fromPartResponsible_owner Part[] @relation("Part_responsible_owner")
+  fromStockLocationOwner StockLocation[] @relation("StockLocation_owner")
+  fromStockItemOwner StockItem[] @relation("StockItem_owner")
+  @@unique([owner_type_id, owner_id])
+  @@index([owner_type_id])
+  @@map("users_owner")
+}
+
+/// Model to store additional user profile information.
+/// Source: src/backend/InvenTree/users/models.py:463
+model UserProfile {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  user_id Int @unique
+  language String? @db.VarChar(10)
+  theme Json? @db.JsonB
+  widgets Json? @db.JsonB
+  displayname String? @db.VarChar(255)
+  position String? @db.VarChar(255)
+  status String? @db.VarChar(2000)
+  location String? @db.VarChar(2000)
+  /// Source application default: True
+  active Boolean
+  contact String? @db.VarChar(255)
+  /// Source application default: UserType.INTERNAL
+  type String @db.VarChar(10)
+  organisation String? @db.VarChar(255)
+  primary_group_id Int?
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("UserProfile_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  primary_group Group? @relation("UserProfile_primary_group", fields: [primary_group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([primary_group_id])
+  @@map("users_userprofile")
+}

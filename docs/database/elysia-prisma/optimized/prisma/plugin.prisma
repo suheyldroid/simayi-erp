@@ -1,0 +1,50 @@
+// Eklenti yapılandırması
+
+/// A PluginConfig object holds settings for plugins.
+/// Source: src/backend/InvenTree/plugin/models.py:22
+model PluginConfig {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  key String @unique @db.VarChar(255)
+  name String? @db.VarChar(255)
+  packageName String? @db.VarChar(255) @map("package_name")
+  /// Source application default: False
+  active Boolean @default(false)
+  fromSelectionListSourcePlugin SelectionList[] @relation("SelectionList_sourcePlugin")
+  fromPluginSettingPlugin PluginSetting[] @relation("PluginSetting_plugin")
+  fromPluginUserSettingPlugin PluginUserSetting[] @relation("PluginUserSetting_plugin")
+  @@map("plugin_config")
+}
+
+/// This model represents settings for individual plugins.
+/// Source: src/backend/InvenTree/plugin/models.py:282
+model PluginSetting {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  key String @db.VarChar(50)
+  value String @default("") @db.VarChar(2000)
+  pluginId Int @map("plugin_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  plugin PluginConfig @relation("PluginSetting_plugin", fields: [pluginId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([pluginId, key])
+  @@map("plugin_setting")
+}
+
+/// This model represents user-specific settings for individual plugins.
+/// Source: src/backend/InvenTree/plugin/models.py:365
+model PluginUserSetting {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  key String @db.VarChar(50)
+  value String @default("") @db.VarChar(2000)
+  pluginId Int @map("plugin_id")
+  userId String @db.Uuid @map("user_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  plugin PluginConfig @relation("PluginUserSetting_plugin", fields: [pluginId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("PluginUserSetting_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([pluginId, userId, key])
+  @@index([userId])
+  @@map("plugin_user_setting")
+}

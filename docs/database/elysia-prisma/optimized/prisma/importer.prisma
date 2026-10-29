@@ -1,0 +1,64 @@
+// Veri içe aktarma
+
+/// Database model representing a data import session.
+/// Source: src/backend/InvenTree/importer/models.py:31
+model DataImportSession {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+  dataFile String @db.VarChar(100) @map("data_file")
+  columns Json? @db.JsonB
+  modelType String @db.VarChar(100) @map("model_type")
+  /// Source application default: DataImportStatusCode.INITIAL.value
+  status Int @default(0)
+  userId String? @db.Uuid @map("user_id")
+  fieldDefaults Json? @db.JsonB @map("field_defaults")
+  fieldOverrides Json? @db.JsonB @map("field_overrides")
+  fieldFilters Json? @db.JsonB @map("field_filters")
+  /// Source application default: False
+  updateRecords Boolean @default(false) @map("update_records")
+  completedRowCountHistory Int? @map("completed_row_count_history")
+  rowCountHistory Int? @map("row_count_history")
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  user User? @relation("DataImportSession_user", fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  fromDataImportColumnMapSession DataImportColumnMap[] @relation("DataImportColumnMap_session")
+  fromDataImportRowSession DataImportRow[] @relation("DataImportRow_session")
+  @@index([userId])
+  @@map("data_import_session")
+}
+
+/// Database model representing a mapping between a file column and serializer field.
+/// Source: src/backend/InvenTree/importer/models.py:501
+model DataImportColumnMap {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  sessionId Int @map("session_id")
+  field String @db.VarChar(100)
+  column String @default("") @db.VarChar(100)
+  lookupField String? @db.VarChar(100) @map("lookup_field")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  session DataImportSession @relation("DataImportColumnMap_session", fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([sessionId])
+  @@map("data_import_column_map")
+}
+
+/// Database model representing a single row in a data import session.
+/// Source: src/backend/InvenTree/importer/models.py:640
+model DataImportRow {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  sessionId Int @map("session_id")
+  /// Source application default: 0
+  rowIndex Int @default(0) @map("row_index")
+  rowData Json? @db.JsonB @map("row_data")
+  data Json? @db.JsonB
+  errors Json? @db.JsonB
+  /// Source application default: False
+  valid Boolean @default(false)
+  /// Source application default: False
+  complete Boolean @default(false)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  session DataImportSession @relation("DataImportRow_session", fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([sessionId, complete, rowIndex])
+  @@map("data_import_row")
+}

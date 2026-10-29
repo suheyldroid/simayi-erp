@@ -1,0 +1,131 @@
+// Kimlik, oturum ve erişim
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model User {
+  id Int @id @default(autoincrement())
+  password String @db.VarChar(128)
+  last_login DateTime? @db.Timestamptz(6)
+  /// Source application default: False
+  is_superuser Boolean
+  username String @unique @db.VarChar(150)
+  first_name String @db.VarChar(150)
+  last_name String @db.VarChar(150)
+  email String @db.VarChar(254)
+  /// Source application default: False
+  is_staff Boolean
+  /// Source application default: True
+  is_active Boolean
+  /// Source application default: timezone.now
+  date_joined DateTime @db.Timestamptz(6)
+  fromBuildCompleted_by Build[] @relation("Build_completed_by")
+  fromBuildIssued_by Build[] @relation("Build_issued_by")
+  fromInvenTreeUserSettingUser InvenTreeUserSetting[] @relation("InvenTreeUserSetting_user")
+  fromWebhookEndpointUser WebhookEndpoint[] @relation("WebhookEndpoint_user")
+  fromNotificationMessageUser NotificationMessage[] @relation("NotificationMessage_user")
+  fromAttachmentUpload_user Attachment[] @relation("Attachment_upload_user")
+  fromParameterUpdated_by Parameter[] @relation("Parameter_updated_by")
+  fromNoteUpdated_by Note[] @relation("Note_updated_by")
+  fromNotesImageUser NotesImage[] @relation("NotesImage_user")
+  fromBarcodeScanResultUser BarcodeScanResult[] @relation("BarcodeScanResult_user")
+  fromDataOutputUser DataOutput[] @relation("DataOutput_user")
+  fromDataImportSessionUser DataImportSession[] @relation("DataImportSession_user")
+  fromPurchaseOrderCreated_by PurchaseOrder[] @relation("PurchaseOrder_created_by")
+  fromPurchaseOrderReceived_by PurchaseOrder[] @relation("PurchaseOrder_received_by")
+  fromSalesOrderCreated_by SalesOrder[] @relation("SalesOrder_created_by")
+  fromSalesOrderShipped_by SalesOrder[] @relation("SalesOrder_shipped_by")
+  fromSalesOrderShipmentChecked_by SalesOrderShipment[] @relation("SalesOrderShipment_checked_by")
+  fromReturnOrderCreated_by ReturnOrder[] @relation("ReturnOrder_created_by")
+  fromTransferOrderCreated_by TransferOrder[] @relation("TransferOrder_created_by")
+  fromPartBom_checked_by Part[] @relation("Part_bom_checked_by")
+  fromPartCreation_user Part[] @relation("Part_creation_user")
+  fromPartStarUser PartStar[] @relation("PartStar_user")
+  fromPartCategoryStarUser PartCategoryStar[] @relation("PartCategoryStar_user")
+  fromPluginUserSettingUser PluginUserSetting[] @relation("PluginUserSetting_user")
+  fromReportTemplateUpdated_by ReportTemplate[] @relation("ReportTemplate_updated_by")
+  fromLabelTemplateUpdated_by LabelTemplate[] @relation("LabelTemplate_updated_by")
+  fromStockItemStocktake_user StockItem[] @relation("StockItem_stocktake_user")
+  fromStockItemTrackingUser StockItemTracking[] @relation("StockItemTracking_user")
+  fromStockItemTestResultUser StockItemTestResult[] @relation("StockItemTestResult_user")
+  fromApiTokenUser ApiToken[] @relation("ApiToken_user")
+  fromUserProfileUser UserProfile? @relation("UserProfile_user")
+  fromUserGroupUser UserGroup[] @relation("UserGroup_user")
+  fromUserPermissionUser UserPermission[] @relation("UserPermission_user")
+  @@map("auth_user")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Group {
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(150)
+  fromRuleSetGroup RuleSet[] @relation("RuleSet_group")
+  fromUserProfilePrimary_group UserProfile[] @relation("UserProfile_primary_group")
+  fromUserGroupGroup UserGroup[] @relation("UserGroup_group")
+  fromGroupPermissionGroup GroupPermission[] @relation("GroupPermission_group")
+  @@map("auth_group")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Permission {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(255)
+  content_type_id Int
+  codename String @db.VarChar(100)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  content_type ContentType @relation("Permission_content_type", fields: [content_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromUserPermissionPermission UserPermission[] @relation("UserPermission_permission")
+  fromGroupPermissionPermission GroupPermission[] @relation("GroupPermission_permission")
+  @@unique([content_type_id, codename])
+  @@index([content_type_id])
+  @@map("auth_permission")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model UserGroup {
+  id Int @id @default(autoincrement())
+  user_id Int
+  group_id Int
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("UserGroup_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  group Group @relation("UserGroup_group", fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([user_id, group_id])
+  @@index([group_id])
+  @@index([user_id])
+  @@map("auth_user_groups")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model UserPermission {
+  id Int @id @default(autoincrement())
+  user_id Int
+  permission_id Int
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("UserPermission_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  permission Permission @relation("UserPermission_permission", fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([user_id, permission_id])
+  @@index([permission_id])
+  @@index([user_id])
+  @@map("auth_user_user_permissions")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model GroupPermission {
+  id Int @id @default(autoincrement())
+  group_id Int
+  permission_id Int
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  group Group @relation("GroupPermission_group", fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  permission Permission @relation("GroupPermission_permission", fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([group_id, permission_id])
+  @@index([group_id])
+  @@index([permission_id])
+  @@map("auth_group_permissions")
+}

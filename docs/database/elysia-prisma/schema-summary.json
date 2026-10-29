@@ -1,0 +1,46 @@
+{
+  "current": {
+    "models": 90,
+    "scalar_fields": 940,
+    "relations": 173,
+    "modules": {
+      "auth": 6,
+      "users": 4,
+      "part": 13,
+      "company": 6,
+      "stock": 5,
+      "order": 14,
+      "build": 3,
+      "common": 21,
+      "report": 4,
+      "importer": 3,
+      "plugin": 3,
+      "machine": 2,
+      "scim": 1,
+      "system": 3,
+      "currency": 2
+    }
+  },
+  "optimized": {
+    "models": 93,
+    "scalar_fields": 962,
+    "relations": 176,
+    "modules": {
+      "auth": 9,
+      "users": 4,
+      "part": 13,
+      "company": 6,
+      "stock": 5,
+      "order": 14,
+      "build": 3,
+      "common": 21,
+      "report": 4,
+      "importer": 3,
+      "plugin": 3,
+      "machine": 2,
+      "scim": 1,
+      "system": 3,
+      "currency": 2
+    }
+  }
+}

@@ -1,4 +1,7 @@
-import { Outlet } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { sessionQuery } from '@/lib/auth'
 import { getCookie } from '@/lib/cookies'
 import { cn } from '@/lib/utils'
 import { LayoutProvider } from '@/context/layout-provider'
@@ -13,6 +16,25 @@ type AuthenticatedLayoutProps = {
 
 export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const defaultOpen = getCookie('sidebar_state') !== 'false'
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { data: user } = useQuery({
+    ...sessionQuery,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  })
+  useEffect(() => {
+    if (user === null) {
+      queryClient.clear()
+      void navigate({
+        to: '/sign-in',
+        search: { redirect: location.href },
+        replace: true,
+      })
+    }
+  }, [user, queryClient, navigate, location.href])
+  if (!user) return null
   return (
     <SearchProvider>
       <LayoutProvider>

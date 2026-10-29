@@ -1,0 +1,31 @@
+{
+  "engine": "PGlite 0.3.15 (PostgreSQL WASM)",
+  "prismaCli": "NOT RUN: Prisma 7 is not installed; network installation permission was declined.",
+  "variants": {
+    "current": {
+      "tables": 90,
+      "columns": 940,
+      "sql": "PASS",
+      "structuralPrismaChecks": "PASS (not a substitute for prisma validate)"
+    },
+    "optimized": {
+      "tables": 93,
+      "columns": 962,
+      "sql": "PASS",
+      "structuralPrismaChecks": "PASS (not a substitute for prisma validate)"
+    }
+  },
+  "cases": [
+    "Better Auth core insert shapes and UUID user relations",
+    "Owner: exactly one target required",
+    "Owner: two targets rejected",
+    "Owner: missing target rejected by FK",
+    "Nonempty serial unique within a part; NULL/empty remain allowed",
+    "Negative stock quantity rejected",
+    "Metadata must be an object",
+    "Decimal quantity exact round-trip",
+    "Only one primary non-template note per target",
+    "Optimistic version predicate rejects a stale write"
+  ],
+  "postgresVersion": "PostgreSQL 17.5 on aarch64-unknown-linux-gnu, compiled by emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.74 (1092ec30a3fb1d46b1782ff1b4db5094d3d06ae5), 32-bit"
+}

@@ -1,0 +1,442 @@
+// Ortak işlevler ve ayarlar
+
+/// A ProjectCode is a unique identifier for a project.
+/// Source: src/backend/InvenTree/common/models.py:154
+model ProjectCode {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  code String @unique @db.VarChar(50)
+  description String @db.VarChar(200)
+  /// Source application default: True
+  active Boolean
+  responsible_id Int?
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  responsible Owner? @relation("ProjectCode_responsible", fields: [responsible_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromBuildProject_code Build[] @relation("Build_project_code")
+  fromPurchaseOrderProject_code PurchaseOrder[] @relation("PurchaseOrder_project_code")
+  fromSalesOrderProject_code SalesOrder[] @relation("SalesOrder_project_code")
+  fromPurchaseOrderLineItemProject_code PurchaseOrderLineItem[] @relation("PurchaseOrderLineItem_project_code")
+  fromPurchaseOrderExtraLineProject_code PurchaseOrderExtraLine[] @relation("PurchaseOrderExtraLine_project_code")
+  fromSalesOrderLineItemProject_code SalesOrderLineItem[] @relation("SalesOrderLineItem_project_code")
+  fromSalesOrderExtraLineProject_code SalesOrderExtraLine[] @relation("SalesOrderExtraLine_project_code")
+  fromReturnOrderProject_code ReturnOrder[] @relation("ReturnOrder_project_code")
+  fromReturnOrderLineItemProject_code ReturnOrderLineItem[] @relation("ReturnOrderLineItem_project_code")
+  fromReturnOrderExtraLineProject_code ReturnOrderExtraLine[] @relation("ReturnOrderExtraLine_project_code")
+  fromTransferOrderProject_code TransferOrder[] @relation("TransferOrder_project_code")
+  fromTransferOrderLineItemProject_code TransferOrderLineItem[] @relation("TransferOrderLineItem_project_code")
+  @@index([responsible_id])
+  @@map("common_projectcode")
+}
+
+/// An InvenTreeSetting object is a key:value pair used for storing single values (e.g. one-off settings values).
+/// Source: src/backend/InvenTree/common/models.py:1239
+model InvenTreeSetting {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  key String @unique @db.VarChar(50)
+  value String @db.VarChar(2000)
+  @@map("common_inventreesetting")
+}
+
+/// An InvenTreeSetting object with a user context.
+/// Source: src/backend/InvenTree/common/models.py:1334
+model InvenTreeUserSetting {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  key String @db.VarChar(50)
+  value String @db.VarChar(2000)
+  user_id Int?
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User? @relation("InvenTreeUserSetting_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([key, user_id])
+  @@index([user_id])
+  @@map("common_inventreeusersetting")
+}
+
+/// Defines a Webhook endpoint.
+/// Source: src/backend/InvenTree/common/models.py:1431
+model WebhookEndpoint {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  /// Source application default: uuid.uuid4
+  endpoint_id String @db.VarChar(255)
+  name String? @db.VarChar(255)
+  /// Source application default: True
+  active Boolean
+  user_id Int?
+  /// Source application default: uuid.uuid4
+  token String? @db.VarChar(255)
+  secret String? @db.VarChar(255)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  user User? @relation("WebhookEndpoint_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromWebhookMessageEndpoint WebhookMessage[] @relation("WebhookMessage_endpoint")
+  @@index([user_id])
+  @@map("common_webhookendpoint")
+}
+
+/// Defines a webhook message.
+/// Source: src/backend/InvenTree/common/models.py:1588
+model WebhookMessage {
+  /// Source application default: uuid.uuid4
+  message_id String @id @db.Uuid
+  host String @db.VarChar(255)
+  header String? @db.VarChar(255)
+  body Json? @db.JsonB
+  endpoint_id Int?
+  /// Source application default: False
+  worked_on Boolean
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  endpoint WebhookEndpoint? @relation("WebhookMessage_endpoint", fields: [endpoint_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([endpoint_id])
+  @@map("common_webhookmessage")
+}
+
+/// A NotificationEntry records the last time a particular notification was sent out.
+/// Source: src/backend/InvenTree/common/models.py:1648
+model NotificationEntry {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  updated DateTime? @db.Timestamptz(6)
+  key String @db.VarChar(250)
+  uid String @db.VarChar(255)
+  @@unique([key, uid])
+  @@map("common_notificationentry")
+}
+
+/// A NotificationMessage is a message sent to a particular user, notifying them of some important information.
+/// Source: src/backend/InvenTree/common/models.py:1687
+model NotificationMessage {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  target_content_type_id Int
+  target_object_id String @db.VarChar(255)
+  source_content_type_id Int?
+  source_object_id String? @db.VarChar(255)
+  user_id Int?
+  category String @db.VarChar(250)
+  name String @db.VarChar(250)
+  message String? @db.VarChar(250)
+  link String? @db.VarChar(500)
+  creation DateTime @db.Timestamptz(6)
+  /// Source application default: False
+  read Boolean
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  target_content_type ContentType @relation("NotificationMessage_target_content_type", fields: [target_content_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  source_content_type ContentType? @relation("NotificationMessage_source_content_type", fields: [source_content_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User? @relation("NotificationMessage_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([source_content_type_id])
+  @@index([target_content_type_id])
+  @@index([user_id])
+  @@map("common_notificationmessage")
+}
+
+/// A NewsFeedEntry represents an entry on the RSS/Atom feed that is generated for InvenTree news.
+/// Source: src/backend/InvenTree/common/models.py:1766
+model NewsFeedEntry {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  feed_id String @unique @db.VarChar(250)
+  title String @db.VarChar(250)
+  link String @db.VarChar(250)
+  published DateTime @db.Timestamptz(6)
+  author String @db.VarChar(250)
+  summary String @db.VarChar(250)
+  /// Source application default: False
+  read Boolean
+  @@map("common_newsfeedentry")
+}
+
+/// Model for storing custom physical unit definitions.
+/// Source: src/backend/InvenTree/common/models.py:1796
+model CustomUnit {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(50)
+  symbol String @db.VarChar(10)
+  definition String @db.VarChar(50)
+  @@map("common_customunit")
+}
+
+/// Class which represents an uploaded file attachment.
+/// Source: src/backend/InvenTree/common/models.py:1936
+model Attachment {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  model_type String @db.VarChar(100)
+  model_id Int
+  attachment String? @db.VarChar(100)
+  thumbnail String? @db.VarChar(100)
+  link String? @db.VarChar(2000)
+  comment String @db.VarChar(250)
+  upload_user_id Int?
+  upload_date DateTime? @db.Date
+  /// Source application default: False
+  is_image Boolean
+  /// Source application default: 0
+  file_size Int
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  upload_user User? @relation("Attachment_upload_user", fields: [upload_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([upload_user_id])
+  @@map("common_attachment")
+}
+
+/// Custom model to extends any registered state with extra custom, user defined states.
+/// Source: src/backend/InvenTree/common/models.py:2277
+model InvenTreeCustomUserStateModel {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  reference_status String @db.VarChar(250)
+  logical_key Int
+  key Int
+  name String @db.VarChar(250)
+  label String @db.VarChar(250)
+  /// Source application default: ColorEnum.secondary.value
+  color String @db.VarChar(10)
+  model_id Int?
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  model ContentType? @relation("InvenTreeCustomUserStateModel_model", fields: [model_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([reference_status, key])
+  @@unique([reference_status, name])
+  @@index([model_id])
+  @@map("common_inventreecustomuserstatemodel")
+}
+
+/// Class which represents a list of selectable items for parameters.
+/// Source: src/backend/InvenTree/common/models.py:2417
+model SelectionList {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  name String @unique @db.VarChar(100)
+  description String @db.VarChar(250)
+  /// Source application default: False
+  locked Boolean
+  /// Source application default: True
+  active Boolean
+  source_plugin_id Int?
+  source_string String @db.VarChar(1000)
+  default_id Int?
+  created DateTime @db.Timestamptz(6)
+  last_updated DateTime @db.Timestamptz(6)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  source_plugin PluginConfig? @relation("SelectionList_source_plugin", fields: [source_plugin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  default SelectionListEntry? @relation("SelectionList_default", fields: [default_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromSelectionListEntryList SelectionListEntry[] @relation("SelectionListEntry_list")
+  fromParameterTemplateSelectionlist ParameterTemplate[] @relation("ParameterTemplate_selectionlist")
+  @@index([default_id])
+  @@index([source_plugin_id])
+  @@map("common_selectionlist")
+}
+
+/// Class which represents a single entry in a SelectionList.
+/// Source: src/backend/InvenTree/common/models.py:2548
+model SelectionListEntry {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  list_id Int?
+  value String @db.VarChar(255)
+  label String @db.VarChar(255)
+  description String @db.VarChar(250)
+  /// Source application default: True
+  active Boolean
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  list SelectionList? @relation("SelectionListEntry_list", fields: [list_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromSelectionListDefault SelectionList[] @relation("SelectionList_default")
+  @@unique([list_id, value])
+  @@index([list_id])
+  @@map("common_selectionlistentry")
+}
+
+/// A ParameterTemplate provides a template for defining parameter values against various models.
+/// Source: src/backend/InvenTree/common/models.py:2608
+model ParameterTemplate {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  model_type_id Int?
+  name String @unique @db.VarChar(100)
+  units String @db.VarChar(25)
+  description String @db.VarChar(250)
+  /// Source application default: False
+  checkbox Boolean
+  choices String @db.VarChar(5000)
+  selectionlist_id Int?
+  /// Source application default: True
+  enabled Boolean
+  /// Source application default: UniqueOptions.NONE
+  unique Int
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  model_type ContentType? @relation("ParameterTemplate_model_type", fields: [model_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  selectionlist SelectionList? @relation("ParameterTemplate_selectionlist", fields: [selectionlist_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromParameterTemplate Parameter[] @relation("Parameter_template")
+  fromPartCategoryParameterTemplateTemplate PartCategoryParameterTemplate[] @relation("PartCategoryParameterTemplate_template")
+  @@index([model_type_id])
+  @@index([selectionlist_id])
+  @@map("part_partparametertemplate")
+}
+
+/// Class which represents a parameter value assigned to a particular model instance.
+/// Source: src/backend/InvenTree/common/models.py:2829
+model Parameter {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  updated DateTime? @db.Timestamptz(6)
+  updated_by_id Int?
+  model_type_id Int
+  model_id Int
+  template_id Int
+  data String @db.VarChar(500)
+  data_numeric Float? @db.DoublePrecision
+  note String @db.VarChar(500)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  updated_by User? @relation("Parameter_updated_by", fields: [updated_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  model_type ContentType @relation("Parameter_model_type", fields: [model_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  template ParameterTemplate @relation("Parameter_template", fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([model_type_id, model_id, template_id])
+  @@index([model_type_id])
+  @@index([model_type_id, model_id])
+  @@index([template_id])
+  @@index([updated_by_id])
+  @@map("part_partparameter")
+}
+
+/// Class which represents a note assigned to a particular model instance.
+/// Source: src/backend/InvenTree/common/models.py:3086
+model Note {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  updated DateTime? @db.Timestamptz(6)
+  updated_by_id Int?
+  /// Source application default: False
+  template Boolean
+  model_type_id Int?
+  model_id Int?
+  /// Source application default: False
+  primary Boolean
+  title String @db.VarChar(100)
+  description String @db.VarChar(250)
+  content String @db.Text
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  updated_by User? @relation("Note_updated_by", fields: [updated_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  model_type ContentType? @relation("Note_model_type", fields: [model_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromNotesImageNote NotesImage[] @relation("NotesImage_note")
+  @@index([model_type_id])
+  @@index([updated_by_id])
+  @@map("common_note")
+}
+
+/// Model for storing uploading images for the 'notes' fields of various models.
+/// Source: src/backend/InvenTree/common/models.py:3399
+model NotesImage {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  image String @db.VarChar(100)
+  user_id Int?
+  date DateTime @db.Timestamptz(6)
+  note_id Int
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  user User? @relation("NotesImage_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  note Note @relation("NotesImage_note", fields: [note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([note_id])
+  @@index([user_id])
+  @@map("common_notesimage")
+}
+
+/// Model for storing barcode scans results.
+/// Source: src/backend/InvenTree/common/models.py:3433
+model BarcodeScanResult {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  data String @db.VarChar(250)
+  user_id Int?
+  timestamp DateTime @db.Timestamptz(6)
+  endpoint String? @db.VarChar(250)
+  context Json? @db.JsonB
+  response Json? @db.JsonB
+  /// Source application default: False
+  result Boolean
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  user User? @relation("BarcodeScanResult_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([user_id])
+  @@map("common_barcodescanresult")
+}
+
+/// Model for storing generated data output from various processes.
+/// Source: src/backend/InvenTree/common/models.py:3497
+model DataOutput {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  created DateTime @db.Date
+  user_id Int?
+  /// Source application default: 1
+  total Int
+  /// Source application default: 0
+  progress Int
+  /// Source application default: False
+  complete Boolean
+  output_type String? @db.VarChar(100)
+  template_name String? @db.VarChar(100)
+  plugin String? @db.VarChar(100)
+  output String? @db.VarChar(100)
+  errors Json? @db.JsonB
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  user User? @relation("DataOutput_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([user_id])
+  @@map("common_dataoutput")
+}
+
+/// Model for storing email messages sent or received by the system.
+/// Source: src/backend/InvenTree/common/models.py:3617
+model EmailMessage {
+  /// Source application default: uuid.uuid4
+  global_id String @id @db.Uuid
+  message_id_key String? @db.VarChar(250)
+  thread_id_key String? @db.VarChar(250)
+  thread_id String? @db.Uuid
+  subject String @db.VarChar(250)
+  body String @db.Text
+  to String @db.VarChar(254)
+  sender String @db.VarChar(254)
+  status String? @db.VarChar(50)
+  timestamp DateTime @db.Timestamptz(6)
+  headers Json? @db.JsonB
+  full_message String? @db.Text
+  direction String? @db.VarChar(50)
+  priority Int
+  delivery_options Json? @db.JsonB
+  error_code String? @db.VarChar(50)
+  error_message String? @db.Text
+  error_timestamp DateTime? @db.Timestamptz(6)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  thread EmailThread? @relation("EmailMessage_thread", fields: [thread_id], references: [global_id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([thread_id])
+  @@map("common_emailmessage")
+}
+
+/// Model for storing email threads.
+/// Source: src/backend/InvenTree/common/models.py:3766
+model EmailThread {
+  /// Source application default: uuid.uuid4
+  global_id String @id @db.Uuid
+  metadata Json? @db.JsonB
+  key String? @db.VarChar(250)
+  /// Source application default: False
+  started_internal Boolean
+  created DateTime @db.Timestamptz(6)
+  updated DateTime @db.Timestamptz(6)
+  fromEmailMessageThread EmailMessage[] @relation("EmailMessage_thread")
+  @@unique([key, global_id])
+  @@map("common_emailthread")
+}

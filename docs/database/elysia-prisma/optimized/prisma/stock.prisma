@@ -1,0 +1,208 @@
+// Stok, depo, izleme ve test
+
+/// A type of stock location like Warehouse, room, shelf, drawer.
+/// Source: src/backend/InvenTree/stock/models.py:62
+model StockLocationType {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  name String @db.VarChar(100)
+  description String @default("") @db.VarChar(250)
+  icon String @default("") @db.VarChar(100)
+  fromStockLocationLocationType StockLocation[] @relation("StockLocation_locationType")
+  @@map("stock_location_type")
+}
+
+/// Organization tree for StockItem objects.
+/// Source: src/backend/InvenTree/stock/models.py:126
+model StockLocation {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  name String @db.VarChar(100)
+  description String @default("") @db.VarChar(250)
+  parentId Int? @map("parent_id")
+  pathstring String @default("") @db.VarChar(250)
+  barcodeData String @default("") @db.VarChar(500) @map("barcode_data")
+  barcodeHash String @default("") @db.VarChar(128) @map("barcode_hash")
+  customIcon String? @db.VarChar(100) @map("custom_icon")
+  ownerId Int? @map("owner_id")
+  /// Source application default: False
+  structural Boolean @default(false)
+  /// Source application default: False
+  external Boolean @default(false)
+  locationTypeId Int? @map("location_type_id")
+  /// Django on_delete: DO_NOTHING; see deletion policy in README.
+  parent StockLocation? @relation("StockLocation_parent", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  owner Owner? @relation("StockLocation_owner", fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  locationType StockLocationType? @relation("StockLocation_locationType", fields: [locationTypeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  fromBuildTakeFrom Build[] @relation("Build_takeFrom")
+  fromBuildDestination Build[] @relation("Build_destination")
+  fromPurchaseOrderDestination PurchaseOrder[] @relation("PurchaseOrder_destination")
+  fromPurchaseOrderLineItemDestination PurchaseOrderLineItem[] @relation("PurchaseOrderLineItem_destination")
+  fromTransferOrderTakeFrom TransferOrder[] @relation("TransferOrder_takeFrom")
+  fromTransferOrderDestination TransferOrder[] @relation("TransferOrder_destination")
+  fromPartCategoryDefaultLocation PartCategory[] @relation("PartCategory_defaultLocation")
+  fromPartDefaultLocation Part[] @relation("Part_defaultLocation")
+  fromStockLocationParent StockLocation[] @relation("StockLocation_parent")
+  fromStockItemLocation StockItem[] @relation("StockItem_location")
+  @@index([locationTypeId])
+  @@index([parentId])
+  @@index([ownerId])
+  @@map("stock_location")
+}
+
+/// A StockItem object represents a quantity of physical instances of a part.
+/// Source: src/backend/InvenTree/stock/models.py:426
+model StockItem {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  updated DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
+  barcodeData String @default("") @db.VarChar(500) @map("barcode_data")
+  barcodeHash String @default("") @db.VarChar(128) @map("barcode_hash")
+  parentId Int? @map("parent_id")
+  partId Int @map("part_id")
+  supplierPartId Int? @map("supplier_part_id")
+  locationId Int? @map("location_id")
+  packaging String? @db.VarChar(50)
+  belongsToId Int? @map("belongs_to_id")
+  customerId Int? @map("customer_id")
+  serial String? @db.VarChar(100)
+  /// Source application default: 0
+  serialInt Int @default(0) @map("serial_int")
+  link String @default("") @db.VarChar(2000)
+  /// Source application default: generate_batch_code
+  batch String? @db.VarChar(100)
+  /// Source application default: 1
+  quantity Decimal @default(1) @db.Decimal(15, 5)
+  buildId Int? @map("build_id")
+  consumedById Int? @map("consumed_by_id")
+  /// Source application default: False
+  isBuilding Boolean @default(false) @map("is_building")
+  purchaseOrderId Int? @map("purchase_order_id")
+  salesOrderId Int? @map("sales_order_id")
+  expiryDate DateTime? @db.Date @map("expiry_date")
+  stocktakeDate DateTime? @db.Date @map("stocktake_date")
+  stocktakeUserId String? @db.Uuid @map("stocktake_user_id")
+  creationDate DateTime? @default(now()) @db.Timestamptz(6) @map("creation_date")
+  /// Source application default: default_delete_on_deplete
+  deleteOnDeplete Boolean @map("delete_on_deplete")
+  /// Source application default: StockStatus.OK.value
+  status Int @default(10)
+  purchasePrice Decimal? @db.Decimal(19, 6) @map("purchase_price")
+  ownerId Int? @map("owner_id")
+  /// generic/states/fields.py contribute_to_class companion column
+  statusCustomKey Int? @map("status_custom_key")
+  /// django-money companion currency column; default resolved by application settings
+  purchasePriceCurrency String? @db.VarChar(3) @map("purchase_price_currency")
+  /// Source application default: 0
+  version Int @default(0)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  parent StockItem? @relation("StockItem_parent", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("StockItem_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  supplierPart SupplierPart? @relation("StockItem_supplierPart", fields: [supplierPartId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: DO_NOTHING; see deletion policy in README.
+  location StockLocation? @relation("StockItem_location", fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  belongsTo StockItem? @relation("StockItem_belongsTo", fields: [belongsToId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  customer Company? @relation("StockItem_customer", fields: [customerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  build Build? @relation("StockItem_build", fields: [buildId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  consumedBy Build? @relation("StockItem_consumedBy", fields: [consumedById], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  purchaseOrder PurchaseOrder? @relation("StockItem_purchaseOrder", fields: [purchaseOrderId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  salesOrder SalesOrder? @relation("StockItem_salesOrder", fields: [salesOrderId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  stocktakeUser User? @relation("StockItem_stocktakeUser", fields: [stocktakeUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  owner Owner? @relation("StockItem_owner", fields: [ownerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  fromBuildItemStockItem BuildItem[] @relation("BuildItem_stockItem")
+  fromBuildItemInstallInto BuildItem[] @relation("BuildItem_installInto")
+  fromSalesOrderAllocationItem SalesOrderAllocation[] @relation("SalesOrderAllocation_item")
+  fromReturnOrderLineItemItem ReturnOrderLineItem[] @relation("ReturnOrderLineItem_item")
+  fromTransferOrderAllocationItem TransferOrderAllocation[] @relation("TransferOrderAllocation_item")
+  fromStockItemParent StockItem[] @relation("StockItem_parent")
+  fromStockItemBelongsTo StockItem[] @relation("StockItem_belongsTo")
+  fromStockItemTrackingItem StockItemTracking[] @relation("StockItemTracking_item")
+  fromStockItemTestResultStockItem StockItemTestResult[] @relation("StockItemTestResult_stockItem")
+  @@index([partId, locationId, status])
+  @@index([locationId, status, id])
+  @@index([consumedById])
+  @@index([purchaseOrderId])
+  @@index([salesOrderId])
+  @@index([stocktakeUserId])
+  @@index([ownerId])
+  @@index([supplierPartId])
+  @@index([customerId])
+  @@index([expiryDate])
+  @@index([batch])
+  @@index([serial])
+  @@index([parentId])
+  @@index([buildId])
+  @@index([belongsToId])
+  @@map("stock_item")
+}
+
+/// Stock tracking entry - used for tracking history of a particular StockItem.
+/// Source: src/backend/InvenTree/stock/models.py:3716
+model StockItemTracking {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  /// Source application default: StockHistoryCode.LEGACY
+  trackingType Int @default(0) @map("tracking_type")
+  itemId Int? @map("item_id")
+  partId Int? @map("part_id")
+  date DateTime @default(now()) @db.Timestamptz(6)
+  notes String? @db.VarChar(512)
+  userId String? @db.Uuid @map("user_id")
+  deltas Json? @db.JsonB
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  item StockItem? @relation("StockItemTracking_item", fields: [itemId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part? @relation("StockItemTracking_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  user User? @relation("StockItemTracking_user", fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  @@index([itemId, date])
+  @@index([partId, date])
+  @@index([userId])
+  @@map("stock_item_tracking")
+}
+
+/// A StockItemTestResult records results of custom tests against individual StockItem objects.
+/// Source: src/backend/InvenTree/stock/models.py:3801
+model StockItemTestResult {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  stockItemId Int @map("stock_item_id")
+  templateId Int @map("template_id")
+  /// Source application default: False
+  result Boolean @default(false)
+  value String @default("") @db.VarChar(500)
+  attachment String? @db.VarChar(100)
+  notes String @default("") @db.VarChar(500)
+  userId String? @db.Uuid @map("user_id")
+  testStation String @default("") @db.VarChar(500) @map("test_station")
+  startedDatetime DateTime? @db.Timestamptz(6) @map("started_datetime")
+  finishedDatetime DateTime? @db.Timestamptz(6) @map("finished_datetime")
+  /// Source application default: InvenTree.helpers.current_time
+  date DateTime @default(now()) @db.Timestamptz(6)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  stockItem StockItem @relation("StockItemTestResult_stockItem", fields: [stockItemId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  template PartTestTemplate @relation("StockItemTestResult_template", fields: [templateId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  user User? @relation("StockItemTestResult_user", fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  @@index([stockItemId, templateId, date])
+  @@index([userId])
+  @@index([templateId])
+  @@map("stock_item_test_result")
+}

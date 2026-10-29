@@ -1,0 +1,49 @@
+// İçerik türleri, etiketler ve Django destek tabloları
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model ContentType {
+  id Int @id @default(autoincrement())
+  app_label String @db.VarChar(100)
+  model String @db.VarChar(100)
+  fromNotificationMessageTarget_content_type NotificationMessage[] @relation("NotificationMessage_target_content_type")
+  fromNotificationMessageSource_content_type NotificationMessage[] @relation("NotificationMessage_source_content_type")
+  fromInvenTreeCustomUserStateModelModel InvenTreeCustomUserStateModel[] @relation("InvenTreeCustomUserStateModel_model")
+  fromParameterTemplateModel_type ParameterTemplate[] @relation("ParameterTemplate_model_type")
+  fromParameterModel_type Parameter[] @relation("Parameter_model_type")
+  fromNoteModel_type Note[] @relation("Note_model_type")
+  fromOwnerOwner_type Owner[] @relation("Owner_owner_type")
+  fromPermissionContent_type Permission[] @relation("Permission_content_type")
+  fromTaggedItemContent_type TaggedItem[] @relation("TaggedItem_content_type")
+  @@unique([app_label, model])
+  @@map("django_content_type")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Tag {
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  slug String @unique @db.VarChar(100)
+  fromTaggedItemTag TaggedItem[] @relation("TaggedItem_tag")
+  @@map("taggit_tag")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model TaggedItem {
+  id Int @id @default(autoincrement())
+  tag_id Int
+  content_type_id Int
+  object_id Int
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  tag Tag @relation("TaggedItem_tag", fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  content_type ContentType @relation("TaggedItem_content_type", fields: [content_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([content_type_id, object_id, tag_id])
+  @@index([content_type_id])
+  @@index([content_type_id, object_id])
+  @@index([object_id])
+  @@index([tag_id])
+  @@map("taggit_taggeditem")
+}

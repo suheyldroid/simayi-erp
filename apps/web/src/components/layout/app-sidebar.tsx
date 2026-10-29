@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query'
+import { isAdministrator, sessionQuery } from '@/lib/auth'
 import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
@@ -14,6 +16,7 @@ import { TeamSwitcher } from './team-switcher'
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
+  const { data: user } = useQuery(sessionQuery)
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
@@ -24,12 +27,24 @@ export function AppSidebar() {
         {/* <AppTitle /> */}
       </SidebarHeader>
       <SidebarContent>
-        {sidebarData.navGroups.map((props) => (
-          <NavGroup key={props.title} {...props} />
+        {sidebarData.navGroups.map((group) => (
+          <NavGroup
+            key={group.title}
+            {...group}
+            items={group.items.filter(
+              (item) => item.url !== '/users' || isAdministrator(user)
+            )}
+          />
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarData.user} />
+        <NavUser
+          user={{
+            name: user?.name ?? '',
+            email: user?.email ?? '',
+            avatar: user?.image ?? '',
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

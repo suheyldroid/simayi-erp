@@ -1,0 +1,175 @@
+// Firma, üretici ve tedarikçi
+
+/// A Company object represents an external company.
+/// Source: src/backend/InvenTree/company/models.py:78
+model Company {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  image String? @db.VarChar(100)
+  name String @db.VarChar(100)
+  description String @default("") @db.VarChar(500)
+  website String @default("") @db.VarChar(2000)
+  phone String @default("") @db.VarChar(50)
+  email String? @db.VarChar(254)
+  contact String @default("") @db.VarChar(100)
+  link String @default("") @db.VarChar(2000)
+  /// Source application default: True
+  active Boolean @default(true)
+  /// Source application default: False
+  isCustomer Boolean @default(false) @map("is_customer")
+  /// Source application default: True
+  isSupplier Boolean @default(true) @map("is_supplier")
+  /// Source application default: False
+  isManufacturer Boolean @default(false) @map("is_manufacturer")
+  /// Source application default: currency_code_default
+  currency String @db.VarChar(3)
+  taxId String @default("") @db.VarChar(50) @map("tax_id")
+  fromContactCompany Contact[] @relation("Contact_company")
+  fromAddressCompany Address[] @relation("Address_company")
+  fromManufacturerPartManufacturer ManufacturerPart[] @relation("ManufacturerPart_manufacturer")
+  fromSupplierPartSupplier SupplierPart[] @relation("SupplierPart_supplier")
+  fromPurchaseOrderSupplier PurchaseOrder[] @relation("PurchaseOrder_supplier")
+  fromSalesOrderCustomer SalesOrder[] @relation("SalesOrder_customer")
+  fromReturnOrderCustomer ReturnOrder[] @relation("ReturnOrder_customer")
+  fromStockItemCustomer StockItem[] @relation("StockItem_customer")
+  @@unique([name, email])
+  @@map("company")
+}
+
+/// A Contact represents a person who works at a particular company. A Company may have zero or more associated Contact objects.
+/// Source: src/backend/InvenTree/company/models.py:299
+model Contact {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  companyId Int @map("company_id")
+  name String @db.VarChar(100)
+  phone String @default("") @db.VarChar(100)
+  email String @default("") @db.VarChar(254)
+  role String @default("") @db.VarChar(100)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  company Company @relation("Contact_company", fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fromPurchaseOrderContact PurchaseOrder[] @relation("PurchaseOrder_contact")
+  fromSalesOrderContact SalesOrder[] @relation("SalesOrder_contact")
+  fromReturnOrderContact ReturnOrder[] @relation("ReturnOrder_contact")
+  fromTransferOrderContact TransferOrder[] @relation("TransferOrder_contact")
+  @@index([companyId])
+  @@map("contact")
+}
+
+/// An address represents a physical location where the company is located. It is possible for a company to have multiple locations.
+/// Source: src/backend/InvenTree/company/models.py:335
+model Address {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  companyId Int @map("company_id")
+  title String @db.VarChar(100)
+  /// Source application default: False
+  primary Boolean @default(false)
+  line1 String @default("") @db.VarChar(50)
+  line2 String @default("") @db.VarChar(50)
+  postalCode String @default("") @db.VarChar(10) @map("postal_code")
+  postalCity String @default("") @db.VarChar(50) @map("postal_city")
+  province String @default("") @db.VarChar(50)
+  country String @default("") @db.VarChar(50)
+  shippingNotes String @default("") @db.VarChar(100) @map("shipping_notes")
+  internalShippingNotes String @default("") @db.VarChar(100) @map("internal_shipping_notes")
+  link String @default("") @db.VarChar(2000)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  company Company @relation("Address_company", fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fromPurchaseOrderAddress PurchaseOrder[] @relation("PurchaseOrder_address")
+  fromSalesOrderAddress SalesOrder[] @relation("SalesOrder_address")
+  fromSalesOrderShipmentShipmentAddress SalesOrderShipment[] @relation("SalesOrderShipment_shipmentAddress")
+  fromReturnOrderAddress ReturnOrder[] @relation("ReturnOrder_address")
+  fromTransferOrderAddress TransferOrder[] @relation("TransferOrder_address")
+  @@index([companyId])
+  @@map("address")
+}
+
+/// Represents a unique part as provided by a Manufacturer Each ManufacturerPart is identified by a MPN (Manufacturer Part Number) Each ManufacturerPart is also linked to a Part object. A Part may be available from multiple manufacturers.
+/// Source: src/backend/InvenTree/company/models.py:489
+model ManufacturerPart {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  barcodeData String @default("") @db.VarChar(500) @map("barcode_data")
+  barcodeHash String @default("") @db.VarChar(128) @map("barcode_hash")
+  partId Int @map("part_id")
+  manufacturerId Int? @map("manufacturer_id")
+  mpn String? @db.VarChar(100)
+  link String? @db.VarChar(2000)
+  description String? @db.VarChar(250)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("ManufacturerPart_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  manufacturer Company? @relation("ManufacturerPart_manufacturer", fields: [manufacturerId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fromSupplierPartManufacturerPart SupplierPart[] @relation("SupplierPart_manufacturerPart")
+  @@unique([partId, manufacturerId, mpn])
+  @@index([manufacturerId])
+  @@map("manufacturer_part")
+}
+
+/// Represents a unique part as provided by a Supplier Each SupplierPart is identified by a SKU (Supplier Part Number) Each SupplierPart is also linked to a Part or ManufacturerPart object. A Part may be available from multiple suppliers.
+/// Source: src/backend/InvenTree/company/models.py:604
+model SupplierPart {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  updated DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
+  barcodeData String @default("") @db.VarChar(500) @map("barcode_data")
+  barcodeHash String @default("") @db.VarChar(128) @map("barcode_hash")
+  metadata Json? @db.JsonB
+  partId Int @map("part_id")
+  supplierId Int @map("supplier_id")
+  sku String @db.VarChar(100)
+  /// Source application default: True
+  active Boolean @default(true)
+  /// Source application default: False
+  primary Boolean @default(false)
+  manufacturerPartId Int? @map("manufacturer_part_id")
+  link String? @db.VarChar(2000)
+  description String? @db.VarChar(250)
+  note String? @db.VarChar(100)
+  /// Source application default: 0
+  baseCost Decimal @default(0) @db.Decimal(10, 3) @map("base_cost")
+  packaging String? @db.VarChar(50)
+  packQuantity String @default("") @db.VarChar(25) @map("pack_quantity")
+  /// Source application default: 1
+  packQuantityNative Decimal? @default(1) @db.Decimal(20, 10) @map("pack_quantity_native")
+  /// Source application default: 1
+  multiple Int @default(1)
+  /// Source application default: 0
+  available Decimal @default(0) @db.Decimal(10, 3)
+  availabilityUpdated DateTime? @db.Timestamptz(6) @map("availability_updated")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("SupplierPart_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  supplier Company @relation("SupplierPart_supplier", fields: [supplierId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  manufacturerPart ManufacturerPart? @relation("SupplierPart_manufacturerPart", fields: [manufacturerPartId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fromSupplierPriceBreakPart SupplierPriceBreak[] @relation("SupplierPriceBreak_part")
+  fromPurchaseOrderLineItemPart PurchaseOrderLineItem[] @relation("PurchaseOrderLineItem_part")
+  fromStockItemSupplierPart StockItem[] @relation("StockItem_supplierPart")
+  @@unique([partId, supplierId, sku])
+  @@index([manufacturerPartId])
+  @@index([supplierId])
+  @@map("supplier_part")
+}
+
+/// Represents a quantity price break for a SupplierPart.
+/// Source: src/backend/InvenTree/company/models.py:1002
+model SupplierPriceBreak {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  updated DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
+  /// Source application default: 1
+  quantity Decimal @default(1) @db.Decimal(15, 5)
+  price Decimal? @db.Decimal(19, 6)
+  partId Int @map("part_id")
+  /// django-money companion currency column; default resolved by application settings
+  priceCurrency String? @db.VarChar(3) @map("price_currency")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part SupplierPart @relation("SupplierPriceBreak_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([partId, quantity])
+  @@map("supplier_price_break")
+}

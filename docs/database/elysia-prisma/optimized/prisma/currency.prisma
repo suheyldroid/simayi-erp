@@ -1,0 +1,25 @@
+// Döviz kuru sağlayıcısı ve kurlar
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model ExchangeBackend {
+  name String @id @db.VarChar(255)
+  lastUpdate DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("last_update")
+  baseCurrency String @db.VarChar(3) @map("base_currency")
+  fromRateBackend Rate[] @relation("Rate_backend")
+  @@map("exchange_backend")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Rate {
+  id Int @id @default(autoincrement())
+  currency String @db.VarChar(3)
+  value Decimal @db.Decimal(20, 6)
+  backendId String @db.VarChar(255) @map("backend_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  backend ExchangeBackend @relation("Rate_backend", fields: [backendId], references: [name], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([currency, backendId])
+  @@index([backendId])
+  @@map("rate")
+}

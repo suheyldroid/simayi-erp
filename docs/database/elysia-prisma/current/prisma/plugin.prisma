@@ -1,0 +1,52 @@
+// Eklenti yapılandırması
+
+/// A PluginConfig object holds settings for plugins.
+/// Source: src/backend/InvenTree/plugin/models.py:22
+model PluginConfig {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  key String @unique @db.VarChar(255)
+  name String? @db.VarChar(255)
+  package_name String? @db.VarChar(255)
+  /// Source application default: False
+  active Boolean
+  fromSelectionListSource_plugin SelectionList[] @relation("SelectionList_source_plugin")
+  fromPluginSettingPlugin PluginSetting[] @relation("PluginSetting_plugin")
+  fromPluginUserSettingPlugin PluginUserSetting[] @relation("PluginUserSetting_plugin")
+  @@map("plugin_pluginconfig")
+}
+
+/// This model represents settings for individual plugins.
+/// Source: src/backend/InvenTree/plugin/models.py:282
+model PluginSetting {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  key String @db.VarChar(50)
+  value String @db.VarChar(2000)
+  plugin_id Int
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  plugin PluginConfig @relation("PluginSetting_plugin", fields: [plugin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([plugin_id, key])
+  @@index([plugin_id])
+  @@map("plugin_pluginsetting")
+}
+
+/// This model represents user-specific settings for individual plugins.
+/// Source: src/backend/InvenTree/plugin/models.py:365
+model PluginUserSetting {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  key String @db.VarChar(50)
+  value String @db.VarChar(2000)
+  plugin_id Int
+  user_id Int
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  plugin PluginConfig @relation("PluginUserSetting_plugin", fields: [plugin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("PluginUserSetting_user", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([plugin_id, user_id, key])
+  @@index([plugin_id])
+  @@index([user_id])
+  @@map("plugin_pluginusersetting")
+}

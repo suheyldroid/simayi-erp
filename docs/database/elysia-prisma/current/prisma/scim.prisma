@@ -1,0 +1,14 @@
+// SCIM yapılandırması
+
+/// Simple model for storing config of SCIM.
+/// Source: src/backend/InvenTree/scim/models.py:21
+model ScimConfiguration {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  /// Source application default: False
+  enabled Boolean
+  secret_digest String @db.VarChar(64)
+  secret_generated DateTime? @db.Timestamptz(6)
+  last_used DateTime? @db.Timestamptz(6)
+  @@map("scim_scimconfiguration")
+}

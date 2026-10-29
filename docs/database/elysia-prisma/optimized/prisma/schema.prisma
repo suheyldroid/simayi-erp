@@ -1,0 +1,10 @@
+// PostgreSQL; Prisma ORM 7 multi-file schema.
+// See the package README.md before applying; use the optimized variant for the fork.
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}

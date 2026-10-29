@@ -1,0 +1,586 @@
+// Satın alma, satış, iade ve transfer
+
+/// A PurchaseOrder represents goods shipped inwards from an external supplier.
+/// Source: src/backend/InvenTree/order/models.py:638
+model PurchaseOrder {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  /// Source application default: 0
+  reference_int BigInt @db.BigInt
+  metadata Json? @db.JsonB
+  barcode_data String @db.VarChar(500)
+  barcode_hash String @db.VarChar(128)
+  description String @db.VarChar(250)
+  project_code_id Int?
+  link String @db.VarChar(2000)
+  start_date DateTime? @db.Date
+  target_date DateTime? @db.Date
+  creation_date DateTime? @db.Date
+  created_by_id Int?
+  issue_date DateTime? @db.Date
+  updated_at DateTime? @db.Timestamptz(6)
+  responsible_id Int?
+  contact_id Int?
+  address_id Int?
+  total_price Decimal? @db.Decimal(19, 6)
+  order_currency String? @db.VarChar(3)
+  /// Source application default: order.validators.generate_next_purchase_order_reference
+  reference String @unique @db.VarChar(64)
+  /// Source application default: PurchaseOrderStatus.PENDING.value
+  status Int
+  supplier_id Int?
+  supplier_reference String @db.VarChar(64)
+  received_by_id Int?
+  complete_date DateTime? @db.Date
+  destination_id Int?
+  /// django-money companion currency column; default resolved by application settings
+  total_price_currency String? @db.VarChar(3)
+  /// generic/states/fields.py contribute_to_class companion column
+  status_custom_key Int?
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("PurchaseOrder_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  created_by User? @relation("PurchaseOrder_created_by", fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  responsible Owner? @relation("PurchaseOrder_responsible", fields: [responsible_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  contact Contact? @relation("PurchaseOrder_contact", fields: [contact_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  address Address? @relation("PurchaseOrder_address", fields: [address_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  supplier Company? @relation("PurchaseOrder_supplier", fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  received_by User? @relation("PurchaseOrder_received_by", fields: [received_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  destination StockLocation? @relation("PurchaseOrder_destination", fields: [destination_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromPurchaseOrderLineItemOrder PurchaseOrderLineItem[] @relation("PurchaseOrderLineItem_order")
+  fromPurchaseOrderExtraLineOrder PurchaseOrderExtraLine[] @relation("PurchaseOrderExtraLine_order")
+  fromStockItemPurchase_order StockItem[] @relation("StockItem_purchase_order")
+  @@index([address_id])
+  @@index([contact_id])
+  @@index([created_by_id])
+  @@index([destination_id])
+  @@index([project_code_id])
+  @@index([received_by_id])
+  @@index([responsible_id])
+  @@index([supplier_id])
+  @@map("order_purchaseorder")
+}
+
+/// A SalesOrder represents a list of goods shipped outwards to a customer.
+/// Source: src/backend/InvenTree/order/models.py:1385
+model SalesOrder {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  /// Source application default: 0
+  reference_int BigInt @db.BigInt
+  metadata Json? @db.JsonB
+  barcode_data String @db.VarChar(500)
+  barcode_hash String @db.VarChar(128)
+  description String @db.VarChar(250)
+  project_code_id Int?
+  link String @db.VarChar(2000)
+  start_date DateTime? @db.Date
+  target_date DateTime? @db.Date
+  creation_date DateTime? @db.Date
+  created_by_id Int?
+  issue_date DateTime? @db.Date
+  updated_at DateTime? @db.Timestamptz(6)
+  responsible_id Int?
+  contact_id Int?
+  address_id Int?
+  total_price Decimal? @db.Decimal(19, 6)
+  order_currency String? @db.VarChar(3)
+  /// Source application default: order.validators.generate_next_sales_order_reference
+  reference String @unique @db.VarChar(64)
+  customer_id Int?
+  /// Source application default: SalesOrderStatus.PENDING.value
+  status Int
+  customer_reference String @db.VarChar(64)
+  shipment_date DateTime? @db.Date
+  shipped_by_id Int?
+  /// django-money companion currency column; default resolved by application settings
+  total_price_currency String? @db.VarChar(3)
+  /// generic/states/fields.py contribute_to_class companion column
+  status_custom_key Int?
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("SalesOrder_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  created_by User? @relation("SalesOrder_created_by", fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  responsible Owner? @relation("SalesOrder_responsible", fields: [responsible_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  contact Contact? @relation("SalesOrder_contact", fields: [contact_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  address Address? @relation("SalesOrder_address", fields: [address_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  customer Company? @relation("SalesOrder_customer", fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  shipped_by User? @relation("SalesOrder_shipped_by", fields: [shipped_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromBuildSales_order Build[] @relation("Build_sales_order")
+  fromSalesOrderLineItemOrder SalesOrderLineItem[] @relation("SalesOrderLineItem_order")
+  fromSalesOrderShipmentOrder SalesOrderShipment[] @relation("SalesOrderShipment_order")
+  fromSalesOrderExtraLineOrder SalesOrderExtraLine[] @relation("SalesOrderExtraLine_order")
+  fromStockItemSales_order StockItem[] @relation("StockItem_sales_order")
+  @@index([address_id])
+  @@index([contact_id])
+  @@index([created_by_id])
+  @@index([customer_id])
+  @@index([project_code_id])
+  @@index([responsible_id])
+  @@index([shipped_by_id])
+  @@map("order_salesorder")
+}
+
+/// Model for a purchase order line item.
+/// Source: src/backend/InvenTree/order/models.py:2240
+model PurchaseOrderLineItem {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Source application default: 0
+  discount Decimal @db.Decimal(5, 2)
+  /// Source application default:
+  line String @db.VarChar(20)
+  /// Source application default: 0
+  line_int Int
+  reference String @db.VarChar(100)
+  notes String @db.VarChar(500)
+  link String @db.VarChar(2000)
+  target_date DateTime? @db.Date
+  project_code_id Int?
+  order_id Int
+  part_id Int?
+  /// Source application default: 0
+  received Decimal @db.Decimal(15, 5)
+  purchase_price Decimal? @db.Decimal(19, 6)
+  build_order_id Int?
+  destination_id Int?
+  /// django-money companion currency column; default resolved by application settings
+  purchase_price_currency String? @db.VarChar(3)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("PurchaseOrderLineItem_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  order PurchaseOrder @relation("PurchaseOrderLineItem_order", fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  part SupplierPart? @relation("PurchaseOrderLineItem_part", fields: [part_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  build_order Build? @relation("PurchaseOrderLineItem_build_order", fields: [build_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  destination StockLocation? @relation("PurchaseOrderLineItem_destination", fields: [destination_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([build_order_id])
+  @@index([destination_id])
+  @@index([order_id])
+  @@index([part_id])
+  @@index([project_code_id])
+  @@map("order_purchaseorderlineitem")
+}
+
+/// Model for a single ExtraLine in a PurchaseOrder.
+/// Source: src/backend/InvenTree/order/models.py:2436
+model PurchaseOrderExtraLine {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Source application default: 0
+  discount Decimal @db.Decimal(5, 2)
+  /// Source application default:
+  line String @db.VarChar(20)
+  /// Source application default: 0
+  line_int Int
+  reference String @db.VarChar(100)
+  notes String @db.VarChar(500)
+  link String @db.VarChar(2000)
+  target_date DateTime? @db.Date
+  project_code_id Int?
+  description String @db.VarChar(250)
+  context Json? @db.JsonB
+  price Decimal? @db.Decimal(19, 6)
+  order_id Int
+  /// django-money companion currency column; default resolved by application settings
+  price_currency String? @db.VarChar(3)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("PurchaseOrderExtraLine_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  order PurchaseOrder @relation("PurchaseOrderExtraLine_order", fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([order_id])
+  @@index([project_code_id])
+  @@map("order_purchaseorderextraline")
+}
+
+/// Model for a single LineItem in a SalesOrder.
+/// Source: src/backend/InvenTree/order/models.py:2462
+model SalesOrderLineItem {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Source application default: 0
+  discount Decimal @db.Decimal(5, 2)
+  /// Source application default:
+  line String @db.VarChar(20)
+  /// Source application default: 0
+  line_int Int
+  reference String @db.VarChar(100)
+  notes String @db.VarChar(500)
+  link String @db.VarChar(2000)
+  target_date DateTime? @db.Date
+  project_code_id Int?
+  order_id Int
+  part_id Int?
+  sale_price Decimal? @db.Decimal(19, 6)
+  /// Source application default: 0
+  shipped Decimal @db.Decimal(15, 5)
+  /// django-money companion currency column; default resolved by application settings
+  sale_price_currency String? @db.VarChar(3)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("SalesOrderLineItem_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  order SalesOrder @relation("SalesOrderLineItem_order", fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  part Part? @relation("SalesOrderLineItem_part", fields: [part_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromSalesOrderAllocationLine SalesOrderAllocation[] @relation("SalesOrderAllocation_line")
+  @@index([order_id])
+  @@index([part_id])
+  @@index([project_code_id])
+  @@map("order_salesorderlineitem")
+}
+
+/// The SalesOrderShipment model represents a physical shipment made against a SalesOrder.
+/// Source: src/backend/InvenTree/order/models.py:2617
+model SalesOrderShipment {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  barcode_data String @db.VarChar(500)
+  barcode_hash String @db.VarChar(128)
+  order_id Int
+  shipment_address_id Int?
+  shipment_date DateTime? @db.Date
+  delivery_date DateTime? @db.Date
+  checked_by_id Int?
+  /// Source application default: 1
+  reference String @db.VarChar(100)
+  tracking_number String @db.VarChar(100)
+  invoice_number String @db.VarChar(100)
+  link String @db.VarChar(2000)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  order SalesOrder @relation("SalesOrderShipment_order", fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  shipment_address Address? @relation("SalesOrderShipment_shipment_address", fields: [shipment_address_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  checked_by User? @relation("SalesOrderShipment_checked_by", fields: [checked_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromSalesOrderAllocationShipment SalesOrderAllocation[] @relation("SalesOrderAllocation_shipment")
+  @@unique([order_id, reference])
+  @@index([checked_by_id])
+  @@index([order_id])
+  @@index([shipment_address_id])
+  @@map("order_salesordershipment")
+}
+
+/// Model for a single ExtraLine in a SalesOrder.
+/// Source: src/backend/InvenTree/order/models.py:3058
+model SalesOrderExtraLine {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Source application default: 0
+  discount Decimal @db.Decimal(5, 2)
+  /// Source application default:
+  line String @db.VarChar(20)
+  /// Source application default: 0
+  line_int Int
+  reference String @db.VarChar(100)
+  notes String @db.VarChar(500)
+  link String @db.VarChar(2000)
+  target_date DateTime? @db.Date
+  project_code_id Int?
+  description String @db.VarChar(250)
+  context Json? @db.JsonB
+  price Decimal? @db.Decimal(19, 6)
+  order_id Int
+  /// django-money companion currency column; default resolved by application settings
+  price_currency String? @db.VarChar(3)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("SalesOrderExtraLine_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  order SalesOrder @relation("SalesOrderExtraLine_order", fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([order_id])
+  @@index([project_code_id])
+  @@map("order_salesorderextraline")
+}
+
+/// This model is used to 'allocate' stock items to a SalesOrder. Items that are "allocated" to a SalesOrder are not yet "attached" to the order, but they will be once the order is fulfilled.
+/// Source: src/backend/InvenTree/order/models.py:3084
+model SalesOrderAllocation {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  line_id Int
+  shipment_id Int?
+  item_id Int
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  line SalesOrderLineItem @relation("SalesOrderAllocation_line", fields: [line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  shipment SalesOrderShipment? @relation("SalesOrderAllocation_shipment", fields: [shipment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  item StockItem @relation("SalesOrderAllocation_item", fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([item_id])
+  @@index([line_id])
+  @@index([shipment_id])
+  @@map("order_salesorderallocation")
+}
+
+/// A ReturnOrder represents goods returned from a customer, e.g. an RMA or warranty.
+/// Source: src/backend/InvenTree/order/models.py:3229
+model ReturnOrder {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  /// Source application default: 0
+  reference_int BigInt @db.BigInt
+  metadata Json? @db.JsonB
+  barcode_data String @db.VarChar(500)
+  barcode_hash String @db.VarChar(128)
+  description String @db.VarChar(250)
+  project_code_id Int?
+  link String @db.VarChar(2000)
+  start_date DateTime? @db.Date
+  target_date DateTime? @db.Date
+  creation_date DateTime? @db.Date
+  created_by_id Int?
+  issue_date DateTime? @db.Date
+  updated_at DateTime? @db.Timestamptz(6)
+  responsible_id Int?
+  contact_id Int?
+  address_id Int?
+  total_price Decimal? @db.Decimal(19, 6)
+  order_currency String? @db.VarChar(3)
+  /// Source application default: order.validators.generate_next_return_order_reference
+  reference String @unique @db.VarChar(64)
+  customer_id Int?
+  /// Source application default: ReturnOrderStatus.PENDING.value
+  status Int
+  customer_reference String @db.VarChar(64)
+  complete_date DateTime? @db.Date
+  /// django-money companion currency column; default resolved by application settings
+  total_price_currency String? @db.VarChar(3)
+  /// generic/states/fields.py contribute_to_class companion column
+  status_custom_key Int?
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("ReturnOrder_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  created_by User? @relation("ReturnOrder_created_by", fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  responsible Owner? @relation("ReturnOrder_responsible", fields: [responsible_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  contact Contact? @relation("ReturnOrder_contact", fields: [contact_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  address Address? @relation("ReturnOrder_address", fields: [address_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  customer Company? @relation("ReturnOrder_customer", fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromReturnOrderLineItemOrder ReturnOrderLineItem[] @relation("ReturnOrderLineItem_order")
+  fromReturnOrderExtraLineOrder ReturnOrderExtraLine[] @relation("ReturnOrderExtraLine_order")
+  @@index([address_id])
+  @@index([contact_id])
+  @@index([created_by_id])
+  @@index([customer_id])
+  @@index([project_code_id])
+  @@index([responsible_id])
+  @@map("order_returnorder")
+}
+
+/// Model for a single LineItem in a ReturnOrder.
+/// Source: src/backend/InvenTree/order/models.py:3554
+model ReturnOrderLineItem {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Source application default: 0
+  discount Decimal @db.Decimal(5, 2)
+  /// Source application default:
+  line String @db.VarChar(20)
+  /// Source application default: 0
+  line_int Int
+  reference String @db.VarChar(100)
+  notes String @db.VarChar(500)
+  link String @db.VarChar(2000)
+  target_date DateTime? @db.Date
+  project_code_id Int?
+  order_id Int
+  item_id Int
+  received_date DateTime? @db.Date
+  /// Source application default: ReturnOrderLineStatus.PENDING.value
+  outcome Int
+  price Decimal? @db.Decimal(19, 6)
+  /// generic/states/fields.py contribute_to_class companion column
+  outcome_custom_key Int?
+  /// django-money companion currency column; default resolved by application settings
+  price_currency String? @db.VarChar(3)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("ReturnOrderLineItem_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  order ReturnOrder @relation("ReturnOrderLineItem_order", fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  item StockItem @relation("ReturnOrderLineItem_item", fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([order_id, item_id])
+  @@index([item_id])
+  @@index([order_id])
+  @@index([project_code_id])
+  @@map("order_returnorderlineitem")
+}
+
+/// Model for a single ExtraLine in a ReturnOrder.
+/// Source: src/backend/InvenTree/order/models.py:3646
+model ReturnOrderExtraLine {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Source application default: 0
+  discount Decimal @db.Decimal(5, 2)
+  /// Source application default:
+  line String @db.VarChar(20)
+  /// Source application default: 0
+  line_int Int
+  reference String @db.VarChar(100)
+  notes String @db.VarChar(500)
+  link String @db.VarChar(2000)
+  target_date DateTime? @db.Date
+  project_code_id Int?
+  description String @db.VarChar(250)
+  context Json? @db.JsonB
+  price Decimal? @db.Decimal(19, 6)
+  order_id Int
+  /// django-money companion currency column; default resolved by application settings
+  price_currency String? @db.VarChar(3)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("ReturnOrderExtraLine_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  order ReturnOrder @relation("ReturnOrderExtraLine_order", fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([order_id])
+  @@index([project_code_id])
+  @@map("order_returnorderextraline")
+}
+
+/// A Transfer Order represents a request to transfer stock from one location to another. It provides a place to queue and review changes before execution.
+/// Source: src/backend/InvenTree/order/models.py:3668
+model TransferOrder {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  /// Source application default: 0
+  reference_int BigInt @db.BigInt
+  metadata Json? @db.JsonB
+  barcode_data String @db.VarChar(500)
+  barcode_hash String @db.VarChar(128)
+  description String @db.VarChar(250)
+  project_code_id Int?
+  link String @db.VarChar(2000)
+  start_date DateTime? @db.Date
+  target_date DateTime? @db.Date
+  creation_date DateTime? @db.Date
+  created_by_id Int?
+  issue_date DateTime? @db.Date
+  updated_at DateTime? @db.Timestamptz(6)
+  responsible_id Int?
+  contact_id Int?
+  address_id Int?
+  /// Source application default: order.validators.generate_next_transfer_order_reference
+  reference String @unique @db.VarChar(64)
+  /// Source application default: TransferOrderStatus.PENDING.value
+  status Int
+  take_from_id Int?
+  destination_id Int?
+  /// Source application default: False
+  consume Boolean
+  complete_date DateTime? @db.Date
+  /// generic/states/fields.py contribute_to_class companion column
+  status_custom_key Int?
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("TransferOrder_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  created_by User? @relation("TransferOrder_created_by", fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  responsible Owner? @relation("TransferOrder_responsible", fields: [responsible_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  contact Contact? @relation("TransferOrder_contact", fields: [contact_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  address Address? @relation("TransferOrder_address", fields: [address_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  take_from StockLocation? @relation("TransferOrder_take_from", fields: [take_from_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  destination StockLocation? @relation("TransferOrder_destination", fields: [destination_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromTransferOrderLineItemOrder TransferOrderLineItem[] @relation("TransferOrderLineItem_order")
+  @@index([address_id])
+  @@index([contact_id])
+  @@index([created_by_id])
+  @@index([destination_id])
+  @@index([project_code_id])
+  @@index([responsible_id])
+  @@index([take_from_id])
+  @@map("order_transferorder")
+}
+
+/// Model for a single LineItem in a TransferOrder.
+/// Source: src/backend/InvenTree/order/models.py:4000
+model TransferOrderLineItem {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Source application default: 0
+  discount Decimal @db.Decimal(5, 2)
+  /// Source application default:
+  line String @db.VarChar(20)
+  /// Source application default: 0
+  line_int Int
+  reference String @db.VarChar(100)
+  notes String @db.VarChar(500)
+  link String @db.VarChar(2000)
+  target_date DateTime? @db.Date
+  project_code_id Int?
+  order_id Int
+  part_id Int?
+  /// Source application default: 0
+  transferred Decimal @db.Decimal(15, 5)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("TransferOrderLineItem_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  order TransferOrder @relation("TransferOrderLineItem_order", fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  part Part? @relation("TransferOrderLineItem_part", fields: [part_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromTransferOrderAllocationLine TransferOrderAllocation[] @relation("TransferOrderAllocation_line")
+  @@index([order_id])
+  @@index([part_id])
+  @@index([project_code_id])
+  @@map("order_transferorderlineitem")
+}
+
+/// This model is used to 'allocate' stock items to a TransferOrder. Items that are "allocated" to a TransferOrder are not yet "attached" to the order, but they will be once the order is fulfilled.
+/// Source: src/backend/InvenTree/order/models.py:4088
+model TransferOrderAllocation {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  line_id Int
+  item_id Int
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  line TransferOrderLineItem @relation("TransferOrderAllocation_line", fields: [line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  item StockItem @relation("TransferOrderAllocation_item", fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([item_id])
+  @@index([line_id])
+  @@map("order_transferorderallocation")
+}

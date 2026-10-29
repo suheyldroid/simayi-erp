@@ -1,0 +1,31 @@
+// Makine ve sürücüler
+
+/// A Machine objects represents a physical machine.
+/// Source: src/backend/InvenTree/machine/models.py:18
+model MachineConfig {
+  /// Source application default: uuid.uuid4
+  id String @id @db.Uuid
+  name String @unique @db.VarChar(255)
+  machine_type String @db.VarChar(255)
+  driver String @db.VarChar(255)
+  /// Source application default: True
+  active Boolean
+  fromMachineSettingMachine_config MachineSetting[] @relation("MachineSetting_machine_config")
+  @@map("machine_machineconfig")
+}
+
+/// This models represents settings for individual machines.
+/// Source: src/backend/InvenTree/machine/models.py:135
+model MachineSetting {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  key String @db.VarChar(50)
+  value String @db.VarChar(2000)
+  machine_config_id String @db.Uuid
+  config_type String @db.VarChar(1)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  machine_config MachineConfig @relation("MachineSetting_machine_config", fields: [machine_config_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([machine_config_id, config_type, key])
+  @@index([machine_config_id])
+  @@map("machine_machinesetting")
+}

@@ -1,0 +1,195 @@
+// Kimlik, oturum ve erişim
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Group {
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(150)
+  fromRuleSetGroup RuleSet[] @relation("RuleSet_group")
+  fromOwnerGroup Owner? @relation("Owner_group")
+  fromUserProfilePrimaryGroup UserProfile[] @relation("UserProfile_primaryGroup")
+  fromUserGroupGroup UserGroup[] @relation("UserGroup_group")
+  fromGroupPermissionGroup GroupPermission[] @relation("GroupPermission_group")
+  @@map("group")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Permission {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(255)
+  contentTypeId Int @map("content_type_id")
+  codename String @db.VarChar(100)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  contentType ModelType @relation("Permission_contentType", fields: [contentTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fromUserPermissionPermission UserPermission[] @relation("UserPermission_permission")
+  fromGroupPermissionPermission GroupPermission[] @relation("GroupPermission_permission")
+  @@unique([contentTypeId, codename])
+  @@map("permission")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model UserGroup {
+  id Int @id @default(autoincrement())
+  userId String @db.Uuid @map("user_id")
+  groupId Int @map("group_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("UserGroup_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  group Group @relation("UserGroup_group", fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([userId, groupId])
+  @@index([groupId])
+  @@map("user_group")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model UserPermission {
+  id Int @id @default(autoincrement())
+  userId String @db.Uuid @map("user_id")
+  permissionId Int @map("permission_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("UserPermission_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  permission Permission @relation("UserPermission_permission", fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([userId, permissionId])
+  @@index([permissionId])
+  @@map("user_permission")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model GroupPermission {
+  id Int @id @default(autoincrement())
+  groupId Int @map("group_id")
+  permissionId Int @map("permission_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  group Group @relation("GroupPermission_group", fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  permission Permission @relation("GroupPermission_permission", fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([groupId, permissionId])
+  @@index([permissionId])
+  @@map("group_permission")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model User {
+  /// Source application default: uuid.uuid4
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String @db.Text
+  email String @unique @db.Text
+  /// Source application default: False
+  emailVerified Boolean @default(false) @map("email_verified")
+  image String? @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  legacyUserId Int? @unique @map("legacy_user_id")
+  legacyUsername String? @unique @db.VarChar(150) @map("legacy_username")
+  /// Source application default:
+  firstName String @default("") @db.VarChar(150) @map("first_name")
+  /// Source application default:
+  lastName String @default("") @db.VarChar(150) @map("last_name")
+  /// Source application default: True
+  isActive Boolean @default(true) @map("is_active")
+  /// Source application default: False
+  isStaff Boolean @default(false) @map("is_staff")
+  /// Source application default: False
+  isSuperuser Boolean @default(false) @map("is_superuser")
+  fromBuildCompletedBy Build[] @relation("Build_completedBy")
+  fromBuildIssuedBy Build[] @relation("Build_issuedBy")
+  fromUserSettingUser UserSetting[] @relation("UserSetting_user")
+  fromWebhookEndpointUser WebhookEndpoint[] @relation("WebhookEndpoint_user")
+  fromNotificationMessageUser NotificationMessage[] @relation("NotificationMessage_user")
+  fromAttachmentUploadUser Attachment[] @relation("Attachment_uploadUser")
+  fromParameterUpdatedBy Parameter[] @relation("Parameter_updatedBy")
+  fromNoteUpdatedBy Note[] @relation("Note_updatedBy")
+  fromNotesImageUser NotesImage[] @relation("NotesImage_user")
+  fromBarcodeScanResultUser BarcodeScanResult[] @relation("BarcodeScanResult_user")
+  fromDataOutputUser DataOutput[] @relation("DataOutput_user")
+  fromDataImportSessionUser DataImportSession[] @relation("DataImportSession_user")
+  fromPurchaseOrderCreatedBy PurchaseOrder[] @relation("PurchaseOrder_createdBy")
+  fromPurchaseOrderReceivedBy PurchaseOrder[] @relation("PurchaseOrder_receivedBy")
+  fromSalesOrderCreatedBy SalesOrder[] @relation("SalesOrder_createdBy")
+  fromSalesOrderShippedBy SalesOrder[] @relation("SalesOrder_shippedBy")
+  fromSalesOrderShipmentCheckedBy SalesOrderShipment[] @relation("SalesOrderShipment_checkedBy")
+  fromReturnOrderCreatedBy ReturnOrder[] @relation("ReturnOrder_createdBy")
+  fromTransferOrderCreatedBy TransferOrder[] @relation("TransferOrder_createdBy")
+  fromPartBomCheckedBy Part[] @relation("Part_bomCheckedBy")
+  fromPartCreationUser Part[] @relation("Part_creationUser")
+  fromPartStarUser PartStar[] @relation("PartStar_user")
+  fromPartCategoryStarUser PartCategoryStar[] @relation("PartCategoryStar_user")
+  fromPluginUserSettingUser PluginUserSetting[] @relation("PluginUserSetting_user")
+  fromReportTemplateUpdatedBy ReportTemplate[] @relation("ReportTemplate_updatedBy")
+  fromLabelTemplateUpdatedBy LabelTemplate[] @relation("LabelTemplate_updatedBy")
+  fromStockItemStocktakeUser StockItem[] @relation("StockItem_stocktakeUser")
+  fromStockItemTrackingUser StockItemTracking[] @relation("StockItemTracking_user")
+  fromStockItemTestResultUser StockItemTestResult[] @relation("StockItemTestResult_user")
+  fromApiKeyUser ApiKey[] @relation("ApiKey_user")
+  fromOwnerUser Owner? @relation("Owner_user")
+  fromUserProfileUser UserProfile? @relation("UserProfile_user")
+  fromUserGroupUser UserGroup[] @relation("UserGroup_user")
+  fromUserPermissionUser UserPermission[] @relation("UserPermission_user")
+  sessions Session[] @relation("Session_user")
+  accounts Account[] @relation("Account_user")
+  @@map("auth_user")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Session {
+  /// Source application default: uuid.uuid4
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  token String @unique @db.Text
+  expiresAt DateTime @db.Timestamptz(6) @map("expires_at")
+  ipAddress String? @db.Text @map("ip_address")
+  userAgent String? @db.Text @map("user_agent")
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("Session_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("auth_session")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Account {
+  /// Source application default: uuid.uuid4
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @db.Uuid @map("user_id")
+  accountId String @db.Text @map("account_id")
+  providerId String @db.Text @map("provider_id")
+  accessToken String? @db.Text @map("access_token")
+  refreshToken String? @db.Text @map("refresh_token")
+  idToken String? @db.Text @map("id_token")
+  accessTokenExpiresAt DateTime? @db.Timestamptz(6) @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @db.Timestamptz(6) @map("refresh_token_expires_at")
+  scope String? @db.Text
+  password String? @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("Account_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("auth_account")
+}
+
+/// Explicit dependency support model; see scope notes.
+/// Source: tools/build.py:1
+model Verification {
+  /// Source application default: uuid.uuid4
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier String @db.Text
+  value String @db.Text
+  expiresAt DateTime @db.Timestamptz(6) @map("expires_at")
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6) @map("updated_at")
+  @@index([identifier])
+  @@index([expiresAt])
+  @@map("auth_verification")
+}

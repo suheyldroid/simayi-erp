@@ -1,0 +1,419 @@
+// Parça kataloğu, BOM ve fiyatlar
+
+/// PartCategory provides hierarchical organization of Part objects.
+/// Source: src/backend/InvenTree/part/models.py:71
+model PartCategory {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  description String @default("") @db.VarChar(250)
+  parentId Int? @map("parent_id")
+  pathstring String @default("") @db.VarChar(250)
+  metadata Json? @db.JsonB
+  defaultLocationId Int? @map("default_location_id")
+  /// Source application default: False
+  structural Boolean @default(false)
+  defaultKeywords String? @db.VarChar(250) @map("default_keywords")
+  icon String? @db.VarChar(100)
+  /// Django on_delete: DO_NOTHING; see deletion policy in README.
+  parent PartCategory? @relation("PartCategory_parent", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  defaultLocation StockLocation? @relation("PartCategory_defaultLocation", fields: [defaultLocationId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  fromPartCategoryParent PartCategory[] @relation("PartCategory_parent")
+  fromPartCategoryParameterTemplateCategory PartCategoryParameterTemplate[] @relation("PartCategoryParameterTemplate_category")
+  fromPartCategory Part[] @relation("Part_category")
+  fromPartCategoryStarCategory PartCategoryStar[] @relation("PartCategoryStar_category")
+  @@index([defaultLocationId])
+  @@index([parentId])
+  @@map("part_category")
+}
+
+/// A PartCategoryParameterTemplate creates a unique relationship between a PartCategory and a ParameterTemplate.
+/// Source: src/backend/InvenTree/part/models.py:352
+model PartCategoryParameterTemplate {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  categoryId Int @map("category_id")
+  templateId Int @map("template_id")
+  defaultValue String @default("") @db.VarChar(500) @map("default_value")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  category PartCategory @relation("PartCategoryParameterTemplate_category", fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  template ParameterTemplate @relation("PartCategoryParameterTemplate_template", fields: [templateId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([categoryId, templateId])
+  @@index([templateId])
+  @@map("part_category_parameter_template")
+}
+
+/// The Part object represents an abstract part, the 'concept' of an actual entity.
+/// Source: src/backend/InvenTree/part/models.py:465
+model Part {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  image String? @db.VarChar(100)
+  barcodeData String @default("") @db.VarChar(500) @map("barcode_data")
+  barcodeHash String @default("") @db.VarChar(128) @map("barcode_hash")
+  name String @db.VarChar(100)
+  /// Source application default: part_settings.part_template_default
+  isTemplate Boolean @map("is_template")
+  variantOfId Int? @map("variant_of_id")
+  description String @default("") @db.VarChar(250)
+  keywords String? @db.VarChar(250)
+  categoryId Int? @map("category_id")
+  ipn String? @db.VarChar(100)
+  revision String? @db.VarChar(100)
+  revisionOfId Int? @map("revision_of_id")
+  link String? @db.VarChar(2000)
+  defaultLocationId Int? @map("default_location_id")
+  /// Source application default: 0
+  defaultExpiry Int @default(0) @map("default_expiry")
+  /// Source application default: 0
+  minimumStock Decimal @default(0) @db.Decimal(19, 6) @map("minimum_stock")
+  /// Source application default: 0
+  maximumStock Decimal @default(0) @db.Decimal(19, 6) @map("maximum_stock")
+  /// Source application default:
+  units String? @default("") @db.VarChar(20)
+  /// Source application default: part_settings.part_assembly_default
+  assembly Boolean
+  /// Source application default: part_settings.part_component_default
+  component Boolean
+  /// Source application default: part_settings.part_trackable_default
+  trackable Boolean
+  /// Source application default: False
+  testable Boolean @default(false)
+  /// Source application default: part_settings.part_purchaseable_default
+  purchaseable Boolean
+  /// Source application default: part_settings.part_salable_default
+  salable Boolean
+  /// Source application default: True
+  active Boolean @default(true)
+  /// Source application default: False
+  locked Boolean @default(false)
+  /// Source application default: part_settings.part_virtual_default
+  virtual Boolean
+  /// Source application default: False
+  consumable Boolean @default(false)
+  /// Source application default: False
+  bomValidated Boolean @default(false) @map("bom_validated")
+  bomChecksum String @default("") @db.VarChar(128) @map("bom_checksum")
+  bomCheckedById String? @db.Uuid @map("bom_checked_by_id")
+  bomCheckedDate DateTime? @db.Date @map("bom_checked_date")
+  creationDate DateTime? @default(now()) @db.Date @map("creation_date")
+  creationUserId String? @db.Uuid @map("creation_user_id")
+  responsibleOwnerId Int? @map("responsible_owner_id")
+  /// Source application default: 0
+  baseCost Decimal @default(0) @db.Decimal(19, 6) @map("base_cost")
+  /// Source application default: 1
+  multiple Int @default(1)
+  /// Source application default: 0
+  version Int @default(0)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  variantOf Part? @relation("Part_variantOf", fields: [variantOfId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: DO_NOTHING; see deletion policy in README.
+  category PartCategory? @relation("Part_category", fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  revisionOf Part? @relation("Part_revisionOf", fields: [revisionOfId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  defaultLocation StockLocation? @relation("Part_defaultLocation", fields: [defaultLocationId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  bomCheckedBy User? @relation("Part_bomCheckedBy", fields: [bomCheckedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  creationUser User? @relation("Part_creationUser", fields: [creationUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  responsibleOwner Owner? @relation("Part_responsibleOwner", fields: [responsibleOwnerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  fromBuildPart Build[] @relation("Build_part")
+  fromManufacturerPartPart ManufacturerPart[] @relation("ManufacturerPart_part")
+  fromSupplierPartPart SupplierPart[] @relation("SupplierPart_part")
+  fromSalesOrderLineItemPart SalesOrderLineItem[] @relation("SalesOrderLineItem_part")
+  fromTransferOrderLineItemPart TransferOrderLineItem[] @relation("TransferOrderLineItem_part")
+  fromPartVariantOf Part[] @relation("Part_variantOf")
+  fromPartRevisionOf Part[] @relation("Part_revisionOf")
+  fromPartPricingPart PartPricing? @relation("PartPricing_part")
+  fromPartStocktakePart PartStocktake[] @relation("PartStocktake_part")
+  fromPartSellPriceBreakPart PartSellPriceBreak[] @relation("PartSellPriceBreak_part")
+  fromPartInternalPriceBreakPart PartInternalPriceBreak[] @relation("PartInternalPriceBreak_part")
+  fromPartStarPart PartStar[] @relation("PartStar_part")
+  fromPartTestTemplatePart PartTestTemplate[] @relation("PartTestTemplate_part")
+  fromBomItemPart BomItem[] @relation("BomItem_part")
+  fromBomItemSubPart BomItem[] @relation("BomItem_subPart")
+  fromBomItemSubstitutePart BomItemSubstitute[] @relation("BomItemSubstitute_part")
+  fromPartRelatedPart1 PartRelated[] @relation("PartRelated_part1")
+  fromPartRelatedPart2 PartRelated[] @relation("PartRelated_part2")
+  fromStockItemPart StockItem[] @relation("StockItem_part")
+  fromStockItemTrackingPart StockItemTracking[] @relation("StockItemTracking_part")
+  @@unique([name, ipn, revision])
+  @@index([categoryId, active, id])
+  @@index([variantOfId, id])
+  @@index([revisionOfId, id])
+  @@index([bomCheckedById])
+  @@index([responsibleOwnerId])
+  @@index([defaultLocationId])
+  @@index([ipn])
+  @@index([creationUserId])
+  @@map("part")
+}
+
+/// Model for caching min/max pricing information for a particular Part.
+/// Source: src/backend/InvenTree/part/models.py:2606
+model PartPricing {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  updated DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
+  /// Source application default: currency_code_default
+  currency String @db.VarChar(10)
+  /// Source application default: False
+  scheduledForUpdate Boolean @default(false) @map("scheduled_for_update")
+  partId Int @unique @map("part_id")
+  bomCostMin Decimal? @db.Decimal(19, 6) @map("bom_cost_min")
+  bomCostMax Decimal? @db.Decimal(19, 6) @map("bom_cost_max")
+  purchaseCostMin Decimal? @db.Decimal(19, 6) @map("purchase_cost_min")
+  purchaseCostMax Decimal? @db.Decimal(19, 6) @map("purchase_cost_max")
+  internalCostMin Decimal? @db.Decimal(19, 6) @map("internal_cost_min")
+  internalCostMax Decimal? @db.Decimal(19, 6) @map("internal_cost_max")
+  supplierPriceMin Decimal? @db.Decimal(19, 6) @map("supplier_price_min")
+  supplierPriceMax Decimal? @db.Decimal(19, 6) @map("supplier_price_max")
+  variantCostMin Decimal? @db.Decimal(19, 6) @map("variant_cost_min")
+  variantCostMax Decimal? @db.Decimal(19, 6) @map("variant_cost_max")
+  overrideMin Decimal? @db.Decimal(19, 6) @map("override_min")
+  overrideMax Decimal? @db.Decimal(19, 6) @map("override_max")
+  overallMin Decimal? @db.Decimal(19, 6) @map("overall_min")
+  overallMax Decimal? @db.Decimal(19, 6) @map("overall_max")
+  salePriceMin Decimal? @db.Decimal(19, 6) @map("sale_price_min")
+  salePriceMax Decimal? @db.Decimal(19, 6) @map("sale_price_max")
+  saleHistoryMin Decimal? @db.Decimal(19, 6) @map("sale_history_min")
+  saleHistoryMax Decimal? @db.Decimal(19, 6) @map("sale_history_max")
+  /// django-money companion currency column; default resolved by application settings
+  bomCostMinCurrency String? @db.VarChar(3) @map("bom_cost_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  bomCostMaxCurrency String? @db.VarChar(3) @map("bom_cost_max_currency")
+  /// django-money companion currency column; default resolved by application settings
+  purchaseCostMinCurrency String? @db.VarChar(3) @map("purchase_cost_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  purchaseCostMaxCurrency String? @db.VarChar(3) @map("purchase_cost_max_currency")
+  /// django-money companion currency column; default resolved by application settings
+  internalCostMinCurrency String? @db.VarChar(3) @map("internal_cost_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  internalCostMaxCurrency String? @db.VarChar(3) @map("internal_cost_max_currency")
+  /// django-money companion currency column; default resolved by application settings
+  supplierPriceMinCurrency String? @db.VarChar(3) @map("supplier_price_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  supplierPriceMaxCurrency String? @db.VarChar(3) @map("supplier_price_max_currency")
+  /// django-money companion currency column; default resolved by application settings
+  variantCostMinCurrency String? @db.VarChar(3) @map("variant_cost_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  variantCostMaxCurrency String? @db.VarChar(3) @map("variant_cost_max_currency")
+  /// django-money companion currency column; default resolved by application settings
+  overrideMinCurrency String? @db.VarChar(3) @map("override_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  overrideMaxCurrency String? @db.VarChar(3) @map("override_max_currency")
+  /// django-money companion currency column; default resolved by application settings
+  overallMinCurrency String? @db.VarChar(3) @map("overall_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  overallMaxCurrency String? @db.VarChar(3) @map("overall_max_currency")
+  /// django-money companion currency column; default resolved by application settings
+  salePriceMinCurrency String? @db.VarChar(3) @map("sale_price_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  salePriceMaxCurrency String? @db.VarChar(3) @map("sale_price_max_currency")
+  /// django-money companion currency column; default resolved by application settings
+  saleHistoryMinCurrency String? @db.VarChar(3) @map("sale_history_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  saleHistoryMaxCurrency String? @db.VarChar(3) @map("sale_history_max_currency")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("PartPricing_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("part_pricing")
+}
+
+/// Model representing a 'stock history' entry for a particular Part.
+/// Source: src/backend/InvenTree/part/models.py:3404
+model PartStocktake {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  partId Int @map("part_id")
+  /// Source application default: 1
+  itemCount Int @default(1) @map("item_count")
+  quantity Decimal @db.Decimal(19, 5)
+  date DateTime @default(now()) @db.Date
+  costMin Decimal? @db.Decimal(19, 6) @map("cost_min")
+  costMax Decimal? @db.Decimal(19, 6) @map("cost_max")
+  /// django-money companion currency column; default resolved by application settings
+  costMinCurrency String? @db.VarChar(3) @map("cost_min_currency")
+  /// django-money companion currency column; default resolved by application settings
+  costMaxCurrency String? @db.VarChar(3) @map("cost_max_currency")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("PartStocktake_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([partId])
+  @@map("part_stocktake")
+}
+
+/// Represents a price break for selling this part.
+/// Source: src/backend/InvenTree/part/models.py:3456
+model PartSellPriceBreak {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  updated DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
+  /// Source application default: 1
+  quantity Decimal @default(1) @db.Decimal(15, 5)
+  price Decimal? @db.Decimal(19, 6)
+  partId Int @map("part_id")
+  /// django-money companion currency column; default resolved by application settings
+  priceCurrency String? @db.VarChar(3) @map("price_currency")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("PartSellPriceBreak_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([partId, quantity])
+  @@map("part_sell_price_break")
+}
+
+/// Represents a price break for internally selling this part.
+/// Source: src/backend/InvenTree/part/models.py:3479
+model PartInternalPriceBreak {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  updated DateTime? @default(now()) @updatedAt @db.Timestamptz(6)
+  /// Source application default: 1
+  quantity Decimal @default(1) @db.Decimal(15, 5)
+  price Decimal? @db.Decimal(19, 6)
+  partId Int @map("part_id")
+  /// django-money companion currency column; default resolved by application settings
+  priceCurrency String? @db.VarChar(3) @map("price_currency")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("PartInternalPriceBreak_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([partId, quantity])
+  @@map("part_internal_price_break")
+}
+
+/// A PartStar object creates a subscription relationship between a User and a Part.
+/// Source: src/backend/InvenTree/part/models.py:3501
+model PartStar {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  partId Int @map("part_id")
+  userId String @db.Uuid @map("user_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("PartStar_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("PartStar_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([partId, userId])
+  @@index([userId])
+  @@map("part_star")
+}
+
+/// A PartCategoryStar creates a subscription relationship between a User and a PartCategory.
+/// Source: src/backend/InvenTree/part/models.py:3531
+model PartCategoryStar {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  categoryId Int @map("category_id")
+  userId String @db.Uuid @map("user_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  category PartCategory @relation("PartCategoryStar_category", fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("PartCategoryStar_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([categoryId, userId])
+  @@index([userId])
+  @@map("part_category_star")
+}
+
+/// A PartTestTemplate defines a 'template' for a test which is required to be run against a StockItem (an instance of the Part).
+/// Source: src/backend/InvenTree/part/models.py:3559
+model PartTestTemplate {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  partId Int @map("part_id")
+  testName String @db.VarChar(100) @map("test_name")
+  key String @default("") @db.VarChar(100)
+  description String? @db.VarChar(100)
+  /// Source application default: True
+  enabled Boolean @default(true)
+  /// Source application default: True
+  required Boolean @default(true)
+  /// Source application default: False
+  requiresValue Boolean @default(false) @map("requires_value")
+  /// Source application default: False
+  requiresAttachment Boolean @default(false) @map("requires_attachment")
+  choices String @default("") @db.VarChar(5000)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("PartTestTemplate_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fromStockItemTestResultTemplate StockItemTestResult[] @relation("StockItemTestResult_template")
+  @@index([partId])
+  @@map("part_test_template")
+}
+
+/// A BomItem links a part to its component items.
+/// Source: src/backend/InvenTree/part/models.py:3724
+model BomItem {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  partId Int @map("part_id")
+  subPartId Int @map("sub_part_id")
+  rawAmount String @db.VarChar(25) @map("raw_amount")
+  /// Source application default: 1.0
+  quantity Decimal @default(1.0) @db.Decimal(15, 5)
+  /// Source application default: False
+  optional Boolean @default(false)
+  /// Source application default: False
+  consumable Boolean @default(false)
+  /// Source application default: 0
+  setupQuantity Decimal @default(0) @db.Decimal(15, 5) @map("setup_quantity")
+  /// Source application default: 0
+  attrition Decimal @default(0) @db.Decimal(6, 3)
+  roundingMultiple Decimal? @db.Decimal(15, 5) @map("rounding_multiple")
+  /// Source application default: 1
+  pieceCount Int @default(1) @map("piece_count")
+  reference String @default("") @db.VarChar(5000)
+  note String @default("") @db.VarChar(500)
+  checksum String @default("") @db.VarChar(128)
+  /// Source application default: False
+  validated Boolean @default(false)
+  /// Source application default: False
+  inherited Boolean @default(false)
+  /// Source application default: False
+  allowVariants Boolean @default(false) @map("allow_variants")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("BomItem_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  subPart Part @relation("BomItem_subPart", fields: [subPartId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fromBuildLineBomItem BuildLine[] @relation("BuildLine_bomItem")
+  fromBomItemSubstituteBomItem BomItemSubstitute[] @relation("BomItemSubstitute_bomItem")
+  @@index([subPartId])
+  @@index([partId])
+  @@map("bom_item")
+}
+
+/// A BomItemSubstitute provides a specification for alternative parts, which can be used in a bill of materials.
+/// Source: src/backend/InvenTree/part/models.py:4408
+model BomItemSubstitute {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  bomItemId Int @map("bom_item_id")
+  partId Int @map("part_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  bomItem BomItem @relation("BomItemSubstitute_bomItem", fields: [bomItemId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("BomItemSubstitute_part", fields: [partId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([partId, bomItemId])
+  @@index([bomItemId])
+  @@map("bom_item_substitute")
+}
+
+/// Store and handle related parts (eg. mating connector, crimps, etc.).
+/// Source: src/backend/InvenTree/part/models.py:4466
+model PartRelated {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  part1Id Int @map("part1_id")
+  part2Id Int @map("part2_id")
+  note String @default("") @db.VarChar(500)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part1 Part @relation("PartRelated_part1", fields: [part1Id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part2 Part @relation("PartRelated_part2", fields: [part2Id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([part1Id, part2Id])
+  @@index([part2Id])
+  @@map("part_related")
+}

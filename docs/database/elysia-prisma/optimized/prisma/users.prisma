@@ -1,0 +1,98 @@
+// Kullanıcı profili, grup ve yetki
+
+/// Extends the default token model provided by djangorestframework.authtoken.
+/// Source: src/backend/InvenTree/users/models.py:59
+model ApiKey {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  userId String @db.Uuid @map("user_id")
+  name String @default("") @db.VarChar(100)
+  /// Source application default: default_token_expiry
+  expiry DateTime @db.Date
+  lastSeen DateTime? @db.Date @map("last_seen")
+  /// Source application default: False
+  revoked Boolean @default(false)
+  /// rest_framework.authtoken.Token.created (abstract parent)
+  created DateTime @default(now()) @db.Timestamptz(6)
+  tokenHash String @unique @db.VarChar(64) @map("token_hash")
+  tokenPrefix String @db.VarChar(16) @map("token_prefix")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("ApiKey_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([userId, revoked])
+  @@map("api_key")
+}
+
+/// A RuleSet is somewhat like a superset of the django permission class, in that in encapsulates a bunch of permissions.
+/// Source: src/backend/InvenTree/users/models.py:175
+model RuleSet {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(50)
+  groupId Int @map("group_id")
+  /// Source application default: False
+  canView Boolean @default(false) @map("can_view")
+  /// Source application default: False
+  canAdd Boolean @default(false) @map("can_add")
+  /// Source application default: False
+  canChange Boolean @default(false) @map("can_change")
+  /// Source application default: False
+  canDelete Boolean @default(false) @map("can_delete")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  group Group @relation("RuleSet_group", fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([name, groupId])
+  @@index([groupId])
+  @@map("rule_set")
+}
+
+/// The Owner class is a proxy for a Group or User instance.
+/// Source: src/backend/InvenTree/users/models.py:270
+model Owner {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  userId String? @unique @db.Uuid @map("user_id")
+  groupId Int? @unique @map("group_id")
+  /// Django on_delete: NEW; see deletion policy in README.
+  user User? @relation("Owner_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: NEW; see deletion policy in README.
+  group Group? @relation("Owner_group", fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  fromBuildResponsible Build[] @relation("Build_responsible")
+  fromProjectCodeResponsible ProjectCode[] @relation("ProjectCode_responsible")
+  fromPurchaseOrderResponsible PurchaseOrder[] @relation("PurchaseOrder_responsible")
+  fromSalesOrderResponsible SalesOrder[] @relation("SalesOrder_responsible")
+  fromReturnOrderResponsible ReturnOrder[] @relation("ReturnOrder_responsible")
+  fromTransferOrderResponsible TransferOrder[] @relation("TransferOrder_responsible")
+  fromPartResponsibleOwner Part[] @relation("Part_responsibleOwner")
+  fromStockLocationOwner StockLocation[] @relation("StockLocation_owner")
+  fromStockItemOwner StockItem[] @relation("StockItem_owner")
+  @@map("owner")
+}
+
+/// Model to store additional user profile information.
+/// Source: src/backend/InvenTree/users/models.py:463
+model UserProfile {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  userId String @unique @db.Uuid @map("user_id")
+  language String? @db.VarChar(10)
+  theme Json? @db.JsonB
+  widgets Json? @db.JsonB
+  displayname String? @db.VarChar(255)
+  position String? @db.VarChar(255)
+  status String? @db.VarChar(2000)
+  location String? @db.VarChar(2000)
+  /// Source application default: True
+  active Boolean @default(true)
+  contact String? @db.VarChar(255)
+  /// Source application default: UserType.INTERNAL
+  type String @default("internal") @db.VarChar(10)
+  organisation String? @db.VarChar(255)
+  primaryGroupId Int? @map("primary_group_id")
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  user User @relation("UserProfile_user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  primaryGroup Group? @relation("UserProfile_primaryGroup", fields: [primaryGroupId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  @@index([primaryGroupId])
+  @@map("user_profile")
+}

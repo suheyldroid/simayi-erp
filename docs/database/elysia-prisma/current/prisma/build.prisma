@@ -1,0 +1,132 @@
+// Üretim ve malzeme tahsisi
+
+/// A Build object organizes the creation of new StockItem objects from other existing StockItem objects.
+/// Source: src/backend/InvenTree/build/models.py:85
+model Build {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  /// Source application default: 0
+  reference_int BigInt @db.BigInt
+  barcode_data String @db.VarChar(500)
+  barcode_hash String @db.VarChar(128)
+  /// Source application default: generate_next_build_reference
+  reference String @unique @db.VarChar(64)
+  title String @db.VarChar(100)
+  parent_id Int?
+  part_id Int
+  sales_order_id Int?
+  take_from_id Int?
+  /// Source application default: False
+  external Boolean
+  destination_id Int?
+  /// Source application default: 1
+  quantity Int
+  /// Source application default: 0
+  completed Int
+  /// Source application default: BuildStatus.PENDING.value
+  status Int
+  batch String? @db.VarChar(100)
+  creation_date DateTime @db.Date
+  start_date DateTime? @db.Date
+  target_date DateTime? @db.Date
+  completion_date DateTime? @db.Date
+  completed_by_id Int?
+  issued_by_id Int?
+  responsible_id Int?
+  link String @db.VarChar(2000)
+  /// Source application default: 0
+  priority Int
+  project_code_id Int?
+  /// django-mptt generated nested-set column
+  lft Int
+  /// django-mptt generated nested-set column
+  rght Int
+  /// django-mptt generated nested-set column
+  tree_id Int
+  /// django-mptt generated nested-set column
+  level Int
+  /// generic/states/fields.py contribute_to_class companion column
+  status_custom_key Int?
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  parent Build? @relation("Build_parent", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  part Part @relation("Build_part", fields: [part_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  sales_order SalesOrder? @relation("Build_sales_order", fields: [sales_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  take_from StockLocation? @relation("Build_take_from", fields: [take_from_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  destination StockLocation? @relation("Build_destination", fields: [destination_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  completed_by User? @relation("Build_completed_by", fields: [completed_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  issued_by User? @relation("Build_issued_by", fields: [issued_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  responsible Owner? @relation("Build_responsible", fields: [responsible_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  project_code ProjectCode? @relation("Build_project_code", fields: [project_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromBuildParent Build[] @relation("Build_parent")
+  fromBuildLineBuild BuildLine[] @relation("BuildLine_build")
+  fromPurchaseOrderLineItemBuild_order PurchaseOrderLineItem[] @relation("PurchaseOrderLineItem_build_order")
+  fromStockItemBuild StockItem[] @relation("StockItem_build")
+  fromStockItemConsumed_by StockItem[] @relation("StockItem_consumed_by")
+  @@index([completed_by_id])
+  @@index([destination_id])
+  @@index([issued_by_id])
+  @@index([parent_id])
+  @@index([part_id])
+  @@index([project_code_id])
+  @@index([responsible_id])
+  @@index([sales_order_id])
+  @@index([take_from_id])
+  @@index([tree_id])
+  @@index([tree_id, lft])
+  @@map("build_build")
+}
+
+/// A BuildLine object links a BOMItem to a Build.
+/// Source: src/backend/InvenTree/build/models.py:2159
+model BuildLine {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  build_id Int
+  bom_item_id Int
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  /// Source application default: 0
+  consumed Decimal @db.Decimal(15, 5)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  build Build @relation("BuildLine_build", fields: [build_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  bom_item BomItem @relation("BuildLine_bom_item", fields: [bom_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fromBuildItemBuild_line BuildItem[] @relation("BuildItem_build_line")
+  @@unique([build_id, bom_item_id])
+  @@index([bom_item_id])
+  @@index([build_id])
+  @@map("build_buildline")
+}
+
+/// A BuildItem links multiple StockItem objects to a Build.
+/// Source: src/backend/InvenTree/build/models.py:2279
+model BuildItem {
+  /// DEFAULT_AUTO_FIELD = django.db.models.AutoField
+  id Int @id @default(autoincrement())
+  metadata Json? @db.JsonB
+  build_line_id Int?
+  stock_item_id Int
+  /// Source application default: 1
+  quantity Decimal @db.Decimal(15, 5)
+  install_into_id Int?
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  build_line BuildLine? @relation("BuildItem_build_line", fields: [build_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: CASCADE; see deletion policy in README.
+  stock_item StockItem @relation("BuildItem_stock_item", fields: [stock_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Django on_delete: SET_NULL; see deletion policy in README.
+  install_into StockItem? @relation("BuildItem_install_into", fields: [install_into_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([build_line_id, stock_item_id, install_into_id])
+  @@index([build_line_id])
+  @@index([install_into_id])
+  @@index([stock_item_id])
+  @@map("build_builditem")
+}
