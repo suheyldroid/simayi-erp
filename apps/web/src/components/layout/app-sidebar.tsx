@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { isAdministrator, sessionQuery } from '@/lib/auth'
+import { sessionQuery } from '@/lib/auth'
 import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
@@ -8,6 +8,8 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import { permissionsQuery } from '@/features/users/access-api'
+import { hasPermission } from '@/features/users/access-model'
 // import { AppTitle } from './app-title'
 import { sidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
@@ -17,6 +19,16 @@ import { TeamSwitcher } from './team-switcher'
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
   const { data: user } = useQuery(sessionQuery)
+  const permissions = useQuery(permissionsQuery)
+  const groups = sidebarData.navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) =>
+          !item.scope || hasPermission(permissions.data, item.scope, 'view')
+      ),
+    }))
+    .filter((group) => group.items.length > 0)
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
@@ -27,14 +39,8 @@ export function AppSidebar() {
         {/* <AppTitle /> */}
       </SidebarHeader>
       <SidebarContent>
-        {sidebarData.navGroups.map((group) => (
-          <NavGroup
-            key={group.title}
-            {...group}
-            items={group.items.filter(
-              (item) => item.url !== '/users' || isAdministrator(user)
-            )}
-          />
+        {groups.map((group) => (
+          <NavGroup key={group.title} {...group} items={group.items} />
         ))}
       </SidebarContent>
       <SidebarFooter>

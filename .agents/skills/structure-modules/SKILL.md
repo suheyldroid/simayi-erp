@@ -49,6 +49,10 @@ apps/api/src/modules/<module>/
 - Receive explicit DTOs, headers, identifiers, or other required values.
 - Import DTO types from `model.ts` instead of repeating their definitions.
 - Use established error handling and preserve transaction boundaries.
+- Authorize business operations through `PermissionsService.require` using the authenticated actor ID.
+- Read owner IDs from stored resources before authorizing ownership-protected operations.
+- Keep delegated RuleSet administration separate from native Better Auth administrative powers.
+- Build mutation payloads from explicit field allowlists, never unrestricted client-object spreads.
 - Call Better Auth's native APIs for users, credentials, and sessions.
 - NEVER replace framework-owned authentication with direct credential writes or custom password logic.
 - Keep framework configuration entry points thin when external tools require them.

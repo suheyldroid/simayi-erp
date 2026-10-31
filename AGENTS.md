@@ -22,6 +22,13 @@ Backend modülü yazmadan veya düzenlemeden önce `.agents/skills/structure-mod
 - Better Auth gibi kütüphanelerin yerleşik API'lerini kullan. Bu katman ayrımı için kimlik doğrulama, parola veya oturum mantığını yeniden yazma.
 - `lib/` ve `plugins/` ortak altyapıdır; bunları gereksiz modüllere veya servis sınıflarına dönüştürme.
 
+## Yetki sözleşmesi
+
+- İş modülü erişimlerinde `users/permissions/service.ts` içindeki `PermissionsService.require` otoritesini kullan; aktör kimliğini doğrulanmış oturumdan al.
+- Sahiplik korumalı kayıtlarda Owner ID'yi mevcut veritabanı kaydından okuyup denetime geçir; istemcinin gönderdiği Owner ID ile mevcut kayıt erişimini doğrulama.
+- RuleSet `admin` kapsamını Better Auth `admin` rolüyle karıştırma. Delege iş yetkileri native hesap/rol/parola yönetimi yetkisi vermez.
+- Yönetim yazmalarında delege sınırlarını ve transaction'ları koru. İstemci nesnelerini ORM güncellemesine doğrudan yayma; yalnızca izin verilen alanları aktar.
+
 Kaynak: https://elysiajs.com/essential/best-practice.html
 
 <!-- BEGIN:turborepo-agent-rules -->

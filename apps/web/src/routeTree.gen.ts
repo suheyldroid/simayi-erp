@@ -27,13 +27,20 @@ import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
 import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_authenticated/route'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
+import { Route as AuthenticatedCommonIndexRouteImport } from './routes/_authenticated/common/index'
+import { Route as AuthenticatedCompanyIndexRouteImport } from './routes/_authenticated/company/index'
+import { Route as AuthenticatedCurrencyIndexRouteImport } from './routes/_authenticated/currency/index'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedPartsIndexRouteImport } from './routes/_authenticated/parts/index'
+import { Route as AuthenticatedPurchasingIndexRouteImport } from './routes/_authenticated/purchasing/index'
+import { Route as AuthenticatedManufacturingIndexRouteImport } from './routes/_authenticated/manufacturing/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
+import { Route as AuthenticatedStockIndexRouteImport } from './routes/_authenticated/stock/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as ClerkauthSignInRouteImport } from './routes/clerk/(auth)/sign-in'
@@ -128,6 +135,24 @@ const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
   path: '/chats/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCommonIndexRoute =
+  AuthenticatedCommonIndexRouteImport.update({
+    id: '/common/',
+    path: '/common/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCompanyIndexRoute =
+  AuthenticatedCompanyIndexRouteImport.update({
+    id: '/company/',
+    path: '/company/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCurrencyIndexRoute =
+  AuthenticatedCurrencyIndexRouteImport.update({
+    id: '/currency/',
+    path: '/currency/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedErrorsErrorRoute =
   AuthenticatedErrorsErrorRouteImport.update({
     id: '/errors/$error',
@@ -138,6 +163,23 @@ const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexRouteImport.update({
     id: '/help-center/',
     path: '/help-center/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPartsIndexRoute = AuthenticatedPartsIndexRouteImport.update({
+  id: '/parts/',
+  path: '/parts/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPurchasingIndexRoute =
+  AuthenticatedPurchasingIndexRouteImport.update({
+    id: '/purchasing/',
+    path: '/purchasing/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManufacturingIndexRoute =
+  AuthenticatedManufacturingIndexRouteImport.update({
+    id: '/manufacturing/',
+    path: '/manufacturing/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSettingsIndexRoute =
@@ -170,6 +212,11 @@ const AuthenticatedSettingsNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+const AuthenticatedStockIndexRoute = AuthenticatedStockIndexRouteImport.update({
+  id: '/stock/',
+  path: '/stock/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexRouteImport.update({
   id: '/tasks/',
   path: '/tasks/',
@@ -221,8 +268,15 @@ export interface FileRoutesByFullPath {
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/apps/': typeof AuthenticatedAppsIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
+  '/common/': typeof AuthenticatedCommonIndexRoute
+  '/company/': typeof AuthenticatedCompanyIndexRoute
+  '/currency/': typeof AuthenticatedCurrencyIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/parts/': typeof AuthenticatedPartsIndexRoute
+  '/purchasing/': typeof AuthenticatedPurchasingIndexRoute
+  '/manufacturing/': typeof AuthenticatedManufacturingIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/stock/': typeof AuthenticatedStockIndexRoute
   '/tasks/': typeof AuthenticatedTasksIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
 }
@@ -249,8 +303,15 @@ export interface FileRoutesByTo {
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/common': typeof AuthenticatedCommonIndexRoute
+  '/company': typeof AuthenticatedCompanyIndexRoute
+  '/currency': typeof AuthenticatedCurrencyIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/parts': typeof AuthenticatedPartsIndexRoute
+  '/purchasing': typeof AuthenticatedPurchasingIndexRoute
+  '/manufacturing': typeof AuthenticatedManufacturingIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/stock': typeof AuthenticatedStockIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
 }
@@ -282,8 +343,15 @@ export interface FileRoutesById {
   '/clerk/_authenticated/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/common/': typeof AuthenticatedCommonIndexRoute
+  '/_authenticated/company/': typeof AuthenticatedCompanyIndexRoute
+  '/_authenticated/currency/': typeof AuthenticatedCurrencyIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/_authenticated/parts/': typeof AuthenticatedPartsIndexRoute
+  '/_authenticated/purchasing/': typeof AuthenticatedPurchasingIndexRoute
+  '/_authenticated/manufacturing/': typeof AuthenticatedManufacturingIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/stock/': typeof AuthenticatedStockIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
 }
@@ -313,8 +381,15 @@ export interface FileRouteTypes {
     | '/clerk/user-management'
     | '/apps/'
     | '/chats/'
+    | '/common/'
+    | '/company/'
+    | '/currency/'
     | '/help-center/'
+    | '/parts/'
+    | '/purchasing/'
+    | '/manufacturing/'
     | '/settings/'
+    | '/stock/'
     | '/tasks/'
     | '/users/'
   fileRoutesByTo: FileRoutesByTo
@@ -341,8 +416,15 @@ export interface FileRouteTypes {
     | '/clerk/user-management'
     | '/apps'
     | '/chats'
+    | '/common'
+    | '/company'
+    | '/currency'
     | '/help-center'
+    | '/parts'
+    | '/purchasing'
+    | '/manufacturing'
     | '/settings'
+    | '/stock'
     | '/tasks'
     | '/users'
   id:
@@ -373,8 +455,15 @@ export interface FileRouteTypes {
     | '/clerk/_authenticated/user-management'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
+    | '/_authenticated/common/'
+    | '/_authenticated/company/'
+    | '/_authenticated/currency/'
     | '/_authenticated/help-center/'
+    | '/_authenticated/parts/'
+    | '/_authenticated/purchasing/'
+    | '/_authenticated/manufacturing/'
     | '/_authenticated/settings/'
+    | '/_authenticated/stock/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
   fileRoutesById: FileRoutesById
@@ -522,6 +611,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/common/': {
+      id: '/_authenticated/common/'
+      path: '/common'
+      fullPath: '/common/'
+      preLoaderRoute: typeof AuthenticatedCommonIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/company/': {
+      id: '/_authenticated/company/'
+      path: '/company'
+      fullPath: '/company/'
+      preLoaderRoute: typeof AuthenticatedCompanyIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/currency/': {
+      id: '/_authenticated/currency/'
+      path: '/currency'
+      fullPath: '/currency/'
+      preLoaderRoute: typeof AuthenticatedCurrencyIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/errors/$error': {
       id: '/_authenticated/errors/$error'
       path: '/errors/$error'
@@ -534,6 +644,27 @@ declare module '@tanstack/react-router' {
       path: '/help-center'
       fullPath: '/help-center/'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/parts/': {
+      id: '/_authenticated/parts/'
+      path: '/parts'
+      fullPath: '/parts/'
+      preLoaderRoute: typeof AuthenticatedPartsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/purchasing/': {
+      id: '/_authenticated/purchasing/'
+      path: '/purchasing'
+      fullPath: '/purchasing/'
+      preLoaderRoute: typeof AuthenticatedPurchasingIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manufacturing/': {
+      id: '/_authenticated/manufacturing/'
+      path: '/manufacturing'
+      fullPath: '/manufacturing/'
+      preLoaderRoute: typeof AuthenticatedManufacturingIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings/': {
@@ -570,6 +701,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/notifications'
       preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/stock/': {
+      id: '/_authenticated/stock/'
+      path: '/stock'
+      fullPath: '/stock/'
+      preLoaderRoute: typeof AuthenticatedStockIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/tasks/': {
       id: '/_authenticated/tasks/'
@@ -638,7 +776,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedCommonIndexRoute: typeof AuthenticatedCommonIndexRoute
+  AuthenticatedCompanyIndexRoute: typeof AuthenticatedCompanyIndexRoute
+  AuthenticatedCurrencyIndexRoute: typeof AuthenticatedCurrencyIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedPartsIndexRoute: typeof AuthenticatedPartsIndexRoute
+  AuthenticatedPurchasingIndexRoute: typeof AuthenticatedPurchasingIndexRoute
+  AuthenticatedManufacturingIndexRoute: typeof AuthenticatedManufacturingIndexRoute
+  AuthenticatedStockIndexRoute: typeof AuthenticatedStockIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
 }
@@ -649,7 +794,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
+  AuthenticatedCommonIndexRoute: AuthenticatedCommonIndexRoute,
+  AuthenticatedCompanyIndexRoute: AuthenticatedCompanyIndexRoute,
+  AuthenticatedCurrencyIndexRoute: AuthenticatedCurrencyIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
+  AuthenticatedPartsIndexRoute: AuthenticatedPartsIndexRoute,
+  AuthenticatedPurchasingIndexRoute: AuthenticatedPurchasingIndexRoute,
+  AuthenticatedManufacturingIndexRoute: AuthenticatedManufacturingIndexRoute,
+  AuthenticatedStockIndexRoute: AuthenticatedStockIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
 }

@@ -51,7 +51,10 @@ export function UserCredentialsForm({
         await navigate({ to: '/sign-in', replace: true })
         toast.success('Password reset. Sign in with your new password.')
       } else {
-        await queryClient.invalidateQueries({ queryKey: ['users'] })
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['users'] }),
+          queryClient.invalidateQueries({ queryKey: ['user-options'] }),
+        ])
         toast.success(creating ? 'User created.' : 'Password reset.')
       }
     } catch {

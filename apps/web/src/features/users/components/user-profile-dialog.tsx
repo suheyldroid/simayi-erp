@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { isAdministrator } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,15 +12,25 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { hasPermission, type EffectivePermissions } from '../access-model'
 import { usersApi } from '../api'
 import type { User } from '../model'
+import { ErpProfilePanel } from './erp-profile-panel'
 
-function ProfileForm({ user, onSaved }: { user: User; onSaved: () => void }) {
-  const queryClient = useQueryClient()
+function AccountProfileForm({
+  user,
+  canEdit,
+  onSaved,
+}: {
+  user: User
+  canEdit: boolean
+  onSaved: () => void
+}) {
+  const client = useQueryClient()
   const form = useForm({
     defaultValues: { name: user.name, image: user.image ?? '' },
   })
-
   async function submit(input: { name: string; image: string }) {
     try {
       await usersApi.updateProfile(user.id, {
@@ -27,75 +38,85 @@ function ProfileForm({ user, onSaved }: { user: User; onSaved: () => void }) {
         image: input.image.trim() || null,
       })
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['users'] }),
-        queryClient.invalidateQueries({ queryKey: ['user', user.id] }),
-        queryClient.invalidateQueries({ queryKey: ['session'] }),
+        client.invalidateQueries({ queryKey: ['users'] }),
+        client.invalidateQueries({ queryKey: ['user-options'] }),
+        client.invalidateQueries({ queryKey: ['user', user.id] }),
+        client.invalidateQueries({ queryKey: ['session'] }),
       ])
       onSaved()
-      toast.success('Profile updated.')
+      toast.success('Account profile updated.')
     } catch {
       form.setError('root', {
         message:
-          'Could not update the profile. Check the values and your connection.',
+          'Could not update the account profile. Check values and platform administrator access.',
       })
     }
   }
-
   return (
-    <form className='space-y-4' onSubmit={form.handleSubmit(submit)}>
-      <dl className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm'>
-        <dt className='text-muted-foreground'>Email</dt>
-        <dd className='break-all'>{user.email}</dd>
-        <dt className='text-muted-foreground'>Role</dt>
-        <dd>{user.role}</dd>
-        <dt className='text-muted-foreground'>Status</dt>
-        <dd>{user.isActive && !user.banned ? 'Active' : 'Inactive'}</dd>
-        <dt className='text-muted-foreground'>Created</dt>
-        <dd>{new Date(user.createdAt).toLocaleString()}</dd>
-        <dt className='text-muted-foreground'>Updated</dt>
-        <dd>{new Date(user.updatedAt).toLocaleString()}</dd>
-      </dl>
-      <div className='space-y-2'>
-        <Label htmlFor='profile-name'>Name</Label>
-        <Input
-          id='profile-name'
-          required
-          maxLength={150}
-          {...form.register('name', {
-            required: true,
-            validate: (value) => value.trim().length > 0,
-          })}
-        />
-        {form.formState.errors.name && <p role='alert'>Enter a name.</p>}
-      </div>
-      <div className='space-y-2'>
-        <Label htmlFor='profile-image'>Avatar URL</Label>
-        <Input
-          id='profile-image'
-          type='url'
-          maxLength={2048}
-          placeholder='https://example.com/avatar.png'
-          {...form.register('image')}
-        />
-        <p className='text-sm text-muted-foreground'>
-          Use an HTTP or HTTPS URL. Leave empty to remove the image.
-        </p>
-      </div>
-      {form.formState.errors.root && (
-        <p role='alert' className='text-sm text-destructive'>
-          {form.formState.errors.root.message}
-        </p>
-      )}
-      <Button disabled={form.formState.isSubmitting}>Save profile</Button>
+    <form onSubmit={form.handleSubmit(submit)}>
+      <fieldset
+        disabled={!canEdit || form.formState.isSubmitting}
+        className='space-y-4'
+      >
+        <dl className='grid grid-cols-[auto_1fr] gap-2 text-sm'>
+          <dt>Email</dt>
+          <dd className='break-all'>{user.email}</dd>
+          <dt>Role</dt>
+          <dd>{user.role}</dd>
+          <dt>Status</dt>
+          <dd>{user.isActive && !user.banned ? 'Active' : 'Inactive'}</dd>
+          <dt>Created</dt>
+          <dd>{new Date(user.createdAt).toLocaleString()}</dd>
+        </dl>
+        {!canEdit && (
+          <p className='text-sm text-muted-foreground'>
+            Native account fields are read-only for delegates.
+          </p>
+        )}
+        <div className='space-y-2'>
+          <Label htmlFor='account-profile-name'>Name</Label>
+          <Input
+            id='account-profile-name'
+            required
+            maxLength={150}
+            {...form.register('name', {
+              required: true,
+              validate: (value) => !!value.trim(),
+            })}
+          />
+          {form.formState.errors.name && <p role='alert'>Enter a name.</p>}
+        </div>
+        <div className='space-y-2'>
+          <Label htmlFor='account-profile-image'>Avatar URL</Label>
+          <Input
+            id='account-profile-image'
+            type='url'
+            maxLength={2048}
+            {...form.register('image')}
+          />
+        </div>
+        {form.formState.errors.root && (
+          <p role='alert' className='text-destructive'>
+            {form.formState.errors.root.message}
+          </p>
+        )}
+        <Button disabled={!canEdit || form.formState.isSubmitting}>
+          Save account profile
+        </Button>
+      </fieldset>
     </form>
   )
 }
 
 export function UserProfileDialog({
   userId,
+  actorId,
+  effective,
   onClose,
 }: {
   userId: string | null
+  actorId: string
+  effective: EffectivePermissions
   onClose: () => void
 }) {
   const details = useQuery({
@@ -107,7 +128,11 @@ export function UserProfileDialog({
     enabled: userId !== null,
     refetchOnWindowFocus: false,
   })
-
+  const canEdit =
+    details.data &&
+    (details.data.id === actorId ||
+      (hasPermission(effective, 'admin', 'change') &&
+        (effective.isAdministrator || !isAdministrator(details.data))))
   return (
     <Dialog
       open={userId !== null}
@@ -115,29 +140,40 @@ export function UserProfileDialog({
         if (!open) onClose()
       }}
     >
-      <DialogContent>
+      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-2xl'>
         <DialogHeader>
-          <DialogTitle>User details</DialogTitle>
+          <DialogTitle>User profile and details</DialogTitle>
           <DialogDescription>
-            View account details and edit the profile. Email, password, and
-            roles remain managed by Better Auth.
+            ERP profile permissions are separate from native account
+            administration.
           </DialogDescription>
         </DialogHeader>
         {details.isPending && <p role='status'>Loading user…</p>}
         {details.isError && (
-          <div role='alert'>
-            Unable to load user.{' '}
+          <p role='alert'>
+            Could not load user.{' '}
             <Button variant='outline' onClick={() => void details.refetch()}>
               Retry
             </Button>
-          </div>
+          </p>
         )}
         {details.data && !details.isError && (
-          <ProfileForm
-            key={details.data.id}
-            user={details.data}
-            onSaved={onClose}
-          />
+          <Tabs key={details.data.id} defaultValue='erp'>
+            <TabsList>
+              <TabsTrigger value='erp'>ERP profile</TabsTrigger>
+              <TabsTrigger value='account'>Account</TabsTrigger>
+            </TabsList>
+            <TabsContent value='erp'>
+              <ErpProfilePanel userId={details.data.id} canEdit={!!canEdit} />
+            </TabsContent>
+            <TabsContent value='account'>
+              <AccountProfileForm
+                user={details.data}
+                canEdit={effective.isAdministrator}
+                onSaved={onClose}
+              />
+            </TabsContent>
+          </Tabs>
         )}
       </DialogContent>
     </Dialog>

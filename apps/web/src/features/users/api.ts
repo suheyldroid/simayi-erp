@@ -2,9 +2,9 @@ import { api } from '@/lib/auth'
 import { UsersModel, type UserProfileInput } from './model'
 
 export const usersApi = {
-  async list(page: number) {
+  async list(page: number, search = '') {
     const { data } = await api.get<unknown>('/users/', {
-      params: { limit: 20, offset: page * 20 },
+      params: { limit: 20, offset: page * 20, search },
     })
     return UsersModel.listResponse.parse(data)
   },
