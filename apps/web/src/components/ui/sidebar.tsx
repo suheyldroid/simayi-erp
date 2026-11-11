@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { VariantProps, cva } from 'class-variance-authority'
 import { PanelLeftIcon } from 'lucide-react'
+import { useSidebar } from '@/stores/sidebar-store'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
@@ -22,38 +23,15 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-const SIDEBAR_COOKIE_NAME = 'sidebar_state'
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
 
-type SidebarContextProps = {
-  state: 'expanded' | 'collapsed'
-  open: boolean
-  setOpen: (open: boolean) => void
-  openMobile: boolean
-  setOpenMobile: (open: boolean) => void
-  isMobile: boolean
-  toggleSidebar: () => void
-}
-
-const SidebarContext = React.createContext<SidebarContextProps | null>(null)
-
-function useSidebar() {
-  const context = React.useContext(SidebarContext)
-  if (!context) {
-    throw new Error('useSidebar must be used within a SidebarProvider.')
-  }
-
-  return context
-}
-
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
-  onOpenChange: setOpenProp,
+  onOpenChange,
   className,
   style,
   children,
@@ -64,31 +42,31 @@ function SidebarProvider({
   onOpenChange?: (open: boolean) => void
 }) {
   const isMobile = useIsMobile()
-  const [openMobile, setOpenMobile] = React.useState(false)
+  const configure = useSidebar((state) => state.configure)
+  const seedDefaultOpen = useSidebar((state) => state.seedDefaultOpen)
+  const setMobile = useSidebar((state) => state.setMobile)
+  const resetSidebar = useSidebar((state) => state.resetSidebar)
+  const toggleSidebar = useSidebar((state) => state.toggleSidebar)
+  const initialDefaultOpen = React.useRef(defaultOpen)
 
-  // This is the internal state of the sidebar.
-  // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen)
-  const open = openProp ?? _open
-  const setOpen = React.useCallback(
-    (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === 'function' ? value(open) : value
-      if (setOpenProp) {
-        setOpenProp(openState)
-      } else {
-        _setOpen(openState)
-      }
+  // Controlled props are mirrored into the store: it stays the single source
+  // of truth for every consumer while the props keep working as before.
+  React.useLayoutEffect(() => {
+    configure({ open: openProp, onOpenChange })
+  }, [configure, openProp, onOpenChange])
 
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
-    },
-    [setOpenProp, open]
-  )
+  React.useLayoutEffect(() => {
+    setMobile(isMobile)
+  }, [isMobile, setMobile])
 
-  // Helper to toggle the sidebar.
-  const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
-  }, [isMobile, setOpen, setOpenMobile])
+  // `defaultOpen` only seeds the value on mount, like useState(defaultOpen).
+  React.useLayoutEffect(() => {
+    seedDefaultOpen(initialDefaultOpen.current)
+  }, [seedDefaultOpen])
+
+  // Ephemeral sidebar state must not survive the authenticated layout; the
+  // reset runs during the unmount commit, before the next paint.
+  React.useLayoutEffect(() => () => resetSidebar(), [resetSidebar])
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -106,45 +84,26 @@ function SidebarProvider({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [toggleSidebar])
 
-  // We add a state so that we can do data-state="expanded" or "collapsed".
-  // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? 'expanded' : 'collapsed'
-
-  const contextValue = React.useMemo<SidebarContextProps>(
-    () => ({
-      state,
-      open,
-      setOpen,
-      isMobile,
-      openMobile,
-      setOpenMobile,
-      toggleSidebar,
-    }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
-  )
-
   return (
-    <SidebarContext.Provider value={contextValue}>
-      <TooltipProvider delayDuration={0}>
-        <div
-          data-slot='sidebar-wrapper'
-          style={
-            {
-              '--sidebar-width': SIDEBAR_WIDTH,
-              '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
-          className={cn(
-            'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar',
-            className
-          )}
-          {...props}
-        >
-          {children}
-        </div>
-      </TooltipProvider>
-    </SidebarContext.Provider>
+    <TooltipProvider delayDuration={0}>
+      <div
+        data-slot='sidebar-wrapper'
+        style={
+          {
+            '--sidebar-width': SIDEBAR_WIDTH,
+            '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
+            ...style,
+          } as React.CSSProperties
+        }
+        className={cn(
+          'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar',
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    </TooltipProvider>
   )
 }
 
@@ -160,7 +119,10 @@ function Sidebar({
   variant?: 'sidebar' | 'floating' | 'inset'
   collapsible?: 'offcanvas' | 'icon' | 'none'
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const isMobile = useSidebar((state) => state.isMobile)
+  const state = useSidebar((sidebar) => sidebar.state)
+  const openMobile = useSidebar((state) => state.openMobile)
+  const setOpenMobile = useSidebar((state) => state.setOpenMobile)
 
   if (collapsible === 'none') {
     return (
@@ -255,7 +217,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const toggleSidebar = useSidebar((state) => state.toggleSidebar)
 
   return (
     <Button
@@ -277,7 +239,7 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
-  const { toggleSidebar } = useSidebar()
+  const toggleSidebar = useSidebar((state) => state.toggleSidebar)
 
   return (
     <button
@@ -482,7 +444,7 @@ const sidebarMenuButtonVariants = cva(
       variant: {
         default: 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
         outline:
-          'bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]',
+          'bg-background shadow-[0_0_0_1px_var(--sidebar-border)] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_var(--input)]',
       },
       size: {
         default: 'h-8 text-sm',
@@ -511,7 +473,8 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : 'button'
-  const { isMobile, state } = useSidebar()
+  const isMobile = useSidebar((state) => state.isMobile)
+  const state = useSidebar((sidebar) => sidebar.state)
 
   const button = (
     <Comp
@@ -724,5 +687,4 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar,
 }

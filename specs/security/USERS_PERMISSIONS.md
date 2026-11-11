@@ -1,5 +1,8 @@
 # Users authorization source review
 
+> **Historical report.** This document predates the native-organization migration and the flattening of `apps/api/src/modules/users/` into one controller/service/model. Current routes and authority are documented in `apps/api/README.md`. Only the profile and owner source citations below were refreshed for that flattening; the older groups, membership, rule-set, and permission findings remain historical and were not re-audited.
+> The ERP profile and owner routes were removed from the API after this review. Their rows stay below as historical findings only; the `UserProfile` and `Owner` database tables remain with their constraints.
+
 ## Contract
 
 - Population: all 22 routes declared by the seven controllers under `apps/api/src/modules/users/`.
@@ -14,11 +17,11 @@
 | Route | Authority before effect | Status | Evidence |
 | --- | --- | --- | --- |
 | GET `/users/` | `admin.view`, active database principal | SATISFIED | `service.ts:28` |
-| GET `/users/:id` | `admin.view`, safe selected fields | SATISFIED | `service.ts:59` |
+| GET `/users/:id` | Historical: `admin.view`, safe selected fields. Current: `erp_settings.view`, member of the active organization, full `UserPlain` row | SATISFIED (historical) | Historical: `service.ts:59`; current contract: `apps/api/README.md` |
 | PATCH `/users/:id` | Platform administrator plus native Better Auth checks | SATISFIED | `controller.ts:37`, `service.ts:109` |
 | PATCH `/users/:id/status` | Platform administrator plus native Better Auth checks | SATISFIED | `controller.ts:52`, `service.ts:109` |
-| GET `/users/profiles/:userId` | Own profile or `admin.view`; neutral provisioning only | SATISFIED | `profile/service.ts:12`, `profile/service.ts:86` |
-| PATCH `/users/profiles/:userId` | Own profile or `admin.change`; protected platform targets | SATISFIED | `profile/service.ts:41`, `profile/service.ts:86` |
+| GET `/users/profiles/:userId` | Historical: own profile or `erp_settings.view`; route removed | REMOVED | No route or service method remains |
+| PATCH `/users/profiles/:userId` | Historical: own profile or `erp_settings.change`; route removed | REMOVED | No route or service method remains |
 | GET `/users/groups/` | `admin.view` | SATISFIED | `groups/service.ts:14` |
 | GET `/users/groups/:groupId` | `admin.view` | SATISFIED | `groups/service.ts:40` |
 | POST `/users/groups/` | `admin.add`; all new grants denied | SATISFIED | `groups/service.ts:50` |
@@ -30,9 +33,9 @@
 | DELETE `/users/groups/:groupId/members/:userId` | Same authority; primary-group cleanup in transaction | SATISFIED | `groups/memberships/service.ts:119` |
 | GET `/users/groups/:groupId/rulesets` | `admin.view` | SATISFIED | `groups/rulesets/service.ts:9` |
 | PUT `/users/groups/:groupId/rulesets` | `admin.change`, existing and requested grant bounds | SATISFIED | `groups/rulesets/service.ts:34` |
-| GET `/users/owners/` | Own/group filter unless `admin.view` | SATISFIED | `owners/service.ts:14`, `owners/service.ts:109` |
-| GET `/users/owners/:ownerId` | Same row filter; hidden/missing target is 404 | SATISFIED | `owners/service.ts:66` |
-| POST `/users/owners/` | `admin.add`, protected user/group bounds; immutable upsert | SATISFIED | `owners/service.ts:76` |
+| GET `/users/owners/` | Historical: own user/team filter unless `erp_settings.view`; route removed | REMOVED | No route or service method remains |
+| GET `/users/owners/:ownerId` | Historical: same row filter; route removed | REMOVED | No route or service method remains |
+| POST `/users/owners/` | Historical: `erp_settings.add`; route removed | REMOVED | No route or service method remains |
 | GET `/users/permissions/me` | Active principal, own effective grants only | SATISFIED | `permissions/service.ts` (`effective`, `context`) |
 | POST `/users/permissions/check` | Active principal; scope AND existing matching owner when supplied | SATISFIED | `permissions/service.ts:171` |
 
@@ -42,7 +45,7 @@ Predicate: every application path changing a non-null primary group preserves me
 
 | Writer | Containment | Status |
 | --- | --- | --- |
-| Profile update/upsert | Membership lookup and profile write in one serializable transaction | SATISFIED |
+| Profile update/upsert (removed) | Historical; the route and serializable transaction were removed | REMOVED |
 | Membership removal | Clear matching primary group before deleting membership in the same serializable transaction | SATISFIED |
 | Group deletion | Group foreign key uses `ON DELETE SET NULL`; memberships cascade | SATISFIED |
 | Initial defaults | Migration and lazy provisioning leave primary group NULL | SATISFIED |
@@ -52,9 +55,9 @@ Predicate: every application path changing a non-null primary group preserves me
 - Permission changes and membership changes re-read authority inside serializable transactions.
 - Delegates cannot mutate groups carrying administrative grants or grants exceeding their own effective permissions.
 - RuleSet input is normalized into an explicit five-field payload; client IDs and group IDs cannot reach its ORM update.
-- ERP profile mutation rebuilds its field allowlist; user relation, record ID, JSON preferences, and native privilege fields are not writable.
+- Historical, route removed: ERP profile mutation rebuilt its field allowlist; user relation, record ID, JSON preferences, and native privilege fields were not writable.
 - Database constraints enforce Owner XOR, unique owner targets, unique memberships/scopes, valid scope names, and permission inheritance.
-- Owner upserts never change targets. Group creation and profile provisioning use explicit single-target owner constructors.
+- Historical, route removed: owner upserts never changed targets; group creation and profile provisioning used explicit single-target owner constructors.
 - The combined owner check uses the current database membership, not primary-group preference or profile activity.
 - Lists are paginated and capped at 100 rows. Current permission context necessarily reads all memberships for one authenticated actor.
 - Scope names and inheritance follow InvenTree commit `66de7b77d4b62c9bdfa6bfa867de16f1aac22f32`, `users/ruleset.py` and `RuleSet.save`.

@@ -55,9 +55,9 @@ export function UserAuthForm({
         return
       }
       queryClient.clear()
-      const user = await queryClient.fetchQuery(sessionQuery)
-      if (!user) throw new Error('Session unavailable')
-      toast.success(`Welcome back, ${user.name}!`)
+      const session = await queryClient.fetchQuery(sessionQuery)
+      if (!session) throw new Error('Session unavailable')
+      toast.success(`Welcome back, ${session.user.name}!`)
       await navigate({ to: safeRedirect(redirectTo), replace: true })
     } catch {
       form.setError('root', { message: 'Unable to connect. Please try again.' })

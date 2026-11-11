@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
+import { useSidebar } from '@/stores/sidebar-store'
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,7 +16,6 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import { Badge } from '../ui/badge'
 import {
@@ -33,12 +33,13 @@ import {
   type NavGroup as NavGroupProps,
 } from './types'
 
-export function NavGroup({ title, items }: NavGroupProps) {
-  const { state, isMobile } = useSidebar()
+export function NavGroup({ title, hideLabel, items }: NavGroupProps) {
+  const isMobile = useSidebar((state) => state.isMobile)
+  const state = useSidebar((sidebar) => sidebar.state)
   const href = useLocation({ select: (location) => location.href })
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+      {hideLabel ? null : <SidebarGroupLabel>{title}</SidebarGroupLabel>}
       <SidebarMenu>
         {items.map((item) => {
           const key = `${item.title}-${item.url}`
@@ -59,11 +60,11 @@ export function NavGroup({ title, items }: NavGroupProps) {
 }
 
 function NavBadge({ children }: { children: ReactNode }) {
-  return <Badge className='rounded-full px-1 py-0 text-xs'>{children}</Badge>
+  return <Badge className='px-1 py-0 text-xs'>{children}</Badge>
 }
 
 function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
-  const { setOpenMobile } = useSidebar()
+  const setOpenMobile = useSidebar((state) => state.setOpenMobile)
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -88,7 +89,7 @@ function SidebarMenuCollapsible({
   item: NavCollapsible
   href: string
 }) {
-  const { setOpenMobile } = useSidebar()
+  const setOpenMobile = useSidebar((state) => state.setOpenMobile)
   return (
     <Collapsible
       asChild
@@ -174,9 +175,13 @@ function SidebarMenuCollapsedDropdown({
 }
 
 function checkIsActive(href: string, item: NavItem, mainNav = false) {
+  const pathname = href.split('?')[0]
   return (
     href === item.url || // /endpint?search=param
-    href.split('?')[0] === item.url || // endpoint
+    pathname === item.url || // endpoint
+    (item.matchChildren === true &&
+      item.url !== undefined &&
+      pathname.startsWith(`${item.url}/`)) || // opt-in detail route of a list
     !!item?.items?.filter((i) => i.url === href).length || // if child nav is active
     (mainNav &&
       href.split('/')[1] !== '' &&

@@ -1,16 +1,16 @@
 import { Link } from '@tanstack/react-router'
 import { Menu, X } from 'lucide-react'
+import { useSidebar } from '@/stores/sidebar-store'
 import { cn } from '@/lib/utils'
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import { Button } from '../ui/button'
 
 export function AppTitle() {
-  const { setOpenMobile } = useSidebar()
+  const setOpenMobile = useSidebar((state) => state.setOpenMobile)
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -41,7 +41,7 @@ function ToggleSidebar({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const toggleSidebar = useSidebar((state) => state.toggleSidebar)
 
   return (
     <Button

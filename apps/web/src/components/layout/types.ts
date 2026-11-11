@@ -1,22 +1,18 @@
 import { type LinkProps } from '@tanstack/react-router'
 
-type User = {
-  name: string
-  email: string
-  avatar: string
-}
-
-type Team = {
-  name: string
-  logo: React.ElementType
-  plan: string
-}
+type NavContext = 'global' | 'organization'
 
 type BaseNavItem = {
   title: string
   badge?: string
   icon?: React.ElementType
-  scope?: string
+  /** Marks the workspace overview link so pages do not repeat it as a section. */
+  overview?: boolean
+  /**
+   * Keeps a list entry active on its detail routes (`<url>/<id>`). Only entries
+   * that opt in match descendants; other links stay exact.
+   */
+  matchChildren?: boolean
 }
 
 type NavLink = BaseNavItem & {
@@ -33,13 +29,24 @@ type NavItem = NavCollapsible | NavLink
 
 type NavGroup = {
   title: string
+  context: NavContext
+  /**
+   * Drops the visible group heading in a sidebar. The title still labels the
+   * command menu group, so only the rendered sidebar heading disappears.
+   */
+  hideLabel?: boolean
   items: NavItem[]
 }
 
 type SidebarData = {
-  user: User
-  teams: Team[]
   navGroups: NavGroup[]
 }
 
-export type { SidebarData, NavGroup, NavItem, NavCollapsible, NavLink }
+export type {
+  SidebarData,
+  NavGroup,
+  NavItem,
+  NavCollapsible,
+  NavLink,
+  NavContext,
+}

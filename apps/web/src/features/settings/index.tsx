@@ -1,49 +1,24 @@
 import { Outlet } from '@tanstack/react-router'
-import { Monitor, Bell, Palette, Wrench, UserCog } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { SidebarNav } from './components/sidebar-nav'
+import { SettingsNav } from './components/sidebar-nav'
 
-const sidebarNavItems = [
-  {
-    title: 'Profile',
-    href: '/settings',
-    icon: <UserCog size={18} />,
-  },
-  {
-    title: 'Account',
-    href: '/settings/account',
-    icon: <Wrench size={18} />,
-  },
-  {
-    title: 'Appearance',
-    href: '/settings/appearance',
-    icon: <Palette size={18} />,
-  },
-  {
-    title: 'Notifications',
-    href: '/settings/notifications',
-    icon: <Bell size={18} />,
-  },
-  {
-    title: 'Display',
-    href: '/settings/display',
-    icon: <Monitor size={18} />,
-  },
-]
-
-export function Settings() {
+/**
+ * Shared settings frame for personal, platform and organization settings. It
+ * owns the one page heading and the categorized inner navigation; route pages
+ * render through the outlet, while the organization settings adapter passes its
+ * own organization-keyed outlet as children. The outer `_system` shell owns the
+ * global sidebar and its provider.
+ */
+export function Settings({ children }: { children?: React.ReactNode }) {
   return (
     <>
-      {/* ===== Top Heading ===== */}
       <Header>
         <Search className='me-auto' />
-        <ThemeSwitch />
         <ConfigDrawer />
         <ProfileDropdown />
       </Header>
@@ -54,16 +29,18 @@ export function Settings() {
             Settings
           </h1>
           <p className='text-muted-foreground'>
-            Manage your account settings and set e-mail preferences.
+            Manage your account, platform access, and organization resources.
           </p>
         </div>
         <Separator className='my-4 lg:my-6' />
-        <div className='flex flex-1 flex-col space-y-2 overflow-hidden md:space-y-2 lg:flex-row lg:space-y-0 lg:space-x-12'>
-          <aside className='top-0 lg:sticky lg:w-1/5'>
-            <SidebarNav items={sidebarNavItems} />
+        <div className='flex flex-1 flex-col gap-6 overflow-hidden lg:flex-row lg:gap-12'>
+          <aside className='shrink-0 lg:sticky lg:top-20 lg:w-1/5 lg:self-start'>
+            <div className='max-h-[45svh] overflow-y-auto pe-1 lg:max-h-[calc(100svh-16rem)]'>
+              <SettingsNav />
+            </div>
           </aside>
-          <div className='flex w-full overflow-y-hidden p-1'>
-            <Outlet />
+          <div className='flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto p-1'>
+            {children ?? <Outlet />}
           </div>
         </div>
       </Main>

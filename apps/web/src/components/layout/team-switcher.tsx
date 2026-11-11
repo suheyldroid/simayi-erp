@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { ChevronsUpDown, Plus } from 'lucide-react'
+import { useSidebar } from '@/stores/sidebar-store'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +14,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from '@/components/ui/sidebar'
 
 type TeamSwitcherProps = {
@@ -25,7 +25,7 @@ type TeamSwitcherProps = {
 }
 
 export function TeamSwitcher({ teams }: TeamSwitcherProps) {
-  const { isMobile } = useSidebar()
+  const isMobile = useSidebar((state) => state.isMobile)
   const [activeTeam, setActiveTeam] = React.useState(teams[0])
 
   return (

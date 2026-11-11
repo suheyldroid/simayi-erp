@@ -1,20 +1,40 @@
 import { z } from 'zod'
 
+const instant = z
+  .union([z.iso.datetime(), z.date()])
+  .transform((value) => (value instanceof Date ? value.toISOString() : value))
+
 const user = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string(),
   emailVerified: z.boolean(),
   image: z.string().nullable(),
-  role: z.string(),
+  role: z.string().nullable(),
   isActive: z.boolean(),
-  banned: z.boolean(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+  banned: z.boolean().nullable(),
+  banReason: z.string().nullable(),
+  banExpires: instant.nullable(),
+  isStaff: z.boolean(),
+  isSuperuser: z.boolean(),
+  createdAt: instant,
+  updatedAt: instant,
+})
+
+// Native Better Auth admin rows may omit keys the raw /users response always
+// returns; omitted keys stay omitted and nulls stay null, with no defaults.
+const adminUser = user.partial({
+  image: true,
+  role: true,
+  banReason: true,
+  banExpires: true,
+  isStaff: true,
+  isSuperuser: true,
 })
 
 export const UsersModel = {
   user,
+  adminUser,
   listResponse: z.object({
     users: z.array(user),
     total: z.number().int().nonnegative(),
@@ -24,5 +44,5 @@ export const UsersModel = {
   profileBody: z.object({ name: z.string(), image: z.string().nullable() }),
 }
 
-export type User = z.infer<typeof UsersModel.user>
+export type User = z.infer<typeof UsersModel.adminUser>
 export type UserProfileInput = z.infer<typeof UsersModel.profileBody>

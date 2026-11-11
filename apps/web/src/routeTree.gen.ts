@@ -10,50 +10,49 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authOtpRouteImport } from './routes/(auth)/otp'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
-import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as errors401RouteImport } from './routes/(errors)/401'
 import { Route as errors403RouteImport } from './routes/(errors)/403'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
-import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
-import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_authenticated/route'
-import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
-import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
-import { Route as AuthenticatedCommonIndexRouteImport } from './routes/_authenticated/common/index'
-import { Route as AuthenticatedCompanyIndexRouteImport } from './routes/_authenticated/company/index'
-import { Route as AuthenticatedCurrencyIndexRouteImport } from './routes/_authenticated/currency/index'
-import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
-import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
-import { Route as AuthenticatedPartsIndexRouteImport } from './routes/_authenticated/parts/index'
-import { Route as AuthenticatedPurchasingIndexRouteImport } from './routes/_authenticated/purchasing/index'
-import { Route as AuthenticatedManufacturingIndexRouteImport } from './routes/_authenticated/manufacturing/index'
-import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
-import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
-import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
-import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
-import { Route as AuthenticatedStockIndexRouteImport } from './routes/_authenticated/stock/index'
-import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
-import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
-import { Route as ClerkauthSignInRouteImport } from './routes/clerk/(auth)/sign-in'
-import { Route as ClerkauthSignUpRouteImport } from './routes/clerk/(auth)/sign-up'
-import { Route as ClerkAuthenticatedUserManagementRouteImport } from './routes/clerk/_authenticated/user-management'
+import { Route as AuthenticatedSystemRouteRouteImport } from './routes/_authenticated/_system/route'
+import { Route as AuthenticatedSystemIndexRouteImport } from './routes/_authenticated/_system/index'
+import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_authenticated/_system/settings/route'
+import { Route as AuthenticatedOOrganizationSlugRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/route'
+import { Route as AuthenticatedSystemErrorsErrorRouteImport } from './routes/_authenticated/_system/errors/$error'
+import { Route as AuthenticatedSystemOrganizationIndexRouteImport } from './routes/_authenticated/_system/organization/index'
+import { Route as AuthenticatedSystemSettingsIndexRouteImport } from './routes/_authenticated/_system/settings/index'
+import { Route as AuthenticatedSystemSettingsSystemRouteRouteImport } from './routes/_authenticated/_system/settings/system/route'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/route'
+import { Route as AuthenticatedOOrganizationSlugSettingsRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/route'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/index'
+import { Route as AuthenticatedOOrganizationSlugSettingsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/index'
+import { Route as AuthenticatedOOrganizationSlugSettingsManageRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/manage'
+import { Route as AuthenticatedOOrganizationSlugSettingsMembersRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/members'
+import { Route as AuthenticatedOOrganizationSlugSettingsTeamsRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/teams'
+import { Route as AuthenticatedSystemSettingsSystemUsersIndexRouteImport } from './routes/_authenticated/_system/settings/system/users/index'
+import { Route as AuthenticatedSystemSettingsSystemUsersUserIdRouteImport } from './routes/_authenticated/_system/settings/system/users/$userId'
+import { Route as AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/purchasing/index'
+import { Route as AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/purchasing/$orderId'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceSalesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/sales/index'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/sales/$saleId'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceStockIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/stock/index'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceStockItemIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/stock/$itemId'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/supplier/index'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId'
+import { Route as AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/item-categories/index'
+import { Route as AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId'
+import { Route as AuthenticatedOOrganizationSlugSettingsItemsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/items/index'
+import { Route as AuthenticatedOOrganizationSlugSettingsItemsItemIdRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/items/$itemId'
+import { Route as AuthenticatedOOrganizationSlugSettingsRecipesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/recipes/index'
+import { Route as AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/recipes/$recipeId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClerkRouteRoute = ClerkRouteRouteImport.update({
-  id: '/clerk',
-  path: '/clerk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
@@ -69,11 +68,6 @@ const authOtpRoute = authOtpRouteImport.update({
 const authSignInRoute = authSignInRouteImport.update({
   id: '/(auth)/sign-in',
   path: '/sign-in',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authSignIn2Route = authSignIn2RouteImport.update({
-  id: '/(auth)/sign-in-2',
-  path: '/sign-in-2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authSignUpRoute = authSignUpRouteImport.update({
@@ -106,375 +100,442 @@ const errors503Route = errors503RouteImport.update({
   path: '/503',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRouteRoute =
-  AuthenticatedSettingsRouteRouteImport.update({
-    id: '/settings',
-    path: '/settings',
+const AuthenticatedSystemRouteRoute =
+  AuthenticatedSystemRouteRouteImport.update({
+    id: '/_system',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ClerkauthRouteRoute = ClerkauthRouteRouteImport.update({
-  id: '/(auth)',
-  getParentRoute: () => ClerkRouteRoute,
-} as any)
-const ClerkAuthenticatedRouteRoute = ClerkAuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => ClerkRouteRoute,
-} as any)
-const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
-  id: '/apps/',
-  path: '/apps/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
-  id: '/chats/',
-  path: '/chats/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedCommonIndexRoute =
-  AuthenticatedCommonIndexRouteImport.update({
-    id: '/common/',
-    path: '/common/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCompanyIndexRoute =
-  AuthenticatedCompanyIndexRouteImport.update({
-    id: '/company/',
-    path: '/company/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCurrencyIndexRoute =
-  AuthenticatedCurrencyIndexRouteImport.update({
-    id: '/currency/',
-    path: '/currency/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedErrorsErrorRoute =
-  AuthenticatedErrorsErrorRouteImport.update({
-    id: '/errors/$error',
-    path: '/errors/$error',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHelpCenterIndexRoute =
-  AuthenticatedHelpCenterIndexRouteImport.update({
-    id: '/help-center/',
-    path: '/help-center/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPartsIndexRoute = AuthenticatedPartsIndexRouteImport.update({
-  id: '/parts/',
-  path: '/parts/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPurchasingIndexRoute =
-  AuthenticatedPurchasingIndexRouteImport.update({
-    id: '/purchasing/',
-    path: '/purchasing/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedManufacturingIndexRoute =
-  AuthenticatedManufacturingIndexRouteImport.update({
-    id: '/manufacturing/',
-    path: '/manufacturing/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSettingsIndexRoute =
-  AuthenticatedSettingsIndexRouteImport.update({
+const AuthenticatedSystemIndexRoute =
+  AuthenticatedSystemIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+    getParentRoute: () => AuthenticatedSystemRouteRoute,
   } as any)
-const AuthenticatedSettingsAccountRoute =
-  AuthenticatedSettingsAccountRouteImport.update({
-    id: '/account',
-    path: '/account',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+const AuthenticatedSystemSettingsRouteRoute =
+  AuthenticatedSystemSettingsRouteRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedSystemRouteRoute,
   } as any)
-const AuthenticatedSettingsAppearanceRoute =
-  AuthenticatedSettingsAppearanceRouteImport.update({
-    id: '/appearance',
-    path: '/appearance',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+const AuthenticatedOOrganizationSlugRouteRoute =
+  AuthenticatedOOrganizationSlugRouteRouteImport.update({
+    id: '/o/$organizationSlug',
+    path: '/o/$organizationSlug',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedSettingsDisplayRoute =
-  AuthenticatedSettingsDisplayRouteImport.update({
-    id: '/display',
-    path: '/display',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+const AuthenticatedSystemErrorsErrorRoute =
+  AuthenticatedSystemErrorsErrorRouteImport.update({
+    id: '/errors/$error',
+    path: '/errors/$error',
+    getParentRoute: () => AuthenticatedSystemRouteRoute,
   } as any)
-const AuthenticatedSettingsNotificationsRoute =
-  AuthenticatedSettingsNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+const AuthenticatedSystemOrganizationIndexRoute =
+  AuthenticatedSystemOrganizationIndexRouteImport.update({
+    id: '/organization/',
+    path: '/organization/',
+    getParentRoute: () => AuthenticatedSystemRouteRoute,
   } as any)
-const AuthenticatedStockIndexRoute = AuthenticatedStockIndexRouteImport.update({
-  id: '/stock/',
-  path: '/stock/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexRouteImport.update({
-  id: '/tasks/',
-  path: '/tasks/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
-  id: '/users/',
-  path: '/users/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ClerkauthSignInRoute = ClerkauthSignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
-  getParentRoute: () => ClerkauthRouteRoute,
-} as any)
-const ClerkauthSignUpRoute = ClerkauthSignUpRouteImport.update({
-  id: '/sign-up',
-  path: '/sign-up',
-  getParentRoute: () => ClerkauthRouteRoute,
-} as any)
-const ClerkAuthenticatedUserManagementRoute =
-  ClerkAuthenticatedUserManagementRouteImport.update({
-    id: '/user-management',
-    path: '/user-management',
-    getParentRoute: () => ClerkAuthenticatedRouteRoute,
+const AuthenticatedSystemSettingsIndexRoute =
+  AuthenticatedSystemSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedSystemSettingsSystemRouteRoute =
+  AuthenticatedSystemSettingsSystemRouteRouteImport.update({
+    id: '/system',
+    path: '/system',
+    getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceRouteRoute =
+  AuthenticatedOOrganizationSlugWorkspaceRouteRouteImport.update({
+    id: '/_workspace',
+    getParentRoute: () => AuthenticatedOOrganizationSlugRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsRouteRoute =
+  AuthenticatedOOrganizationSlugSettingsRouteRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedOOrganizationSlugRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsIndexRoute =
+  AuthenticatedOOrganizationSlugSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsManageRoute =
+  AuthenticatedOOrganizationSlugSettingsManageRouteImport.update({
+    id: '/manage',
+    path: '/manage',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsMembersRoute =
+  AuthenticatedOOrganizationSlugSettingsMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsTeamsRoute =
+  AuthenticatedOOrganizationSlugSettingsTeamsRouteImport.update({
+    id: '/teams',
+    path: '/teams',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedSystemSettingsSystemUsersIndexRoute =
+  AuthenticatedSystemSettingsSystemUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => AuthenticatedSystemSettingsSystemRouteRoute,
+  } as any)
+const AuthenticatedSystemSettingsSystemUsersUserIdRoute =
+  AuthenticatedSystemSettingsSystemUsersUserIdRouteImport.update({
+    id: '/users/$userId',
+    path: '/users/$userId',
+    getParentRoute: () => AuthenticatedSystemSettingsSystemRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRouteImport.update({
+    id: '/purchasing/',
+    path: '/purchasing/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute =
+  AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRouteImport.update({
+    id: '/purchasing/$orderId',
+    path: '/purchasing/$orderId',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspaceSalesIndexRouteImport.update({
+    id: '/sales/',
+    path: '/sales/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute =
+  AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRouteImport.update({
+    id: '/sales/$saleId',
+    path: '/sales/$saleId',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspaceStockIndexRouteImport.update({
+    id: '/stock/',
+    path: '/stock/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute =
+  AuthenticatedOOrganizationSlugWorkspaceStockItemIdRouteImport.update({
+    id: '/stock/$itemId',
+    path: '/stock/$itemId',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRouteImport.update({
+    id: '/supplier/',
+    path: '/supplier/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute =
+  AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRouteImport.update({
+    id: '/supplier/$supplierId',
+    path: '/supplier/$supplierId',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute =
+  AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRouteImport.update({
+    id: '/item-categories/',
+    path: '/item-categories/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute =
+  AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRouteImport.update(
+    {
+      id: '/item-categories/$categoryId',
+      path: '/item-categories/$categoryId',
+      getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugSettingsItemsIndexRoute =
+  AuthenticatedOOrganizationSlugSettingsItemsIndexRouteImport.update({
+    id: '/items/',
+    path: '/items/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute =
+  AuthenticatedOOrganizationSlugSettingsItemsItemIdRouteImport.update({
+    id: '/items/$itemId',
+    path: '/items/$itemId',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute =
+  AuthenticatedOOrganizationSlugSettingsRecipesIndexRouteImport.update({
+    id: '/recipes/',
+    path: '/recipes/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute =
+  AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRouteImport.update({
+    id: '/recipes/$recipeId',
+    path: '/recipes/$recipeId',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
-  '/clerk': typeof ClerkauthRouteRouteWithChildren
-  '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/': typeof AuthenticatedSystemIndexRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
   '/sign-in': typeof authSignInRoute
-  '/sign-in-2': typeof authSignIn2Route
   '/sign-up': typeof authSignUpRoute
   '/401': typeof errors401Route
   '/403': typeof errors403Route
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/settings/account': typeof AuthenticatedSettingsAccountRoute
-  '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/settings/display': typeof AuthenticatedSettingsDisplayRoute
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
-  '/clerk/sign-in': typeof ClerkauthSignInRoute
-  '/clerk/sign-up': typeof ClerkauthSignUpRoute
-  '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
-  '/apps/': typeof AuthenticatedAppsIndexRoute
-  '/chats/': typeof AuthenticatedChatsIndexRoute
-  '/common/': typeof AuthenticatedCommonIndexRoute
-  '/company/': typeof AuthenticatedCompanyIndexRoute
-  '/currency/': typeof AuthenticatedCurrencyIndexRoute
-  '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
-  '/parts/': typeof AuthenticatedPartsIndexRoute
-  '/purchasing/': typeof AuthenticatedPurchasingIndexRoute
-  '/manufacturing/': typeof AuthenticatedManufacturingIndexRoute
-  '/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/stock/': typeof AuthenticatedStockIndexRoute
-  '/tasks/': typeof AuthenticatedTasksIndexRoute
-  '/users/': typeof AuthenticatedUsersIndexRoute
+  '/settings': typeof AuthenticatedSystemSettingsRouteRouteWithChildren
+  '/o/$organizationSlug': typeof AuthenticatedOOrganizationSlugRouteRouteWithChildren
+  '/settings/system': typeof AuthenticatedSystemSettingsSystemRouteRouteWithChildren
+  '/o/$organizationSlug/settings': typeof AuthenticatedOOrganizationSlugSettingsRouteRouteWithChildren
+  '/errors/$error': typeof AuthenticatedSystemErrorsErrorRoute
+  '/organization/': typeof AuthenticatedSystemOrganizationIndexRoute
+  '/settings/': typeof AuthenticatedSystemSettingsIndexRoute
+  '/o/$organizationSlug/settings/manage': typeof AuthenticatedOOrganizationSlugSettingsManageRoute
+  '/o/$organizationSlug/settings/members': typeof AuthenticatedOOrganizationSlugSettingsMembersRoute
+  '/o/$organizationSlug/settings/teams': typeof AuthenticatedOOrganizationSlugSettingsTeamsRoute
+  '/o/$organizationSlug/': typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
+  '/o/$organizationSlug/settings/': typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
+  '/settings/system/users/$userId': typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
+  '/o/$organizationSlug/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute
+  '/o/$organizationSlug/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
+  '/o/$organizationSlug/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
+  '/o/$organizationSlug/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute
+  '/o/$organizationSlug/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute
+  '/o/$organizationSlug/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute
+  '/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
+  '/settings/system/users/': typeof AuthenticatedSystemSettingsSystemUsersIndexRoute
+  '/o/$organizationSlug/purchasing/': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute
+  '/o/$organizationSlug/sales/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
+  '/o/$organizationSlug/stock/': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
+  '/o/$organizationSlug/supplier/': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute
+  '/o/$organizationSlug/settings/item-categories/': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute
+  '/o/$organizationSlug/settings/items/': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
+  '/o/$organizationSlug/settings/recipes/': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/clerk': typeof ClerkauthRouteRouteWithChildren
+  '/': typeof AuthenticatedSystemIndexRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
   '/sign-in': typeof authSignInRoute
-  '/sign-in-2': typeof authSignIn2Route
   '/sign-up': typeof authSignUpRoute
   '/401': typeof errors401Route
   '/403': typeof errors403Route
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/': typeof AuthenticatedIndexRoute
-  '/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/settings/account': typeof AuthenticatedSettingsAccountRoute
-  '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/settings/display': typeof AuthenticatedSettingsDisplayRoute
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
-  '/clerk/sign-in': typeof ClerkauthSignInRoute
-  '/clerk/sign-up': typeof ClerkauthSignUpRoute
-  '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
-  '/apps': typeof AuthenticatedAppsIndexRoute
-  '/chats': typeof AuthenticatedChatsIndexRoute
-  '/common': typeof AuthenticatedCommonIndexRoute
-  '/company': typeof AuthenticatedCompanyIndexRoute
-  '/currency': typeof AuthenticatedCurrencyIndexRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexRoute
-  '/parts': typeof AuthenticatedPartsIndexRoute
-  '/purchasing': typeof AuthenticatedPurchasingIndexRoute
-  '/manufacturing': typeof AuthenticatedManufacturingIndexRoute
-  '/settings': typeof AuthenticatedSettingsIndexRoute
-  '/stock': typeof AuthenticatedStockIndexRoute
-  '/tasks': typeof AuthenticatedTasksIndexRoute
-  '/users': typeof AuthenticatedUsersIndexRoute
+  '/o/$organizationSlug': typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
+  '/settings/system': typeof AuthenticatedSystemSettingsSystemRouteRouteWithChildren
+  '/errors/$error': typeof AuthenticatedSystemErrorsErrorRoute
+  '/organization': typeof AuthenticatedSystemOrganizationIndexRoute
+  '/settings': typeof AuthenticatedSystemSettingsIndexRoute
+  '/o/$organizationSlug/settings/manage': typeof AuthenticatedOOrganizationSlugSettingsManageRoute
+  '/o/$organizationSlug/settings/members': typeof AuthenticatedOOrganizationSlugSettingsMembersRoute
+  '/o/$organizationSlug/settings/teams': typeof AuthenticatedOOrganizationSlugSettingsTeamsRoute
+  '/o/$organizationSlug/settings': typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
+  '/settings/system/users/$userId': typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
+  '/o/$organizationSlug/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute
+  '/o/$organizationSlug/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
+  '/o/$organizationSlug/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
+  '/o/$organizationSlug/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute
+  '/o/$organizationSlug/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute
+  '/o/$organizationSlug/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute
+  '/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
+  '/settings/system/users': typeof AuthenticatedSystemSettingsSystemUsersIndexRoute
+  '/o/$organizationSlug/purchasing': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute
+  '/o/$organizationSlug/sales': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
+  '/o/$organizationSlug/stock': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
+  '/o/$organizationSlug/supplier': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute
+  '/o/$organizationSlug/settings/item-categories': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute
+  '/o/$organizationSlug/settings/items': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
+  '/o/$organizationSlug/settings/recipes': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/clerk': typeof ClerkRouteRouteWithChildren
-  '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
-  '/clerk/(auth)': typeof ClerkauthRouteRouteWithChildren
-  '/clerk/_authenticated': typeof ClerkAuthenticatedRouteRouteWithChildren
+  '/_authenticated/_system': typeof AuthenticatedSystemRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/otp': typeof authOtpRoute
   '/(auth)/sign-in': typeof authSignInRoute
-  '/(auth)/sign-in-2': typeof authSignIn2Route
   '/(auth)/sign-up': typeof authSignUpRoute
   '/(errors)/401': typeof errors401Route
   '/(errors)/403': typeof errors403Route
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
-  '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
-  '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
-  '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
-  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
-  '/clerk/(auth)/sign-in': typeof ClerkauthSignInRoute
-  '/clerk/(auth)/sign-up': typeof ClerkauthSignUpRoute
-  '/clerk/_authenticated/user-management': typeof ClerkAuthenticatedUserManagementRoute
-  '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
-  '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
-  '/_authenticated/common/': typeof AuthenticatedCommonIndexRoute
-  '/_authenticated/company/': typeof AuthenticatedCompanyIndexRoute
-  '/_authenticated/currency/': typeof AuthenticatedCurrencyIndexRoute
-  '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
-  '/_authenticated/parts/': typeof AuthenticatedPartsIndexRoute
-  '/_authenticated/purchasing/': typeof AuthenticatedPurchasingIndexRoute
-  '/_authenticated/manufacturing/': typeof AuthenticatedManufacturingIndexRoute
-  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/_authenticated/stock/': typeof AuthenticatedStockIndexRoute
-  '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
-  '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/_system/settings': typeof AuthenticatedSystemSettingsRouteRouteWithChildren
+  '/_authenticated/o/$organizationSlug': typeof AuthenticatedOOrganizationSlugRouteRouteWithChildren
+  '/_authenticated/_system/': typeof AuthenticatedSystemIndexRoute
+  '/_authenticated/_system/settings/system': typeof AuthenticatedSystemSettingsSystemRouteRouteWithChildren
+  '/_authenticated/o/$organizationSlug/_workspace': typeof AuthenticatedOOrganizationSlugWorkspaceRouteRouteWithChildren
+  '/_authenticated/o/$organizationSlug/settings': typeof AuthenticatedOOrganizationSlugSettingsRouteRouteWithChildren
+  '/_authenticated/_system/errors/$error': typeof AuthenticatedSystemErrorsErrorRoute
+  '/_authenticated/_system/organization/': typeof AuthenticatedSystemOrganizationIndexRoute
+  '/_authenticated/_system/settings/': typeof AuthenticatedSystemSettingsIndexRoute
+  '/_authenticated/o/$organizationSlug/settings/manage': typeof AuthenticatedOOrganizationSlugSettingsManageRoute
+  '/_authenticated/o/$organizationSlug/settings/members': typeof AuthenticatedOOrganizationSlugSettingsMembersRoute
+  '/_authenticated/o/$organizationSlug/settings/teams': typeof AuthenticatedOOrganizationSlugSettingsTeamsRoute
+  '/_authenticated/o/$organizationSlug/_workspace/': typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
+  '/_authenticated/o/$organizationSlug/settings/': typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
+  '/_authenticated/_system/settings/system/users/$userId': typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
+  '/_authenticated/o/$organizationSlug/_workspace/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute
+  '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
+  '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
+  '/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute
+  '/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute
+  '/_authenticated/o/$organizationSlug/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute
+  '/_authenticated/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
+  '/_authenticated/_system/settings/system/users/': typeof AuthenticatedSystemSettingsSystemUsersIndexRoute
+  '/_authenticated/o/$organizationSlug/_workspace/purchasing/': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute
+  '/_authenticated/o/$organizationSlug/_workspace/sales/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
+  '/_authenticated/o/$organizationSlug/_workspace/stock/': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
+  '/_authenticated/o/$organizationSlug/_workspace/supplier/': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute
+  '/_authenticated/o/$organizationSlug/settings/item-categories/': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute
+  '/_authenticated/o/$organizationSlug/settings/items/': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
+  '/_authenticated/o/$organizationSlug/settings/recipes/': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/clerk'
-    | '/settings'
     | '/forgot-password'
     | '/otp'
     | '/sign-in'
-    | '/sign-in-2'
     | '/sign-up'
     | '/401'
     | '/403'
     | '/404'
     | '/500'
     | '/503'
+    | '/settings'
+    | '/o/$organizationSlug'
+    | '/settings/system'
+    | '/o/$organizationSlug/settings'
     | '/errors/$error'
-    | '/settings/account'
-    | '/settings/appearance'
-    | '/settings/display'
-    | '/settings/notifications'
-    | '/clerk/sign-in'
-    | '/clerk/sign-up'
-    | '/clerk/user-management'
-    | '/apps/'
-    | '/chats/'
-    | '/common/'
-    | '/company/'
-    | '/currency/'
-    | '/help-center/'
-    | '/parts/'
-    | '/purchasing/'
-    | '/manufacturing/'
+    | '/organization/'
     | '/settings/'
-    | '/stock/'
-    | '/tasks/'
-    | '/users/'
+    | '/o/$organizationSlug/settings/manage'
+    | '/o/$organizationSlug/settings/members'
+    | '/o/$organizationSlug/settings/teams'
+    | '/o/$organizationSlug/'
+    | '/o/$organizationSlug/settings/'
+    | '/settings/system/users/$userId'
+    | '/o/$organizationSlug/purchasing/$orderId'
+    | '/o/$organizationSlug/sales/$saleId'
+    | '/o/$organizationSlug/stock/$itemId'
+    | '/o/$organizationSlug/supplier/$supplierId'
+    | '/o/$organizationSlug/settings/item-categories/$categoryId'
+    | '/o/$organizationSlug/settings/items/$itemId'
+    | '/o/$organizationSlug/settings/recipes/$recipeId'
+    | '/settings/system/users/'
+    | '/o/$organizationSlug/purchasing/'
+    | '/o/$organizationSlug/sales/'
+    | '/o/$organizationSlug/stock/'
+    | '/o/$organizationSlug/supplier/'
+    | '/o/$organizationSlug/settings/item-categories/'
+    | '/o/$organizationSlug/settings/items/'
+    | '/o/$organizationSlug/settings/recipes/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/clerk'
+    | '/'
     | '/forgot-password'
     | '/otp'
     | '/sign-in'
-    | '/sign-in-2'
     | '/sign-up'
     | '/401'
     | '/403'
     | '/404'
     | '/500'
     | '/503'
-    | '/'
+    | '/o/$organizationSlug'
+    | '/settings/system'
     | '/errors/$error'
-    | '/settings/account'
-    | '/settings/appearance'
-    | '/settings/display'
-    | '/settings/notifications'
-    | '/clerk/sign-in'
-    | '/clerk/sign-up'
-    | '/clerk/user-management'
-    | '/apps'
-    | '/chats'
-    | '/common'
-    | '/company'
-    | '/currency'
-    | '/help-center'
-    | '/parts'
-    | '/purchasing'
-    | '/manufacturing'
+    | '/organization'
     | '/settings'
-    | '/stock'
-    | '/tasks'
-    | '/users'
+    | '/o/$organizationSlug/settings/manage'
+    | '/o/$organizationSlug/settings/members'
+    | '/o/$organizationSlug/settings/teams'
+    | '/o/$organizationSlug/settings'
+    | '/settings/system/users/$userId'
+    | '/o/$organizationSlug/purchasing/$orderId'
+    | '/o/$organizationSlug/sales/$saleId'
+    | '/o/$organizationSlug/stock/$itemId'
+    | '/o/$organizationSlug/supplier/$supplierId'
+    | '/o/$organizationSlug/settings/item-categories/$categoryId'
+    | '/o/$organizationSlug/settings/items/$itemId'
+    | '/o/$organizationSlug/settings/recipes/$recipeId'
+    | '/settings/system/users'
+    | '/o/$organizationSlug/purchasing'
+    | '/o/$organizationSlug/sales'
+    | '/o/$organizationSlug/stock'
+    | '/o/$organizationSlug/supplier'
+    | '/o/$organizationSlug/settings/item-categories'
+    | '/o/$organizationSlug/settings/items'
+    | '/o/$organizationSlug/settings/recipes'
   id:
     | '__root__'
     | '/_authenticated'
-    | '/clerk'
-    | '/_authenticated/settings'
-    | '/clerk/(auth)'
-    | '/clerk/_authenticated'
+    | '/_authenticated/_system'
     | '/(auth)/forgot-password'
     | '/(auth)/otp'
     | '/(auth)/sign-in'
-    | '/(auth)/sign-in-2'
     | '/(auth)/sign-up'
     | '/(errors)/401'
     | '/(errors)/403'
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
-    | '/_authenticated/'
-    | '/_authenticated/errors/$error'
-    | '/_authenticated/settings/account'
-    | '/_authenticated/settings/appearance'
-    | '/_authenticated/settings/display'
-    | '/_authenticated/settings/notifications'
-    | '/clerk/(auth)/sign-in'
-    | '/clerk/(auth)/sign-up'
-    | '/clerk/_authenticated/user-management'
-    | '/_authenticated/apps/'
-    | '/_authenticated/chats/'
-    | '/_authenticated/common/'
-    | '/_authenticated/company/'
-    | '/_authenticated/currency/'
-    | '/_authenticated/help-center/'
-    | '/_authenticated/parts/'
-    | '/_authenticated/purchasing/'
-    | '/_authenticated/manufacturing/'
-    | '/_authenticated/settings/'
-    | '/_authenticated/stock/'
-    | '/_authenticated/tasks/'
-    | '/_authenticated/users/'
+    | '/_authenticated/_system/settings'
+    | '/_authenticated/o/$organizationSlug'
+    | '/_authenticated/_system/'
+    | '/_authenticated/_system/settings/system'
+    | '/_authenticated/o/$organizationSlug/_workspace'
+    | '/_authenticated/o/$organizationSlug/settings'
+    | '/_authenticated/_system/errors/$error'
+    | '/_authenticated/_system/organization/'
+    | '/_authenticated/_system/settings/'
+    | '/_authenticated/o/$organizationSlug/settings/manage'
+    | '/_authenticated/o/$organizationSlug/settings/members'
+    | '/_authenticated/o/$organizationSlug/settings/teams'
+    | '/_authenticated/o/$organizationSlug/_workspace/'
+    | '/_authenticated/o/$organizationSlug/settings/'
+    | '/_authenticated/_system/settings/system/users/$userId'
+    | '/_authenticated/o/$organizationSlug/_workspace/purchasing/$orderId'
+    | '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId'
+    | '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId'
+    | '/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId'
+    | '/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId'
+    | '/_authenticated/o/$organizationSlug/settings/items/$itemId'
+    | '/_authenticated/o/$organizationSlug/settings/recipes/$recipeId'
+    | '/_authenticated/_system/settings/system/users/'
+    | '/_authenticated/o/$organizationSlug/_workspace/purchasing/'
+    | '/_authenticated/o/$organizationSlug/_workspace/sales/'
+    | '/_authenticated/o/$organizationSlug/_workspace/stock/'
+    | '/_authenticated/o/$organizationSlug/_workspace/supplier/'
+    | '/_authenticated/o/$organizationSlug/settings/item-categories/'
+    | '/_authenticated/o/$organizationSlug/settings/items/'
+    | '/_authenticated/o/$organizationSlug/settings/recipes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  ClerkRouteRoute: typeof ClerkRouteRouteWithChildren
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authOtpRoute: typeof authOtpRoute
   authSignInRoute: typeof authSignInRoute
-  authSignIn2Route: typeof authSignIn2Route
   authSignUpRoute: typeof authSignUpRoute
   errors401Route: typeof errors401Route
   errors403Route: typeof errors403Route
@@ -490,13 +551,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clerk': {
-      id: '/clerk'
-      path: '/clerk'
-      fullPath: '/clerk'
-      preLoaderRoute: typeof ClerkRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/forgot-password': {
@@ -518,13 +572,6 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof authSignInRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/sign-in-2': {
-      id: '/(auth)/sign-in-2'
-      path: '/sign-in-2'
-      fullPath: '/sign-in-2'
-      preLoaderRoute: typeof authSignIn2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)/sign-up': {
@@ -569,296 +616,402 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof errors503RouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
+    '/_authenticated/_system': {
+      id: '/_authenticated/_system'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedSystemRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_system/': {
+      id: '/_authenticated/_system/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof AuthenticatedSystemIndexRouteImport
+      parentRoute: typeof AuthenticatedSystemRouteRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
+    '/_authenticated/_system/settings': {
+      id: '/_authenticated/_system/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+      preLoaderRoute: typeof AuthenticatedSystemSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedSystemRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug': {
+      id: '/_authenticated/o/$organizationSlug'
+      path: '/o/$organizationSlug'
+      fullPath: '/o/$organizationSlug'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/clerk/(auth)': {
-      id: '/clerk/(auth)'
-      path: ''
-      fullPath: '/clerk'
-      preLoaderRoute: typeof ClerkauthRouteRouteImport
-      parentRoute: typeof ClerkRouteRoute
-    }
-    '/clerk/_authenticated': {
-      id: '/clerk/_authenticated'
-      path: ''
-      fullPath: '/clerk'
-      preLoaderRoute: typeof ClerkAuthenticatedRouteRouteImport
-      parentRoute: typeof ClerkRouteRoute
-    }
-    '/_authenticated/apps/': {
-      id: '/_authenticated/apps/'
-      path: '/apps'
-      fullPath: '/apps/'
-      preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/chats/': {
-      id: '/_authenticated/chats/'
-      path: '/chats'
-      fullPath: '/chats/'
-      preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/common/': {
-      id: '/_authenticated/common/'
-      path: '/common'
-      fullPath: '/common/'
-      preLoaderRoute: typeof AuthenticatedCommonIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/company/': {
-      id: '/_authenticated/company/'
-      path: '/company'
-      fullPath: '/company/'
-      preLoaderRoute: typeof AuthenticatedCompanyIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/currency/': {
-      id: '/_authenticated/currency/'
-      path: '/currency'
-      fullPath: '/currency/'
-      preLoaderRoute: typeof AuthenticatedCurrencyIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/errors/$error': {
-      id: '/_authenticated/errors/$error'
+    '/_authenticated/_system/errors/$error': {
+      id: '/_authenticated/_system/errors/$error'
       path: '/errors/$error'
       fullPath: '/errors/$error'
-      preLoaderRoute: typeof AuthenticatedErrorsErrorRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof AuthenticatedSystemErrorsErrorRouteImport
+      parentRoute: typeof AuthenticatedSystemRouteRoute
     }
-    '/_authenticated/help-center/': {
-      id: '/_authenticated/help-center/'
-      path: '/help-center'
-      fullPath: '/help-center/'
-      preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated/_system/organization/': {
+      id: '/_authenticated/_system/organization/'
+      path: '/organization'
+      fullPath: '/organization/'
+      preLoaderRoute: typeof AuthenticatedSystemOrganizationIndexRouteImport
+      parentRoute: typeof AuthenticatedSystemRouteRoute
     }
-    '/_authenticated/parts/': {
-      id: '/_authenticated/parts/'
-      path: '/parts'
-      fullPath: '/parts/'
-      preLoaderRoute: typeof AuthenticatedPartsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/purchasing/': {
-      id: '/_authenticated/purchasing/'
-      path: '/purchasing'
-      fullPath: '/purchasing/'
-      preLoaderRoute: typeof AuthenticatedPurchasingIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/manufacturing/': {
-      id: '/_authenticated/manufacturing/'
-      path: '/manufacturing'
-      fullPath: '/manufacturing/'
-      preLoaderRoute: typeof AuthenticatedManufacturingIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
+    '/_authenticated/_system/settings/': {
+      id: '/_authenticated/_system/settings/'
       path: '/'
       fullPath: '/settings/'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
+      preLoaderRoute: typeof AuthenticatedSystemSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
     }
-    '/_authenticated/settings/account': {
-      id: '/_authenticated/settings/account'
-      path: '/account'
-      fullPath: '/settings/account'
-      preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    '/_authenticated/_system/settings/system': {
+      id: '/_authenticated/_system/settings/system'
+      path: '/system'
+      fullPath: '/settings/system'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsSystemRouteRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
     }
-    '/_authenticated/settings/appearance': {
-      id: '/_authenticated/settings/appearance'
-      path: '/appearance'
-      fullPath: '/settings/appearance'
-      preLoaderRoute: typeof AuthenticatedSettingsAppearanceRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    '/_authenticated/o/$organizationSlug/_workspace': {
+      id: '/_authenticated/o/$organizationSlug/_workspace'
+      path: ''
+      fullPath: '/o/$organizationSlug'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugRouteRoute
     }
-    '/_authenticated/settings/display': {
-      id: '/_authenticated/settings/display'
-      path: '/display'
-      fullPath: '/settings/display'
-      preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    '/_authenticated/o/$organizationSlug/settings': {
+      id: '/_authenticated/o/$organizationSlug/settings'
+      path: '/settings'
+      fullPath: '/o/$organizationSlug/settings'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugRouteRoute
     }
-    '/_authenticated/settings/notifications': {
-      id: '/_authenticated/settings/notifications'
-      path: '/notifications'
-      fullPath: '/settings/notifications'
-      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    '/_authenticated/o/$organizationSlug/_workspace/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/'
+      path: '/'
+      fullPath: '/o/$organizationSlug/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
     }
-    '/_authenticated/stock/': {
-      id: '/_authenticated/stock/'
-      path: '/stock'
-      fullPath: '/stock/'
-      preLoaderRoute: typeof AuthenticatedStockIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated/o/$organizationSlug/settings/': {
+      id: '/_authenticated/o/$organizationSlug/settings/'
+      path: '/'
+      fullPath: '/o/$organizationSlug/settings/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
     }
-    '/_authenticated/tasks/': {
-      id: '/_authenticated/tasks/'
-      path: '/tasks'
-      fullPath: '/tasks/'
-      preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated/o/$organizationSlug/settings/manage': {
+      id: '/_authenticated/o/$organizationSlug/settings/manage'
+      path: '/manage'
+      fullPath: '/o/$organizationSlug/settings/manage'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsManageRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
     }
-    '/_authenticated/users/': {
-      id: '/_authenticated/users/'
+    '/_authenticated/o/$organizationSlug/settings/members': {
+      id: '/_authenticated/o/$organizationSlug/settings/members'
+      path: '/members'
+      fullPath: '/o/$organizationSlug/settings/members'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsMembersRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/teams': {
+      id: '/_authenticated/o/$organizationSlug/settings/teams'
+      path: '/teams'
+      fullPath: '/o/$organizationSlug/settings/teams'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsTeamsRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
+    '/_authenticated/_system/settings/system/users/': {
+      id: '/_authenticated/_system/settings/system/users/'
       path: '/users'
-      fullPath: '/users/'
-      preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      fullPath: '/settings/system/users/'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsSystemUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsSystemRouteRoute
     }
-    '/clerk/(auth)/sign-in': {
-      id: '/clerk/(auth)/sign-in'
-      path: '/sign-in'
-      fullPath: '/clerk/sign-in'
-      preLoaderRoute: typeof ClerkauthSignInRouteImport
-      parentRoute: typeof ClerkauthRouteRoute
+    '/_authenticated/_system/settings/system/users/$userId': {
+      id: '/_authenticated/_system/settings/system/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/settings/system/users/$userId'
+      preLoaderRoute: typeof AuthenticatedSystemSettingsSystemUsersUserIdRouteImport
+      parentRoute: typeof AuthenticatedSystemSettingsSystemRouteRoute
     }
-    '/clerk/(auth)/sign-up': {
-      id: '/clerk/(auth)/sign-up'
-      path: '/sign-up'
-      fullPath: '/clerk/sign-up'
-      preLoaderRoute: typeof ClerkauthSignUpRouteImport
-      parentRoute: typeof ClerkauthRouteRoute
+    '/_authenticated/o/$organizationSlug/_workspace/purchasing/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/purchasing/'
+      path: '/purchasing'
+      fullPath: '/o/$organizationSlug/purchasing/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
     }
-    '/clerk/_authenticated/user-management': {
-      id: '/clerk/_authenticated/user-management'
-      path: '/user-management'
-      fullPath: '/clerk/user-management'
-      preLoaderRoute: typeof ClerkAuthenticatedUserManagementRouteImport
-      parentRoute: typeof ClerkAuthenticatedRouteRoute
+    '/_authenticated/o/$organizationSlug/_workspace/purchasing/$orderId': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/purchasing/$orderId'
+      path: '/purchasing/$orderId'
+      fullPath: '/o/$organizationSlug/purchasing/$orderId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/sales/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/sales/'
+      path: '/sales'
+      fullPath: '/o/$organizationSlug/sales/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId'
+      path: '/sales/$saleId'
+      fullPath: '/o/$organizationSlug/sales/$saleId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/stock/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/stock/'
+      path: '/stock'
+      fullPath: '/o/$organizationSlug/stock/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId'
+      path: '/stock/$itemId'
+      fullPath: '/o/$organizationSlug/stock/$itemId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/supplier/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/supplier/'
+      path: '/supplier'
+      fullPath: '/o/$organizationSlug/supplier/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId'
+      path: '/supplier/$supplierId'
+      fullPath: '/o/$organizationSlug/supplier/$supplierId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/item-categories/': {
+      id: '/_authenticated/o/$organizationSlug/settings/item-categories/'
+      path: '/item-categories'
+      fullPath: '/o/$organizationSlug/settings/item-categories/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId': {
+      id: '/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId'
+      path: '/item-categories/$categoryId'
+      fullPath: '/o/$organizationSlug/settings/item-categories/$categoryId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/items/': {
+      id: '/_authenticated/o/$organizationSlug/settings/items/'
+      path: '/items'
+      fullPath: '/o/$organizationSlug/settings/items/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/items/$itemId': {
+      id: '/_authenticated/o/$organizationSlug/settings/items/$itemId'
+      path: '/items/$itemId'
+      fullPath: '/o/$organizationSlug/settings/items/$itemId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/recipes/': {
+      id: '/_authenticated/o/$organizationSlug/settings/recipes/'
+      path: '/recipes'
+      fullPath: '/o/$organizationSlug/settings/recipes/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/recipes/$recipeId': {
+      id: '/_authenticated/o/$organizationSlug/settings/recipes/$recipeId'
+      path: '/recipes/$recipeId'
+      fullPath: '/o/$organizationSlug/settings/recipes/$recipeId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
     }
   }
 }
 
-interface AuthenticatedSettingsRouteRouteChildren {
-  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
-  AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
-  AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
-  AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
-  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+interface AuthenticatedSystemSettingsSystemRouteRouteChildren {
+  AuthenticatedSystemSettingsSystemUsersUserIdRoute: typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
+  AuthenticatedSystemSettingsSystemUsersIndexRoute: typeof AuthenticatedSystemSettingsSystemUsersIndexRoute
 }
 
-const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
+const AuthenticatedSystemSettingsSystemRouteRouteChildren: AuthenticatedSystemSettingsSystemRouteRouteChildren =
   {
-    AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
-    AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
-    AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
-    AuthenticatedSettingsNotificationsRoute:
-      AuthenticatedSettingsNotificationsRoute,
-    AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+    AuthenticatedSystemSettingsSystemUsersUserIdRoute:
+      AuthenticatedSystemSettingsSystemUsersUserIdRoute,
+    AuthenticatedSystemSettingsSystemUsersIndexRoute:
+      AuthenticatedSystemSettingsSystemUsersIndexRoute,
   }
 
-const AuthenticatedSettingsRouteRouteWithChildren =
-  AuthenticatedSettingsRouteRoute._addFileChildren(
-    AuthenticatedSettingsRouteRouteChildren,
+const AuthenticatedSystemSettingsSystemRouteRouteWithChildren =
+  AuthenticatedSystemSettingsSystemRouteRoute._addFileChildren(
+    AuthenticatedSystemSettingsSystemRouteRouteChildren,
+  )
+
+interface AuthenticatedSystemSettingsRouteRouteChildren {
+  AuthenticatedSystemSettingsSystemRouteRoute: typeof AuthenticatedSystemSettingsSystemRouteRouteWithChildren
+  AuthenticatedSystemSettingsIndexRoute: typeof AuthenticatedSystemSettingsIndexRoute
+}
+
+const AuthenticatedSystemSettingsRouteRouteChildren: AuthenticatedSystemSettingsRouteRouteChildren =
+  {
+    AuthenticatedSystemSettingsSystemRouteRoute:
+      AuthenticatedSystemSettingsSystemRouteRouteWithChildren,
+    AuthenticatedSystemSettingsIndexRoute:
+      AuthenticatedSystemSettingsIndexRoute,
+  }
+
+const AuthenticatedSystemSettingsRouteRouteWithChildren =
+  AuthenticatedSystemSettingsRouteRoute._addFileChildren(
+    AuthenticatedSystemSettingsRouteRouteChildren,
+  )
+
+interface AuthenticatedSystemRouteRouteChildren {
+  AuthenticatedSystemSettingsRouteRoute: typeof AuthenticatedSystemSettingsRouteRouteWithChildren
+  AuthenticatedSystemIndexRoute: typeof AuthenticatedSystemIndexRoute
+  AuthenticatedSystemErrorsErrorRoute: typeof AuthenticatedSystemErrorsErrorRoute
+  AuthenticatedSystemOrganizationIndexRoute: typeof AuthenticatedSystemOrganizationIndexRoute
+}
+
+const AuthenticatedSystemRouteRouteChildren: AuthenticatedSystemRouteRouteChildren =
+  {
+    AuthenticatedSystemSettingsRouteRoute:
+      AuthenticatedSystemSettingsRouteRouteWithChildren,
+    AuthenticatedSystemIndexRoute: AuthenticatedSystemIndexRoute,
+    AuthenticatedSystemErrorsErrorRoute: AuthenticatedSystemErrorsErrorRoute,
+    AuthenticatedSystemOrganizationIndexRoute:
+      AuthenticatedSystemOrganizationIndexRoute,
+  }
+
+const AuthenticatedSystemRouteRouteWithChildren =
+  AuthenticatedSystemRouteRoute._addFileChildren(
+    AuthenticatedSystemRouteRouteChildren,
+  )
+
+interface AuthenticatedOOrganizationSlugWorkspaceRouteRouteChildren {
+  AuthenticatedOOrganizationSlugWorkspaceIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
+  AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute: typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute
+  AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
+  AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute: typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
+  AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute
+  AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute
+  AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
+  AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
+  AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute
+}
+
+const AuthenticatedOOrganizationSlugWorkspaceRouteRouteChildren: AuthenticatedOOrganizationSlugWorkspaceRouteRouteChildren =
+  {
+    AuthenticatedOOrganizationSlugWorkspaceIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspaceIndexRoute,
+    AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute:
+      AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute,
+    AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute:
+      AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute,
+    AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute:
+      AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute,
+    AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute:
+      AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute,
+    AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute,
+    AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute,
+    AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute,
+    AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute,
+  }
+
+const AuthenticatedOOrganizationSlugWorkspaceRouteRouteWithChildren =
+  AuthenticatedOOrganizationSlugWorkspaceRouteRoute._addFileChildren(
+    AuthenticatedOOrganizationSlugWorkspaceRouteRouteChildren,
+  )
+
+interface AuthenticatedOOrganizationSlugSettingsRouteRouteChildren {
+  AuthenticatedOOrganizationSlugSettingsManageRoute: typeof AuthenticatedOOrganizationSlugSettingsManageRoute
+  AuthenticatedOOrganizationSlugSettingsMembersRoute: typeof AuthenticatedOOrganizationSlugSettingsMembersRoute
+  AuthenticatedOOrganizationSlugSettingsTeamsRoute: typeof AuthenticatedOOrganizationSlugSettingsTeamsRoute
+  AuthenticatedOOrganizationSlugSettingsIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
+  AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute: typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute
+  AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute: typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute
+  AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute: typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
+  AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute
+  AuthenticatedOOrganizationSlugSettingsItemsIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
+  AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
+}
+
+const AuthenticatedOOrganizationSlugSettingsRouteRouteChildren: AuthenticatedOOrganizationSlugSettingsRouteRouteChildren =
+  {
+    AuthenticatedOOrganizationSlugSettingsManageRoute:
+      AuthenticatedOOrganizationSlugSettingsManageRoute,
+    AuthenticatedOOrganizationSlugSettingsMembersRoute:
+      AuthenticatedOOrganizationSlugSettingsMembersRoute,
+    AuthenticatedOOrganizationSlugSettingsTeamsRoute:
+      AuthenticatedOOrganizationSlugSettingsTeamsRoute,
+    AuthenticatedOOrganizationSlugSettingsIndexRoute:
+      AuthenticatedOOrganizationSlugSettingsIndexRoute,
+    AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute:
+      AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute,
+    AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute:
+      AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute,
+    AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute:
+      AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute,
+    AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute:
+      AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute,
+    AuthenticatedOOrganizationSlugSettingsItemsIndexRoute:
+      AuthenticatedOOrganizationSlugSettingsItemsIndexRoute,
+    AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute:
+      AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute,
+  }
+
+const AuthenticatedOOrganizationSlugSettingsRouteRouteWithChildren =
+  AuthenticatedOOrganizationSlugSettingsRouteRoute._addFileChildren(
+    AuthenticatedOOrganizationSlugSettingsRouteRouteChildren,
+  )
+
+interface AuthenticatedOOrganizationSlugRouteRouteChildren {
+  AuthenticatedOOrganizationSlugWorkspaceRouteRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRouteWithChildren
+  AuthenticatedOOrganizationSlugSettingsRouteRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRouteWithChildren
+}
+
+const AuthenticatedOOrganizationSlugRouteRouteChildren: AuthenticatedOOrganizationSlugRouteRouteChildren =
+  {
+    AuthenticatedOOrganizationSlugWorkspaceRouteRoute:
+      AuthenticatedOOrganizationSlugWorkspaceRouteRouteWithChildren,
+    AuthenticatedOOrganizationSlugSettingsRouteRoute:
+      AuthenticatedOOrganizationSlugSettingsRouteRouteWithChildren,
+  }
+
+const AuthenticatedOOrganizationSlugRouteRouteWithChildren =
+  AuthenticatedOOrganizationSlugRouteRoute._addFileChildren(
+    AuthenticatedOOrganizationSlugRouteRouteChildren,
   )
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
-  AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
-  AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
-  AuthenticatedCommonIndexRoute: typeof AuthenticatedCommonIndexRoute
-  AuthenticatedCompanyIndexRoute: typeof AuthenticatedCompanyIndexRoute
-  AuthenticatedCurrencyIndexRoute: typeof AuthenticatedCurrencyIndexRoute
-  AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
-  AuthenticatedPartsIndexRoute: typeof AuthenticatedPartsIndexRoute
-  AuthenticatedPurchasingIndexRoute: typeof AuthenticatedPurchasingIndexRoute
-  AuthenticatedManufacturingIndexRoute: typeof AuthenticatedManufacturingIndexRoute
-  AuthenticatedStockIndexRoute: typeof AuthenticatedStockIndexRoute
-  AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
-  AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedSystemRouteRoute: typeof AuthenticatedSystemRouteRouteWithChildren
+  AuthenticatedOOrganizationSlugRouteRoute: typeof AuthenticatedOOrganizationSlugRouteRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
-  AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
-  AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
-  AuthenticatedCommonIndexRoute: AuthenticatedCommonIndexRoute,
-  AuthenticatedCompanyIndexRoute: AuthenticatedCompanyIndexRoute,
-  AuthenticatedCurrencyIndexRoute: AuthenticatedCurrencyIndexRoute,
-  AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
-  AuthenticatedPartsIndexRoute: AuthenticatedPartsIndexRoute,
-  AuthenticatedPurchasingIndexRoute: AuthenticatedPurchasingIndexRoute,
-  AuthenticatedManufacturingIndexRoute: AuthenticatedManufacturingIndexRoute,
-  AuthenticatedStockIndexRoute: AuthenticatedStockIndexRoute,
-  AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
-  AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedSystemRouteRoute: AuthenticatedSystemRouteRouteWithChildren,
+  AuthenticatedOOrganizationSlugRouteRoute:
+    AuthenticatedOOrganizationSlugRouteRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface ClerkauthRouteRouteChildren {
-  ClerkauthSignInRoute: typeof ClerkauthSignInRoute
-  ClerkauthSignUpRoute: typeof ClerkauthSignUpRoute
-}
-
-const ClerkauthRouteRouteChildren: ClerkauthRouteRouteChildren = {
-  ClerkauthSignInRoute: ClerkauthSignInRoute,
-  ClerkauthSignUpRoute: ClerkauthSignUpRoute,
-}
-
-const ClerkauthRouteRouteWithChildren = ClerkauthRouteRoute._addFileChildren(
-  ClerkauthRouteRouteChildren,
-)
-
-interface ClerkAuthenticatedRouteRouteChildren {
-  ClerkAuthenticatedUserManagementRoute: typeof ClerkAuthenticatedUserManagementRoute
-}
-
-const ClerkAuthenticatedRouteRouteChildren: ClerkAuthenticatedRouteRouteChildren =
-  {
-    ClerkAuthenticatedUserManagementRoute:
-      ClerkAuthenticatedUserManagementRoute,
-  }
-
-const ClerkAuthenticatedRouteRouteWithChildren =
-  ClerkAuthenticatedRouteRoute._addFileChildren(
-    ClerkAuthenticatedRouteRouteChildren,
-  )
-
-interface ClerkRouteRouteChildren {
-  ClerkauthRouteRoute: typeof ClerkauthRouteRouteWithChildren
-  ClerkAuthenticatedRouteRoute: typeof ClerkAuthenticatedRouteRouteWithChildren
-}
-
-const ClerkRouteRouteChildren: ClerkRouteRouteChildren = {
-  ClerkauthRouteRoute: ClerkauthRouteRouteWithChildren,
-  ClerkAuthenticatedRouteRoute: ClerkAuthenticatedRouteRouteWithChildren,
-}
-
-const ClerkRouteRouteWithChildren = ClerkRouteRoute._addFileChildren(
-  ClerkRouteRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  ClerkRouteRoute: ClerkRouteRouteWithChildren,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authOtpRoute: authOtpRoute,
   authSignInRoute: authSignInRoute,
-  authSignIn2Route: authSignIn2Route,
   authSignUpRoute: authSignUpRoute,
   errors401Route: errors401Route,
   errors403Route: errors403Route,

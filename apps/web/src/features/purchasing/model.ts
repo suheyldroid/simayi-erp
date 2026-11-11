@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { resourceUuid } from '@/lib/resource-uuid'
+import { ItemsModel } from '@/features/items/model'
 
 const id = z.number().int().positive()
 const paging = {
@@ -6,8 +8,7 @@ const paging = {
   limit: id,
   offset: z.number().int().nonnegative(),
 }
-const metadata = z.record(z.string(), z.unknown()).nullable()
-const currency = z.string().regex(/^[A-Z]{3}$/)
+const jsonObject = z.record(z.string(), z.unknown()).nullable()
 const decimal = z.string()
 const status = z.union([
   z.literal(10),
@@ -20,30 +21,33 @@ const status = z.union([
 ])
 const list = <T extends z.ZodType>(item: T) =>
   z.object({ items: z.array(item), ...paging })
+const supplier = z.object({
+  uuid: resourceUuid,
+  name: z.string(),
+  contact: z.string(),
+  contactPhone: z.string(),
+  contactRole: z.string(),
+  phone: z.string(),
+  line1: z.string(),
+  line2: z.string(),
+  postalCode: z.string(),
+  postalCity: z.string(),
+  province: z.string(),
+  country: z.string(),
+})
 const order = z.object({
-  id,
+  uuid: resourceUuid,
   reference: z.string(),
   referenceInt: z.string(),
   description: z.string(),
   link: z.string(),
   status,
-  supplierId: id.nullable(),
-  supplier: z.object({ id, name: z.string(), currency: z.string() }).nullable(),
+  statusLabel: z.string(),
+  supplierUuid: resourceUuid.nullable(),
+  supplier: supplier.nullable(),
   supplierReference: z.string(),
-  contactId: id.nullable(),
-  contact: z.object({ id, name: z.string() }).nullable(),
-  addressId: id.nullable(),
-  address: z.object({ id, title: z.string() }).nullable(),
-  destinationId: id.nullable(),
-  destination: z
-    .object({ id, name: z.string(), pathstring: z.string() })
-    .nullable(),
-  projectCodeId: id.nullable(),
-  projectCode: z.object({ id, code: z.string() }).nullable(),
-  responsibleId: id.nullable(),
-  orderCurrency: currency.nullable(),
+  responsibleUuid: resourceUuid.nullable(),
   totalPrice: decimal.nullable(),
-  totalPriceCurrency: currency.nullable(),
   startDate: z.string().nullable(),
   targetDate: z.string().nullable(),
   creationDate: z.string().nullable(),
@@ -53,60 +57,45 @@ const order = z.object({
   receivedById: z.string().nullable(),
   barcodeData: z.string(),
   barcodeHash: z.string(),
-  metadata,
   version: z.number().int().nonnegative(),
 })
 const line = z.object({
-  id,
-  orderId: id,
-  partId: id.nullable(),
-  part: z
+  uuid: resourceUuid,
+  orderUuid: resourceUuid,
+  itemUuid: resourceUuid.nullable(),
+  item: z
     .object({
-      id,
-      sku: z.string(),
-      partId: id,
-      packQuantityNative: z.string().nullable(),
-      partName: z.string(),
-      trackable: z.boolean(),
+      uuid: resourceUuid,
+      name: z.string(),
+      ipn: z.string().nullable(),
     })
     .nullable(),
+  packQuantityNative: z.string().nullable(),
   quantity: decimal,
   received: decimal,
   discount: decimal,
   purchasePrice: decimal.nullable(),
-  purchasePriceCurrency: currency.nullable(),
   line: z.string(),
   lineInt: z.number().int(),
   reference: z.string(),
   notes: z.string(),
   link: z.string(),
   targetDate: z.string().nullable(),
-  destinationId: id.nullable(),
-  destination: z
-    .object({ id, name: z.string(), pathstring: z.string() })
-    .nullable(),
-  projectCodeId: id.nullable(),
-  projectCode: z.object({ id, code: z.string() }).nullable(),
-  metadata,
 })
 const extra = z.object({
-  id,
-  orderId: id,
+  uuid: resourceUuid,
+  orderUuid: resourceUuid,
   description: z.string(),
   quantity: decimal,
   discount: decimal,
   price: decimal.nullable(),
-  priceCurrency: currency.nullable(),
   line: z.string(),
   lineInt: z.number().int(),
   reference: z.string(),
   notes: z.string(),
   link: z.string(),
   targetDate: z.string().nullable(),
-  projectCodeId: id.nullable(),
-  projectCode: z.object({ id, code: z.string() }).nullable(),
-  context: metadata,
-  metadata,
+  context: jsonObject,
 })
 const amount = z
   .string()
@@ -126,15 +115,10 @@ export const PurchasingModel = {
   extras: list(extra),
   success: z.object({ success: z.literal(true) }),
   orderInput: z.object({
-    supplierId: id,
+    supplierUuid: resourceUuid,
     reference: z.string().trim().min(1).max(64).optional(),
     description: z.string().max(250).optional(),
     supplierReference: z.string().max(64).optional(),
-    contactId: id.optional(),
-    addressId: id.optional(),
-    destinationId: id.optional(),
-    projectCodeId: id.optional(),
-    orderCurrency: currency.optional(),
     targetDate: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -142,10 +126,9 @@ export const PurchasingModel = {
   }),
   lineInput: z.object({
     version: z.number().int().nonnegative(),
-    partId: id,
+    itemUuid: resourceUuid,
     quantity: amount,
     purchasePrice: money.optional(),
-    destinationId: id.optional(),
     notes: z.string().max(500).optional(),
   }),
   extraInput: z.object({
@@ -159,17 +142,15 @@ export const PurchasingModel = {
     items: z
       .array(
         z.object({
-          lineId: id,
+          lineUuid: resourceUuid,
           quantity: amount,
-          locationId: id.optional(),
-          batch: z.string().max(100).optional(),
-          serials: z.string().max(4000).optional(),
           notes: z.string().max(512).optional(),
         })
       )
       .min(1)
       .max(100),
   }),
+  receivedItems: z.object({ items: z.array(ItemsModel.item) }),
 }
 export type PurchaseOrder = z.infer<typeof order>
 export type PurchaseLine = z.infer<typeof line>

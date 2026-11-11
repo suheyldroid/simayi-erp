@@ -8,10 +8,9 @@ import {
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { isOrganizationMismatch } from '@/lib/auth'
 import { handleServerError } from '@/lib/handle-server-error'
-import { DirectionProvider } from './context/direction-provider'
-import { FontProvider } from './context/font-provider'
-import { ThemeProvider } from './context/theme-provider'
+import { registerOrganizationQueryClient } from '@/lib/tenant'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
 // Styles
@@ -37,6 +36,10 @@ const queryClient = new QueryClient({
     },
     mutations: {
       onError: (error) => {
+        if (isOrganizationMismatch(error)) {
+          window.location.reload()
+          return
+        }
         handleServerError(error)
 
         if (error instanceof AxiosError) {
@@ -50,6 +53,10 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (error instanceof AxiosError) {
+        if (isOrganizationMismatch(error)) {
+          window.location.reload()
+          return
+        }
         if (error.response?.status === 401) {
           toast.error('Session expired!')
           queryClient.clear()
@@ -70,6 +77,7 @@ const queryClient = new QueryClient({
     },
   }),
 })
+registerOrganizationQueryClient(queryClient)
 
 // Create a new router instance
 const router = createRouter({
@@ -93,13 +101,7 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <FontProvider>
-            <DirectionProvider>
-              <RouterProvider router={router} />
-            </DirectionProvider>
-          </FontProvider>
-        </ThemeProvider>
+        <RouterProvider router={router} />
       </QueryClientProvider>
     </StrictMode>
   )

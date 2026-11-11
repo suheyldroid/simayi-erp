@@ -1,6 +1,5 @@
+import { errorMessage } from '@/lib/api-error'
 import { api } from '@/lib/auth'
-import { errorMessage } from '@/features/common/api'
-import { StockModel } from '@/features/stock/model'
 import {
   PurchasingModel,
   type ExtraInput,
@@ -12,7 +11,12 @@ import {
 export { errorMessage }
 
 export const purchasingApi = {
-  async orders(input: { page?: number; search?: string; open?: boolean }) {
+  async orders(input: {
+    page?: number
+    search?: string
+    open?: boolean
+    supplierUuid?: string
+  }) {
     const page = input.page ?? 0
     return PurchasingModel.orders.parse(
       (
@@ -22,14 +26,17 @@ export const purchasingApi = {
             offset: page * 20,
             search: input.search || undefined,
             ...(input.open === undefined ? {} : { open: input.open }),
+            ...(input.supplierUuid === undefined
+              ? {}
+              : { supplierUuid: input.supplierUuid }),
           },
         })
       ).data
     )
   },
-  async order(id: number) {
+  async order(uuid: string) {
     return PurchasingModel.order.parse(
-      (await api.get<unknown>(`/order/purchase-orders/${id}`)).data
+      (await api.get<unknown>(`/order/purchase-orders/${uuid}`)).data
     )
   },
   async createOrder(body: OrderInput) {
@@ -37,49 +44,44 @@ export const purchasingApi = {
       (await api.post<unknown>('/order/purchase-orders/', body)).data
     )
   },
-  async removeOrder(id: number, version: number) {
-    return PurchasingModel.success.parse(
-      (
-        await api.delete<unknown>(`/order/purchase-orders/${id}`, {
-          params: { version },
-        })
-      ).data
-    )
-  },
   async act(
-    id: number,
+    uuid: string,
     action: 'place' | 'hold' | 'cancel' | 'complete',
     body: { version: number; acceptIncomplete?: boolean }
   ) {
     return PurchasingModel.order.parse(
-      (await api.post<unknown>(`/order/purchase-orders/${id}/${action}`, body))
-        .data
-    )
-  },
-  async lines(orderId: number) {
-    return PurchasingModel.lines.parse(
-      (
-        await api.get<unknown>(`/order/purchase-orders/${orderId}/lines/`, {
-          params: { limit: 100, offset: 0 },
-        })
-      ).data
-    )
-  },
-  async addLine(orderId: number, body: LineInput) {
-    return PurchasingModel.line.parse(
       (
         await api.post<unknown>(
-          `/order/purchase-orders/${orderId}/lines/`,
+          `/order/purchase-orders/${uuid}/${action}`,
           body
         )
       ).data
     )
   },
-  async removeLine(orderId: number, id: number, version: number) {
+  async lines(orderUuid: string) {
+    return PurchasingModel.lines.parse(
+      (
+        await api.get<unknown>(`/order/purchase-orders/${orderUuid}/lines/`, {
+          params: { limit: 100, offset: 0 },
+        })
+      ).data
+    )
+  },
+  async addLine(orderUuid: string, body: LineInput) {
+    return PurchasingModel.line.parse(
+      (
+        await api.post<unknown>(
+          `/order/purchase-orders/${orderUuid}/lines/`,
+          body
+        )
+      ).data
+    )
+  },
+  async removeLine(orderUuid: string, lineUuid: string, version: number) {
     return PurchasingModel.success.parse(
       (
         await api.delete<unknown>(
-          `/order/purchase-orders/${orderId}/lines/${id}`,
+          `/order/purchase-orders/${orderUuid}/lines/${lineUuid}`,
           {
             params: { version },
           }
@@ -87,39 +89,39 @@ export const purchasingApi = {
       ).data
     )
   },
-  async extras(orderId: number) {
+  async extras(orderUuid: string) {
     return PurchasingModel.extras.parse(
       (
         await api.get<unknown>(
-          `/order/purchase-orders/${orderId}/extra-lines/`,
+          `/order/purchase-orders/${orderUuid}/extra-lines/`,
           { params: { limit: 100, offset: 0 } }
         )
       ).data
     )
   },
-  async addExtra(orderId: number, body: ExtraInput) {
+  async addExtra(orderUuid: string, body: ExtraInput) {
     return PurchasingModel.extra.parse(
       (
         await api.post<unknown>(
-          `/order/purchase-orders/${orderId}/extra-lines/`,
+          `/order/purchase-orders/${orderUuid}/extra-lines/`,
           body
         )
       ).data
     )
   },
-  async removeExtra(orderId: number, id: number, version: number) {
+  async removeExtra(orderUuid: string, extraUuid: string, version: number) {
     return PurchasingModel.success.parse(
       (
         await api.delete<unknown>(
-          `/order/purchase-orders/${orderId}/extra-lines/${id}`,
+          `/order/purchase-orders/${orderUuid}/extra-lines/${extraUuid}`,
           { params: { version } }
         )
       ).data
     )
   },
-  async receive(id: number, body: ReceiveInput) {
-    return StockModel.createdStock.parse(
-      (await api.post<unknown>(`/order/purchase-orders/${id}/receive/`, body))
+  async receive(uuid: string, body: ReceiveInput) {
+    return PurchasingModel.receivedItems.parse(
+      (await api.post<unknown>(`/order/purchase-orders/${uuid}/receive/`, body))
         .data
     )
   },

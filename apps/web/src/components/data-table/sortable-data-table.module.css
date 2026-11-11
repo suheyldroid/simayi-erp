@@ -1,0 +1,585 @@
+/*
+ * Arc UI sortable-data-table styling, re-expressed with this project's
+ * Cursor Dark palette and square geometry. Token names map as follows:
+ * --surface -> --background, --text-muted -> --muted-foreground,
+ * --surface-muted -> --muted, --control-on -> --primary,
+ * --radius-control -> --radius, focus outline -> --ring.
+ * Source: https://uiarc.dev/components/sortable-data-table
+ */
+
+/* Cells are opaque so rows passing each other during a sort cover one another cleanly instead of blending text. */
+.wrapper {
+  --column-tint: var(--muted);
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--foreground);
+}
+.scroller {
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--column-tint);
+  pointer-events: none;
+}
+.table {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 560px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-align: start;
+}
+.table[data-fixed] {
+  table-layout: fixed;
+}
+.table caption,
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.selectCol {
+  width: 44px;
+}
+
+.table th,
+.table td {
+  --cell-base: var(--background);
+  --cell-fill: var(--cell-base);
+  background-color: var(--cell-fill);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+.table th[data-sorted],
+.table td[data-sorted] {
+  --cell-base: var(--column-tint);
+}
+.table th {
+  height: 44px;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: start;
+  white-space: nowrap;
+}
+.table th[data-sortable] {
+  padding: 0;
+}
+.table th[data-sorted] {
+  color: var(--foreground);
+}
+.table td {
+  height: 52px;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  font-weight: 400;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.table [data-numeric] {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.table[data-selectable] tbody tr {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.table[data-selectable] tbody tr[data-selected] td {
+  --cell-fill: color-mix(in oklab, var(--primary) 12%, var(--cell-base));
+}
+.table[data-selectable] [data-primary]:not([data-sortable]),
+.table[data-selectable] th[data-primary] .sortButton {
+  padding-inline-start: 0.5rem;
+}
+
+.sortButton {
+  display: flex;
+  width: 100%;
+  height: 44px;
+  align-items: center;
+  justify-content: flex-start;
+  border: 0;
+  padding: 0 1rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.table th[data-numeric] .sortButton {
+  justify-content: flex-end;
+}
+.sortInner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius);
+  transition: color 140ms ease;
+}
+/* Right-aligned columns lead with the arrow so the label lines up with the digits below it. */
+.table th[data-numeric] .sortInner {
+  flex-direction: row-reverse;
+}
+.sortIcon {
+  position: relative;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  place-items: center;
+}
+.sortHint,
+.sortArrow {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.sortHint {
+  color: var(--muted-foreground);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+.sortArrow {
+  color: var(--foreground);
+}
+.sortButton:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+.sortButton:focus-visible .sortHint {
+  opacity: 0.6;
+}
+.table th[data-sorted] .sortHint {
+  opacity: 0;
+}
+
+.selectCell {
+  width: 44px;
+}
+.table .selectCell {
+  padding-block: 0;
+  padding-inline-start: 1rem;
+  padding-inline-end: 0;
+}
+.selectHit {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 44px;
+  align-items: center;
+  cursor: pointer;
+}
+.selectHit[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.selectInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.selectInput:disabled {
+  cursor: not-allowed;
+}
+.selectBox {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--primary-foreground);
+  pointer-events: none;
+  transition:
+    border-color 140ms ease,
+    transform 240ms ease;
+}
+.selectBox[data-on] {
+  border-color: var(--primary);
+}
+.selectFill {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: var(--primary);
+}
+.selectMark {
+  position: absolute;
+  inset: -1px;
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+}
+/* The native checkbox is hidden, so its keyboard focus outline is drawn on the visible box. */
+.selectInput:focus-visible + .selectBox {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.selectInput:active + .selectBox {
+  transform: scale(0.95);
+  transition:
+    border-color 140ms ease,
+    transform 110ms ease;
+}
+
+.footer {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.5rem 0 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.count {
+  display: inline-flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.28em;
+  white-space: nowrap;
+  transition: color 180ms ease;
+}
+.count[data-active] {
+  color: var(--foreground);
+}
+.swap {
+  display: inline-block;
+}
+.swapInner {
+  position: relative;
+  display: inline-flex;
+  width: max-content;
+}
+.swapText {
+  display: inline-block;
+  white-space: nowrap;
+}
+.number {
+  font-variant-numeric: tabular-nums;
+}
+.clear {
+  height: 30px;
+  flex: none;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0 0.75rem;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 500;
+  letter-spacing: inherit;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.clear:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.empty {
+  height: 120px !important;
+  color: var(--muted-foreground) !important;
+  text-align: center !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .table tbody tr:hover td {
+    --cell-fill: color-mix(in oklab, var(--foreground) 4%, var(--cell-base));
+  }
+  .table[data-selectable] tbody tr[data-selected]:hover td {
+    --cell-fill: color-mix(in oklab, var(--primary) 16%, var(--cell-base));
+  }
+  .table tbody tr:has(.empty):hover td {
+    --cell-fill: var(--cell-base);
+  }
+  .sortButton:hover .sortInner {
+    color: var(--foreground);
+  }
+  .sortButton:hover .sortHint {
+    opacity: 0.6;
+  }
+  .table th[data-sorted] .sortButton:hover .sortHint {
+    opacity: 0;
+  }
+  .selectHit:hover .selectBox:not([data-on]) {
+    border-color: var(--muted-foreground);
+  }
+  .clear:hover {
+    background: var(--muted);
+  }
+}
+
+@media (max-width: 620px) {
+  .scroller {
+    overflow: visible;
+  }
+  .band {
+    display: none;
+  }
+  .table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .table thead {
+    display: block;
+  }
+  /* The header becomes a strip of sort controls, so sorting stays one tap away on a phone. */
+  .table thead tr {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    scrollbar-width: none;
+  }
+  .table thead tr::-webkit-scrollbar {
+    display: none;
+  }
+  .table th {
+    display: block;
+    flex: none;
+    height: auto;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    /* Leaves room for the pinned select-all cell when scrolled into view. */
+    scroll-margin-inline-start: 48px;
+  }
+  /* Select all stays pinned while the sort controls scroll beneath it. */
+  .table th.selectCell {
+    position: sticky;
+    inset-inline-start: -0.5rem;
+    z-index: 1;
+    width: 40px;
+    margin-inline-start: -0.5rem;
+    padding-block: 0;
+    padding-inline-start: 0.75rem;
+    background: var(--background);
+  }
+  .table th.selectCell .selectHit {
+    height: 32px;
+  }
+  /* Once the strip scrolls, a fade off the pinned cell hides the word sliding under it. */
+  .table th.selectCell::after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    inset-inline-start: 100%;
+    width: 36px;
+    background: linear-gradient(to right, var(--background) 45%, transparent);
+    content: '';
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* Browsers without scroll-driven animations would play the fade once, at zero duration, and leave it on; they keep it off. */
+  @supports (animation-timeline: scroll()) {
+    .table th.selectCell::after {
+      animation: stripFade linear both;
+      animation-timeline: scroll(nearest inline);
+      animation-range: 0 24px;
+    }
+  }
+  /* The fade leaves the pinned cell on its inline-end side, which mirrors in RTL. */
+  .wrapper:dir(rtl) .table th.selectCell::after {
+    background: linear-gradient(to left, var(--background) 45%, transparent);
+  }
+  .table th .sortButton,
+  .table[data-selectable] th[data-primary] .sortButton {
+    width: auto;
+    height: 32px;
+    border-radius: var(--radius);
+    padding: 0 10px;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease;
+  }
+  /* Labels for non-sortable columns keep the strip's rhythm instead of sitting flush. */
+  .table th:not([data-sortable]):not(.selectCell) {
+    padding: 0 10px;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+  }
+  .table th[data-sorted] .sortButton {
+    background: var(--muted);
+  }
+  .table th[data-numeric] .sortInner {
+    flex-direction: row;
+  }
+  .sortButton:focus-visible {
+    outline-offset: 1px;
+  }
+  .table tbody {
+    display: block;
+    width: 100%;
+  }
+  /* Rows fold into two lines: the first column with its number, then the remaining details. */
+  .table tbody tr {
+    --row-fill: var(--background);
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-height: 64px;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    align-items: baseline;
+    align-content: center;
+    gap: 2px 0.5rem;
+    padding: 10px 1rem;
+    border-bottom: 1px solid var(--border);
+    background-color: var(--row-fill);
+    transition: background-color 180ms ease;
+  }
+  .table tbody tr::after {
+    order: 1;
+    flex-basis: 100%;
+    content: '';
+  }
+  .table[data-selectable] tbody tr {
+    padding-inline-start: 44px;
+  }
+  .table[data-selectable] tbody tr[data-selected] {
+    --row-fill: color-mix(in oklab, var(--primary) 12%, var(--background));
+  }
+  .table tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .table td {
+    order: 2;
+    display: block;
+    min-width: 0;
+    height: auto;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    text-align: start;
+  }
+  .table[data-selectable] td[data-primary]:not([data-sortable]) {
+    padding-inline-start: 0;
+  }
+  .table td[data-primary] {
+    order: 0;
+    flex: 1 1 0;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  .table td[data-numeric]:not([data-primary]) {
+    order: 0;
+    flex: none;
+    margin-inline-start: auto;
+    padding-inline-start: 0.5rem;
+    color: var(--foreground);
+    font-size: 0.875rem;
+  }
+  .table td[data-numeric] ~ td[data-numeric] {
+    order: 2;
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+  }
+  /* The sorted value lifts to full contrast, echoing the tinted column on wider screens. */
+  .table td[data-sorted]:not([data-primary]) {
+    color: var(--foreground);
+  }
+  .table td.selectCell {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    inset-inline-start: 0.25rem;
+    display: flex;
+    width: 36px;
+    align-items: center;
+    padding: 0;
+  }
+  .table td.selectCell .selectHit {
+    justify-content: center;
+  }
+  .table .empty {
+    flex: 1 0 100%;
+    height: auto !important;
+    padding: 1.5rem 0;
+  }
+  .table[data-selectable] tbody tr:has(.empty) {
+    padding-inline-start: 1rem;
+  }
+}
+@media (max-width: 620px) and (hover: hover) and (pointer: fine) {
+  .table tbody tr:hover {
+    --row-fill: color-mix(in oklab, var(--foreground) 4%, var(--background));
+  }
+  .table[data-selectable] tbody tr[data-selected]:hover {
+    --row-fill: color-mix(in oklab, var(--primary) 16%, var(--background));
+  }
+  .table tbody tr:hover td {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table th,
+  .table td,
+  .table tbody tr,
+  .sortInner,
+  .sortHint,
+  .selectBox,
+  .count,
+  .clear,
+  .table th .sortButton {
+    transition: none !important;
+  }
+  .selectInput:active + .selectBox {
+    transform: none;
+  }
+}
+
+@keyframes stripFade {
+  to {
+    opacity: 1;
+  }
+}

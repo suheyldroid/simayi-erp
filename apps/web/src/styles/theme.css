@@ -1,31 +1,66 @@
+/*
+ * Single fixed palette: Cursor Dark (Anysphere) anthracite surfaces, off-white
+ * main text, matte blue primary, square geometry.
+ *
+ * This is the only palette. There is no `.dark` / `.light` override and no
+ * `prefers-color-scheme` branch, so no cookie or OS preference can lighten the
+ * application. `color-scheme: dark` keeps native form controls and scrollbars
+ * dark from first paint.
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  color-scheme: dark;
 
-  --sidebar: var(--background);
-  --sidebar-foreground: var(--foreground);
+  /* Geometry: square by default. Circular shapes are opt-in per component
+     (avatar, radio marker, slider/scroll thumb) and never come from tokens. */
+  --radius: 0px;
+
+  /* Surfaces */
+  --background: #181818;
+  --foreground: #f0f0f0;
+  --card: #1e1e1e;
+  --card-foreground: #f0f0f0;
+  --popover: #242424;
+  --popover-foreground: #f0f0f0;
+
+  /* Matte blue primary; exact Cursor hover shade */
+  --primary: #81a1c1;
+  --primary-foreground: #191c22;
+  --primary-hover: #87a6c4;
+
+  --secondary: #292929;
+  --secondary-foreground: #f0f0f0;
+  --muted: #242424;
+  --muted-foreground: #a4a4a4;
+  --accent: #303030;
+  --accent-foreground: #f0f0f0;
+
+  /* Error. Cursor's own errorForeground is #E34671, which only reaches 4.27:1 on
+     card #1E1E1E and 3.98:1 on popover #242424, so it cannot carry text or be
+     the only error cue. The token is that colour tinted 30% toward --foreground
+     (#E77997): 4.76:1 on accent #303030, 5.60:1 on popover, 6.02:1 on card,
+     6.41:1 on background. Hover is the same tint one step lighter (#E888A0).
+     Both keep the dark foreground readable: #141414 on #E77997 = 6.65:1,
+     on #E888A0 = 7.42:1. */
+  --destructive: #e77997;
+  --destructive-hover: #e888a0;
+  --destructive-foreground: #141414;
+
+  /* `--border` is the opaque surface boundary.
+     `--input` is the stronger interactive outline for form controls; it is a
+     colour only and must never be used as a fill. */
+  --border: #484848;
+  --input: #707070;
+  --ring: #88c0d0;
+
+  --chart-1: #81a1c1;
+  --chart-2: #82d2ce;
+  --chart-3: #f1b467;
+  --chart-4: #aaa0fa;
+  --chart-5: #e34671;
+
+  /* Sidebar reuses the palette above; no second palette. */
+  --sidebar: #141414;
+  --sidebar-foreground: #f0f0f0;
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--accent);
@@ -34,40 +69,20 @@
   --sidebar-ring: var(--ring);
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.14 0.04 259.21);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-}
-
 @theme inline {
   --font-inter: 'Inter', 'sans-serif';
-  --font-manrope: 'Manrope', 'sans-serif';
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Every non-circular radius maps to 0 so `rounded-xl` and friends still
+     render square. Literal 0 avoids negative `calc()` values. */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -76,6 +91,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -83,6 +99,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

@@ -24,7 +24,6 @@ export function UserStatusDialog({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['users'] }),
         queryClient.invalidateQueries({ queryKey: ['user-options'] }),
-        queryClient.invalidateQueries({ queryKey: ['group-members'] }),
         queryClient.invalidateQueries({ queryKey: ['user', user.id] }),
       ])
       onClose()

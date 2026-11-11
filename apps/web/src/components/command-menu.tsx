@@ -1,8 +1,7 @@
 import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRight, ChevronRight, Laptop, Moon, Sun } from 'lucide-react'
-import { useSearch } from '@/context/search-provider'
-import { useTheme } from '@/context/theme-provider'
+import { ArrowRight, ChevronRight } from 'lucide-react'
+import { useSearch } from '@/stores/search-store'
 import {
   CommandDialog,
   CommandEmpty,
@@ -10,15 +9,32 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from '@/components/ui/command'
-import { sidebarData } from './layout/data/sidebar-data'
+import { type NavGroup } from '@/components/layout/types'
 import { ScrollArea } from './ui/scroll-area'
 
-export function CommandMenu() {
+/**
+ * Command menu for one shell. Groups are supplied by the owning layout so the
+ * system shell never sees organization entries and the organization shell
+ * never needs to know about global ones.
+ */
+export function CommandMenu({ groups }: { groups: NavGroup[] }) {
   const navigate = useNavigate()
-  const { setTheme } = useTheme()
-  const { open, setOpen } = useSearch()
+  const open = useSearch((state) => state.open)
+  const setOpen = useSearch((state) => state.setOpen)
+  const toggleSearch = useSearch((state) => state.toggleSearch)
+
+  React.useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        toggleSearch()
+      }
+    }
+
+    document.addEventListener('keydown', down)
+    return () => document.removeEventListener('keydown', down)
+  }, [toggleSearch])
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
@@ -34,7 +50,7 @@ export function CommandMenu() {
       <CommandList>
         <ScrollArea type='hover' className='h-72 pe-1'>
           <CommandEmpty>No results found.</CommandEmpty>
-          {sidebarData.navGroups.map((group) => (
+          {groups.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((navItem, i) => {
                 if (navItem.url)
@@ -70,20 +86,6 @@ export function CommandMenu() {
               })}
             </CommandGroup>
           ))}
-          <CommandSeparator />
-          <CommandGroup heading='Theme'>
-            <CommandItem onSelect={() => runCommand(() => setTheme('light'))}>
-              <Sun /> <span>Light</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => setTheme('dark'))}>
-              <Moon className='scale-90' />
-              <span>Dark</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => setTheme('system'))}>
-              <Laptop />
-              <span>System</span>
-            </CommandItem>
-          </CommandGroup>
         </ScrollArea>
       </CommandList>
     </CommandDialog>
