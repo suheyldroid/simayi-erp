@@ -38,6 +38,63 @@
   }
 }
 
+/* SnapGrid ships no stylesheet: theme its native tile affordances only.
+   Position, size and transforms stay owned by the library. */
+.snapgrid-item {
+  cursor: grab;
+  border-radius: 0.375rem;
+}
+.snapgrid-item[data-dragging] {
+  cursor: grabbing;
+  box-shadow: 0 12px 28px
+    color-mix(in oklab, var(--foreground) 18%, transparent);
+}
+.snapgrid-item[aria-disabled='true'] {
+  cursor: default;
+}
+.snapgrid-item:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+/* One grip per library-rendered resize axis. The library owns each handle's
+   hit area and cursor; only the visible indicator is themed here. */
+.snapgrid-resize-handle::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--muted-foreground) 55%, transparent);
+  transition: background-color 120ms ease;
+}
+.snapgrid-resize-handle:hover::after,
+.snapgrid-resize-handle:active::after {
+  background: var(--primary);
+}
+.snapgrid-resize-handle--e::after,
+.snapgrid-resize-handle--w::after {
+  top: calc(50% - 8px);
+  width: 3px;
+  height: 16px;
+}
+.snapgrid-resize-handle--e::after {
+  right: 5px;
+}
+.snapgrid-resize-handle--w::after {
+  left: 5px;
+}
+.snapgrid-resize-handle--s::after {
+  bottom: 5px;
+  left: calc(50% - 8px);
+  width: 16px;
+  height: 3px;
+}
+.snapgrid-resize-handle--se::after {
+  right: 5px;
+  bottom: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+
 @utility container {
   margin-inline: auto;
   padding-inline: 2rem;
