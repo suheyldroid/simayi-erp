@@ -20,6 +20,7 @@ const trackingEntry = z.object({
   notes: z.string().nullable(),
   userId: z.string().nullable(),
   deltas: z.record(z.string(), z.unknown()).nullable(),
+  unitCode: z.string().nullable(),
   quantityBefore: z.string().nullable(),
   quantityAfter: z.string().nullable(),
 })

@@ -68,6 +68,7 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
   const live = detail.data
   const unavailable =
     detail.isPending || detail.isFetching || detail.isError || live == null
+  const unitUnresolved = live != null && live.unitUuid == null
   return (
     <Sheet
       open
@@ -149,7 +150,14 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
             {live && !detail.isError && (
               <p className='text-sm text-muted-foreground'>
                 {live.name} · current stock {live.stock}
-                {live.units ? ` ${live.units}` : ''} · version {live.version}
+                {live.units ? ` ${live.units}` : ' (unit unresolved)'} · version{' '}
+                {live.version}
+              </p>
+            )}
+            {live && !detail.isError && unitUnresolved && (
+              <p role='alert' className='text-sm text-destructive'>
+                This item has no unit assigned. Assign a unit in Items before
+                adding stock.
               </p>
             )}
             {addition.error != null && (
@@ -171,7 +179,7 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
               </div>
             )}
             <fieldset
-              disabled={addition.isPending || live == null}
+              disabled={addition.isPending || live == null || unitUnresolved}
               className='space-y-3'
             >
               <FieldInput
@@ -201,7 +209,10 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={addition.isPending || unavailable}>
+            <Button
+              type='submit'
+              disabled={addition.isPending || unavailable || unitUnresolved}
+            >
               Add stock
             </Button>
           </SheetFooter>

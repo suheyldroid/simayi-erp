@@ -73,6 +73,18 @@ function saleColumns(organizationSlug: string): SortableColumn<SaleSummary>[] {
       cell: ({ getValue }) => String(getValue() ?? ''),
     },
     {
+      id: 'channel',
+      header: 'Channel',
+      accessorFn: (sale) => sale.channelName ?? '',
+      cell: ({ getValue }) => String(getValue() ?? '') || '—',
+    },
+    {
+      id: 'businessDate',
+      header: 'Sale date',
+      accessorFn: (sale) => sale.businessDate ?? '',
+      cell: ({ getValue }) => String(getValue() ?? '') || '—',
+    },
+    {
       id: 'recorded',
       header: 'Recorded',
       accessorFn: (sale) => new Date(sale.createdAt).getTime(),
@@ -142,7 +154,15 @@ function SalesDirectory() {
   const data = sales.data
   return (
     <div className='space-y-4'>
-      <div className='flex justify-end'>
+      <div className='flex flex-wrap items-center justify-end gap-2'>
+        <Button variant='outline' asChild>
+          <Link
+            to='/o/$organizationSlug/sales/batches'
+            params={{ organizationSlug }}
+          >
+            Sales batches
+          </Link>
+        </Button>
         <Button type='button' onClick={() => setCreating(true)}>
           Record sale
         </Button>

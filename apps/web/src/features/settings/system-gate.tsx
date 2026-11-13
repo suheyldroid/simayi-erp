@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 /**
  * Nested platform administration gate for the system category of settings.
  * Nothing below it mounts for a non-administrator, a pending session or a
- * failed session read, so the users directory never starts an admin query.
+ * failed session read, so the users, units and currency management queries
+ * never start.
  */
 export function SystemSettingsGate() {
   const session = useQuery(sessionQuery)

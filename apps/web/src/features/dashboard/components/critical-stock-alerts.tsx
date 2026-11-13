@@ -96,7 +96,7 @@ export function CriticalStockAlerts({
                             <span className='font-medium tabular-nums'>
                               {item.minimumStock}
                             </span>
-                            {item.units ? ` ${item.units}` : null}
+                            {item.units ? ` ${item.units}` : ' (unit unresolved)'}
                           </p>
                         </div>
                         <Link

@@ -134,7 +134,7 @@ export function OrderReceive({
                             : item.reference || 'Line'}{' '}
                           ·{' '}
                           {subtractDecimalStrings(item.quantity, item.received)}{' '}
-                          outstanding
+                          {item.unitCode ?? 'Unknown unit'} outstanding
                         </option>
                       ))}
                     </select>
@@ -142,7 +142,7 @@ export function OrderReceive({
                   <FieldInput
                     field={{
                       name: 'quantity',
-                      label: 'Quantity to receive',
+                      label: `Quantity to receive (${line.unitCode ?? 'unknown unit'})`,
                       required: true,
                     }}
                   />

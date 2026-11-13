@@ -188,8 +188,19 @@ export function ItemDetail() {
                   '—'
                 )}
               </dd>
-              <dt>Units</dt>
-              <dd>{item.units || '—'}</dd>
+              <dt>Unit</dt>
+              <dd>
+                {item.unit ? (
+                  <span>
+                    {item.unit.name} · {item.unit.code}
+                  </span>
+                ) : item.units ? (
+                  item.units
+                ) : (
+                  'Unresolved (legacy)'
+                )}
+                {item.unit && !item.unit.active ? ' · inactive' : null}
+              </dd>
               <dt>Minimum stock</dt>
               <dd>{item.minimumStock}</dd>
               <dt>Default expiry</dt>

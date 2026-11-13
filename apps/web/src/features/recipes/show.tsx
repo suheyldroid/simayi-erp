@@ -249,7 +249,9 @@ function RecipeDetailView({ uuid }: { uuid: string | null }) {
                       <TableCell>{ingredient.item.name}</TableCell>
                       <TableCell>{ingredient.item.ipn || '—'}</TableCell>
                       <TableCell>{ingredient.quantity}</TableCell>
-                      <TableCell>{ingredient.item.units || '—'}</TableCell>
+                      <TableCell>
+                        {ingredient.item.units || 'Unresolved'}
+                      </TableCell>
                       <TableCell>{ingredient.note || '—'}</TableCell>
                     </TableRow>
                   ))}

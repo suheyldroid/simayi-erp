@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { resourceUuid } from '@/lib/resource-uuid'
+import { UnitsModel } from '@/features/units/model'
 
 const pageSize = z.number().int().positive()
 const paging = {
@@ -55,6 +56,8 @@ const item = z.object({
   description: z.string(),
   categoryUuid: resourceUuid.nullable(),
   units: z.string(),
+  unitUuid: resourceUuid.nullable(),
+  unit: UnitsModel.unit.nullable(),
   image: z.string().nullable(),
   ipn: z.string().nullable(),
   defaultExpiry: z.number().int().nonnegative(),
@@ -78,7 +81,7 @@ export const ItemsModel = {
     description: z.string().max(250).optional(),
     image: optionalText(100).optional(),
     categoryUuid: formUuid.optional(),
-    units: optionalText(20).optional(),
+    unitUuid: resourceUuid.optional(),
     ipn: optionalText(100).optional(),
     defaultExpiry: z.number().int().nonnegative().optional(),
     minimumStock: quantity.optional(),

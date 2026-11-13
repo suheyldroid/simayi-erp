@@ -30,12 +30,14 @@ import {
 
 function PurchaseExtraForm({
   version,
+  currencyCode,
   pending,
   error,
   onClose,
   onSubmit,
 }: {
   version: number
+  currencyCode: string | null
   pending: boolean
   error: unknown
   onClose: () => void
@@ -53,8 +55,10 @@ function PurchaseExtraForm({
         <SheetHeader>
           <SheetTitle>Add extra line</SheetTitle>
           <SheetDescription>
-            Charges that are not item lines, such as shipping or fees. The order
-            version is sent with the extra so a stale order cannot be changed.
+            Charges that are not item lines, such as shipping or fees. Prices
+            use the order currency ({currencyCode ?? 'unknown currency'}). The
+            order version is sent with the extra so a stale order cannot be
+            changed.
           </SheetDescription>
         </SheetHeader>
         <form
@@ -90,7 +94,12 @@ function PurchaseExtraForm({
               <FieldInput
                 field={{ name: 'quantity', label: 'Quantity', required: true }}
               />
-              <FieldInput field={{ name: 'price', label: 'Price' }} />
+              <FieldInput
+                field={{
+                  name: 'price',
+                  label: `Price (${currencyCode ?? 'unknown currency'})`,
+                }}
+              />
             </fieldset>
             {(validationError != null || error != null) && (
               <p role='alert' className='text-destructive'>
@@ -120,6 +129,7 @@ function PurchaseExtraForm({
 export function OrderExtras({
   order,
   extras,
+  currencyCode,
   pending,
   error,
   editable,
@@ -127,6 +137,7 @@ export function OrderExtras({
 }: {
   order: PurchaseOrder
   extras: PurchaseExtra[]
+  currencyCode: string | null
   pending: boolean
   error: unknown
   editable: boolean
@@ -192,7 +203,11 @@ export function OrderExtras({
             <TableRow key={line.uuid}>
               <TableCell>{line.description || '—'}</TableCell>
               <TableCell>{line.quantity}</TableCell>
-              <TableCell>{line.price ?? '—'}</TableCell>
+              <TableCell>
+                {line.price == null
+                  ? '—'
+                  : `${line.price} ${currencyCode ?? 'Unknown currency'}`}
+              </TableCell>
               <TableCell>
                 {editable && (
                   <Button
@@ -217,6 +232,7 @@ export function OrderExtras({
       {editable && adding && (
         <PurchaseExtraForm
           version={order.version}
+          currencyCode={currencyCode}
           pending={save.isPending}
           error={save.error}
           onClose={() => setAdding(false)}

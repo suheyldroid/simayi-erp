@@ -64,3 +64,29 @@ export const salesApi = {
     )
   },
 }
+
+export const salesChannelApi = {
+  async list(input?: { search?: string }) {
+    return SalesPageModel.channelList.parse(
+      (
+        await api.get<unknown>('/sales/channels/', {
+          params: {
+            limit: 100,
+            offset: 0,
+            search: input?.search?.trim() || undefined,
+          },
+        })
+      ).data
+    )
+  },
+  async create(name: string) {
+    return SalesPageModel.channel.parse(
+      (await api.post<unknown>('/sales/channels/', { name })).data
+    )
+  },
+  async update(uuid: string, body: { name?: string; active?: boolean }) {
+    return SalesPageModel.channel.parse(
+      (await api.patch<unknown>(`/sales/channels/${uuid}`, body)).data
+    )
+  },
+}

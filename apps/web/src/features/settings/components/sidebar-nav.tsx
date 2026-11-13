@@ -1,19 +1,32 @@
 import { type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams, useRouter } from '@tanstack/react-router'
-import { Building2, UserCog, Users, type LucideIcon } from 'lucide-react'
+import {
+  Building2,
+  Coins,
+  Ruler,
+  UserCog,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import { isAdministrator, sessionQuery } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { organizationSettingsNavEntries } from '@/components/layout/data/sidebar-data'
 import { useOrganizationMemberships } from '@/features/organization/membership-query'
 
-type StaticSettingsPath = '/settings' | '/settings/system/users'
+type StaticSettingsPath =
+  | '/settings'
+  | '/settings/system/users'
+  | '/settings/system/units'
+  | '/settings/system/currency'
 
 type UserSettingsEntry = {
   title: string
   to: StaticSettingsPath
   icon: LucideIcon
+  /** List entries stay active on their detail routes. */
+  matchChildren?: boolean
 }
 
 /**
@@ -24,11 +37,21 @@ const userSettingsEntries: readonly UserSettingsEntry[] = [
   { title: 'Profile', to: '/settings', icon: UserCog },
 ]
 
-const systemSettingsEntry: UserSettingsEntry = {
-  title: 'Users',
-  to: '/settings/system/users',
-  icon: Users,
-}
+/**
+ * Platform administration. They share the system requirements of native user
+ * management: a verified account session with the platform `admin` role, and
+ * no active organization.
+ */
+const systemSettingsEntries: readonly UserSettingsEntry[] = [
+  { title: 'Users', to: '/settings/system/users', icon: Users },
+  {
+    title: 'Units',
+    to: '/settings/system/units',
+    icon: Ruler,
+    matchChildren: true,
+  },
+  { title: 'Currency', to: '/settings/system/currency', icon: Coins },
+]
 
 function isActivePath(pathname: string, href: string, matchChildren = false) {
   const current = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
@@ -115,10 +138,13 @@ export function SettingsNav() {
 
       {platformAdmin ? (
         <SettingsNavSection title='System'>
-          <StaticSettingsLink
-            entry={systemSettingsEntry}
-            active={isActivePath(pathname, systemSettingsEntry.to, true)}
-          />
+          {systemSettingsEntries.map((entry) => (
+            <StaticSettingsLink
+              key={entry.to}
+              entry={entry}
+              active={isActivePath(pathname, entry.to, entry.matchChildren)}
+            />
+          ))}
         </SettingsNavSection>
       ) : null}
 

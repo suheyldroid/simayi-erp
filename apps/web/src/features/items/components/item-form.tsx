@@ -16,6 +16,10 @@ import {
 import { FieldInput } from '@/components/field-input'
 import { FlagInput } from '@/components/flag-input'
 import { ImageInput } from '@/components/image-input'
+import {
+  UnitSelect,
+  type UnitOption,
+} from '@/features/units/components/unit-select'
 import { errorMessage, itemApi } from '../api'
 import { itemImageApi, itemImagePrefix } from '../image-api'
 import { ItemsModel, canonicalStock, type Item, type ItemInput } from '../model'
@@ -75,6 +79,10 @@ function ItemFormSheet({
   const [categoryUuid, setCategoryUuid] = useState<string | null>(
     source?.categoryUuid ?? null
   )
+  const [unit, setUnit] = useState<UnitOption | null>(source?.unit ?? null)
+  const [unitUuid, setUnitUuid] = useState<string | null>(
+    source?.unitUuid ?? null
+  )
   const [image, setImage] = useState<string | null>(source?.image ?? null)
   const [file, setFile] = useState<File | null>(null)
   const save = useMutation({
@@ -96,6 +104,9 @@ function ItemFormSheet({
     onSuccess: async (item, input) => {
       await invalidateItemStockCaches(client, input.scope)
       await client.invalidateQueries({ queryKey: ['item-category'] })
+      await client.invalidateQueries({
+        queryKey: ['recipe', 'recipes', input.scope],
+      })
       toast.success(editing ? 'Item updated' : 'Item created')
       onSaved?.(item)
       onOpenChange(false)
@@ -124,7 +135,8 @@ function ItemFormSheet({
           <SheetTitle>{editing ? 'Edit item' : 'New item'}</SheetTitle>
           <SheetDescription>
             Items are physical stock materials. Each item keeps one stock
-            balance with a recorded history of every change.
+            balance in a single system unit from the global catalog, with a
+            recorded history of every change.
           </SheetDescription>
         </SheetHeader>
         <form
@@ -135,13 +147,21 @@ function ItemFormSheet({
             if (!canSubmit || save.isPending) return
             setError(null)
             const form = new FormData(event.currentTarget)
+            const chosenUnitUuid = unit?.uuid ?? null
+            if (!editing && chosenUnitUuid == null) {
+              setError('Choose a unit for the item.')
+              return
+            }
+            const unitChanged =
+              chosenUnitUuid != null &&
+              chosenUnitUuid !== (source?.unitUuid ?? null)
             try {
               const body = ItemsModel.itemInput.parse({
                 name: String(form.get('name') ?? ''),
                 description: String(form.get('description') ?? ''),
                 image: image ?? '',
                 categoryUuid: categoryUuid ?? '',
-                units: String(form.get('units') ?? ''),
+                ...(unitChanged ? { unitUuid: chosenUnitUuid } : {}),
                 ipn: String(form.get('ipn') ?? ''),
                 defaultExpiry: Number(form.get('defaultExpiry') ?? 0),
                 minimumStock: String(form.get('minimumStock') ?? '0'),
@@ -201,10 +221,34 @@ function ItemFormSheet({
                   setCategoryUuid(next?.uuid ?? null)
                 }}
               />
-              <FieldInput
-                field={{ name: 'units', label: 'Units', maxLength: 20 }}
-                value={text(source, source?.units)}
+              <UnitSelect
+                value={unit}
+                fallbackUuid={unit == null ? unitUuid : null}
+                disabled={save.isPending}
+                onChange={(next) => {
+                  setUnit(next)
+                  setUnitUuid(next?.uuid ?? null)
+                }}
               />
+              {editing && source?.unitUuid == null && (
+                <p className='text-xs text-muted-foreground sm:col-span-2'>
+                  This item has no unit assigned yet. Choose one to resolve it;
+                  existing stock history is kept unchanged.
+                </p>
+              )}
+              {editing && source?.unitUuid != null && (
+                <p className='text-xs text-muted-foreground sm:col-span-2'>
+                  Changing an assigned unit is refused while the item has a
+                  stock balance, recipe, order, or sale link, or meaningful
+                  stock history.
+                </p>
+              )}
+              {unit != null && !unit.active && (
+                <p className='text-xs text-muted-foreground sm:col-span-2'>
+                  This unit is inactive. It stays assigned until you choose an
+                  active unit.
+                </p>
+              )}
               <FieldInput
                 field={{
                   name: 'minimumStock',

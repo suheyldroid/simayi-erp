@@ -13,6 +13,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { FieldInput } from '@/components/field-input'
+import { currencyApi } from '@/features/currency/api'
+import { CurrencySelect } from '@/features/currency/components/currency-select'
 import { supplierApi } from '@/features/supplier/api'
 import type { Supplier } from '@/features/supplier/model'
 import { errorMessage } from '../api'
@@ -41,8 +43,22 @@ export function PurchaseOrderForm({
   const targetDateId = useId()
   const [supplier, setSupplier] = useState<PurchaseOrderSupplier | null>(null)
   const [search, setSearch] = useState('')
+  const [currencyChoice, setCurrencyChoice] = useState<
+    string | null | undefined
+  >(undefined)
   const [validationError, setValidationError] = useState<string | null>(null)
   const chosenSupplier = fixedSupplier ?? supplier
+  const preference = useQuery({
+    queryKey: ['system-preference'],
+    queryFn: () => currencyApi.preference(),
+  })
+  // Untouched (`undefined`) follows the system default; an explicit null means
+  // the user cleared it and must choose before submitting.
+  const currencyCode =
+    currencyChoice === undefined
+      ? (preference.data?.defaultCurrencyCode ?? null)
+      : currencyChoice
+  const currencyPending = preference.isPending && currencyChoice === undefined
   const suppliers = useQuery({
     queryKey: [
       'supplier',
@@ -77,6 +93,16 @@ export function PurchaseOrderForm({
               setValidationError('Choose a supplier')
               return
             }
+            // An untouched default that could not be read is left for the
+            // server to resolve; an explicit clear still demands a choice.
+            const deferToSystemDefault =
+              preference.isError && currencyChoice === undefined
+            if (currencyCode == null && !deferToSystemDefault) {
+              setValidationError(
+                'Choose a currency for this order, or ask a platform administrator to set a system default in Settings → System → Currency.'
+              )
+              return
+            }
             const form = new FormData(event.currentTarget)
             const reference = text(form, 'reference').trim()
             const description = text(form, 'description').trim()
@@ -85,6 +111,7 @@ export function PurchaseOrderForm({
             try {
               const body = PurchasingModel.orderInput.parse({
                 supplierUuid: chosenSupplier.uuid,
+                ...(currencyCode == null ? {} : { currencyCode }),
                 ...(reference === '' ? {} : { reference }),
                 ...(description === '' ? {} : { description }),
                 ...(supplierReference === '' ? {} : { supplierReference }),
@@ -164,6 +191,37 @@ export function PurchaseOrderForm({
                   )}
                 </div>
               )}
+              <CurrencySelect
+                value={currencyCode}
+                disabled={pending}
+                onChange={setCurrencyChoice}
+              />
+              {preference.isPending && currencyChoice === undefined && (
+                <p role='status' className='text-sm text-muted-foreground'>
+                  Loading the system default currency…
+                </p>
+              )}
+              {preference.isError && currencyChoice === undefined && (
+                <p role='alert'>
+                  Could not load the system default currency. You can still
+                  choose one for this order, or submit and let the server apply
+                  its default.{' '}
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={() => void preference.refetch()}
+                  >
+                    Retry
+                  </Button>
+                </p>
+              )}
+              {currencyCode == null && preference.isSuccess && (
+                <p className='text-xs text-muted-foreground'>
+                  No system default currency is configured. Choose one for this
+                  order; only a platform administrator can set the default in
+                  Settings → System → Currency.
+                </p>
+              )}
               <FieldInput
                 field={{ name: 'reference', label: 'Reference', maxLength: 64 }}
               />
@@ -205,7 +263,7 @@ export function PurchaseOrderForm({
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={pending}>
+            <Button type='submit' disabled={pending || currencyPending}>
               Create order
             </Button>
           </SheetFooter>

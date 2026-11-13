@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { isAdministrator, sessionQuery } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -28,7 +27,6 @@ export function Dashboard() {
       <Header>
         <Search />
         <div className='ms-auto flex items-center gap-4'>
-          <ConfigDrawer />
           <ProfileDropdown />
         </div>
       </Header>

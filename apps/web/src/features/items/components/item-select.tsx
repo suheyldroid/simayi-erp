@@ -101,7 +101,7 @@ export function ItemSelect({
                   ? undefined
                   : value.units
                     ? `${value.name} · ${value.units}`
-                    : value.name
+                    : `${value.name} · no unit`
               }
               className={cn(
                 'relative w-full min-w-0 justify-start ps-3',
@@ -208,7 +208,11 @@ export function ItemSelect({
                               <span className='shrink-0 text-xs text-muted-foreground'>
                                 {item.units}
                               </span>
-                            ) : null}
+                            ) : (
+                              <span className='shrink-0 text-xs text-muted-foreground'>
+                                no unit
+                              </span>
+                            )}
                             {alreadyAdded ? (
                               <span className='shrink-0 text-xs text-muted-foreground'>
                                 Already added

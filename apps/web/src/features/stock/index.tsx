@@ -63,8 +63,9 @@ function StockDirectory() {
       {
         id: 'units',
         header: 'Unit',
-        accessorFn: (item) => item.units,
-        cell: ({ getValue }) => String(getValue() ?? '') || '—',
+        accessorFn: (item) => item.unit?.code ?? item.units,
+        cell: ({ row }) =>
+          row.original.unit?.code || row.original.units || 'No unit',
       },
       {
         id: 'category',

@@ -33,16 +33,18 @@ import {
   type PurchaseOrder,
 } from '../model'
 
-type ItemChoice = { uuid: string; name: string; ipn: string | null }
+type ItemChoice = { uuid: string; name: string; ipn: string | null; units: string }
 
 function PurchaseLineForm({
   version,
+  currencyCode,
   pending,
   error,
   onClose,
   onSubmit,
 }: {
   version: number
+  currencyCode: string | null
   pending: boolean
   error: unknown
   onClose: () => void
@@ -68,8 +70,10 @@ function PurchaseLineForm({
         <SheetHeader>
           <SheetTitle>Add line</SheetTitle>
           <SheetDescription>
-            An item and its ordered quantity. The order version is sent with the
-            line so a stale order cannot be changed.
+            An item and its ordered quantity in the item's stock unit. Prices
+            use the order currency ({currencyCode ?? 'unknown currency'}). The
+            order version is sent with the line so a stale order cannot be
+            changed.
           </SheetDescription>
         </SheetHeader>
         <form
@@ -78,6 +82,12 @@ function PurchaseLineForm({
             event.preventDefault()
             if (!item) {
               setValidationError('Choose an item')
+              return
+            }
+            if (!item.units) {
+              setValidationError(
+                `${item.name} has no unit assigned. Assign a unit in Items before ordering it.`
+              )
               return
             }
             const form = new FormData(event.currentTarget)
@@ -111,7 +121,8 @@ function PurchaseLineForm({
                 {item && (
                   <p className='text-sm'>
                     Selected: {item.name}
-                    {item.ipn ? ` · ${item.ipn}` : ''}
+                    {item.ipn ? ` · ${item.ipn}` : ''} ·{' '}
+                    {item.units || 'unit unresolved'}
                   </p>
                 )}
                 {search.trim() !== '' && items.isFetching && (
@@ -133,6 +144,7 @@ function PurchaseLineForm({
                               uuid: entry.uuid,
                               name: entry.name,
                               ipn: entry.ipn,
+                              units: entry.units,
                             })
                             setSearch('')
                           }}
@@ -150,11 +162,21 @@ function PurchaseLineForm({
                   </ul>
                 )}
               </div>
+              <div className='space-y-2'>
+                <FieldInput
+                  field={{ name: 'quantity', label: 'Quantity', required: true }}
+                />
+                <p className='text-xs text-muted-foreground'>
+                  {item
+                    ? `Ordered in ${item.units || 'an unresolved unit'}.`
+                    : 'Choose an item to see its unit.'}
+                </p>
+              </div>
               <FieldInput
-                field={{ name: 'quantity', label: 'Quantity', required: true }}
-              />
-              <FieldInput
-                field={{ name: 'purchasePrice', label: 'Unit price' }}
+                field={{
+                  name: 'purchasePrice',
+                  label: `Unit price (${currencyCode ?? 'unknown currency'})`,
+                }}
               />
             </fieldset>
             {(validationError != null || error != null) && (
@@ -185,6 +207,7 @@ function PurchaseLineForm({
 export function OrderLines({
   order,
   lines,
+  currencyCode,
   pending,
   error,
   editable,
@@ -192,6 +215,7 @@ export function OrderLines({
 }: {
   order: PurchaseOrder
   lines: PurchaseLine[]
+  currencyCode: string | null
   pending: boolean
   error: unknown
   editable: boolean
@@ -250,6 +274,7 @@ export function OrderLines({
             <TableHead>Item</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead>Received</TableHead>
+            <TableHead>Unit</TableHead>
             <TableHead>Price</TableHead>
             <TableHead />
           </TableRow>
@@ -264,7 +289,12 @@ export function OrderLines({
               </TableCell>
               <TableCell>{line.quantity}</TableCell>
               <TableCell>{line.received}</TableCell>
-              <TableCell>{line.purchasePrice ?? '—'}</TableCell>
+              <TableCell>{line.unitCode ?? 'Unknown unit'}</TableCell>
+              <TableCell>
+                {line.purchasePrice == null
+                  ? '—'
+                  : `${line.purchasePrice} ${currencyCode ?? 'Unknown currency'}`}
+              </TableCell>
               <TableCell>
                 {editable && !isPositiveDecimal(line.received) && (
                   <Button
@@ -281,7 +311,7 @@ export function OrderLines({
           ))}
           {lines.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5}>No lines yet.</TableCell>
+              <TableCell colSpan={6}>No lines yet.</TableCell>
             </TableRow>
           )}
         </TableBody>
@@ -289,6 +319,7 @@ export function OrderLines({
       {editable && adding && (
         <PurchaseLineForm
           version={order.version}
+          currencyCode={currencyCode}
           pending={save.isPending}
           error={save.error}
           onClose={() => setAdding(false)}

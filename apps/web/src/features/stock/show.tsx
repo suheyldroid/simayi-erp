@@ -115,8 +115,13 @@ export function StockShow() {
                     '—'
                   )}
                 </dd>
-                <dt>Units</dt>
-                <dd>{item.units || '—'}</dd>
+                <dt>Unit</dt>
+                <dd>
+                  {item.unit
+                    ? `${item.unit.name} · ${item.unit.code}`
+                    : item.units || 'Unresolved (legacy)'}
+                  {item.unit && !item.unit.active ? ' · inactive' : null}
+                </dd>
                 <dt>Minimum stock</dt>
                 <dd>{item.minimumStock}</dd>
                 <dt>Status</dt>

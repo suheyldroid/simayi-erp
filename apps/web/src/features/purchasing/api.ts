@@ -5,6 +5,7 @@ import {
   type ExtraInput,
   type LineInput,
   type OrderInput,
+  type OrderPatchInput,
   type ReceiveInput,
 } from './model'
 
@@ -42,6 +43,13 @@ export const purchasingApi = {
   async createOrder(body: OrderInput) {
     return PurchasingModel.order.parse(
       (await api.post<unknown>('/order/purchase-orders/', body)).data
+    )
+  },
+  async updateOrder(uuid: string, body: OrderPatchInput) {
+    return PurchasingModel.order.parse(
+      (
+        await api.patch<unknown>(`/order/purchase-orders/${uuid}`, body)
+      ).data
     )
   },
   async act(

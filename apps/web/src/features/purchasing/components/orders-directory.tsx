@@ -43,7 +43,13 @@ function purchaseOrderColumns(
       id: 'total',
       header: 'Total',
       accessorFn: (order) => order.totalPrice ?? '',
-      cell: ({ row }) => row.original.totalPrice ?? '—',
+      enableSorting: false,
+      cell: ({ row }) =>
+        row.original.totalPrice == null
+          ? '—'
+          : `${row.original.totalPrice} ${
+              row.original.currencyCode ?? 'Unknown currency'
+            }`,
     },
     {
       id: 'target',
@@ -194,6 +200,10 @@ export function OrdersDirectory({
           </p>
           <p className='text-sm text-muted-foreground'>
             Select Details on an order to open it.
+          </p>
+          <p className='text-sm text-muted-foreground'>
+            Every total carries its own order currency. Amounts are not
+            converted, rounded, or summed across currencies.
           </p>
           <SortableDataTable
             data={data.items}

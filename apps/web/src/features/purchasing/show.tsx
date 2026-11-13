@@ -15,6 +15,7 @@ import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { errorMessage, purchasingApi } from './api'
+import { OrderCurrencyAction } from './components/order-currency'
 import { OrderExtras } from './components/order-extras'
 import { OrderLines } from './components/order-lines'
 import { OrderReceive } from './components/order-receive'
@@ -96,6 +97,24 @@ export function PurchaseOrderDetail() {
       : undefined
   const isOpen =
     record?.status === 10 || record?.status === 20 || record?.status === 25
+  const lineCount = lines.data?.items.length
+  const extraCount = extras.data?.items.length
+  // A legacy null currency can be assigned while open; a known currency only
+  // changes before any line or extra line exists.
+  const currencyLocked =
+    record?.currencyCode != null &&
+    (lineCount === undefined ||
+      extraCount === undefined ||
+      lineCount > 0 ||
+      extraCount > 0)
+  const currencyLockReason =
+    record?.currencyCode == null
+      ? ''
+      : lines.isError || extras.isError
+        ? 'Load the order lines before changing the currency.'
+        : lineCount === undefined || extraCount === undefined
+          ? 'Checking the order lines before the currency can change…'
+          : 'The currency cannot change while this order has item lines or extra lines.'
   const cancelDialogOpen =
     cancelOpen &&
     cancelTarget !== null &&
@@ -189,7 +208,13 @@ export function PurchaseOrderDetail() {
                 <dt>Description</dt>
                 <dd>{record.description || '—'}</dd>
                 <dt>Total</dt>
-                <dd>{record.totalPrice ?? '—'}</dd>
+                <dd>
+                  {record.totalPrice == null
+                    ? '—'
+                    : `${record.totalPrice} ${record.currencyCode ?? 'Unknown currency'}`}
+                </dd>
+                <dt>Currency</dt>
+                <dd>{record.currencyCode ?? 'Unknown currency (legacy)'}</dd>
                 <dt>Target date</dt>
                 <dd>{record.targetDate ?? '—'}</dd>
                 <dt>Creation date</dt>
@@ -257,6 +282,13 @@ export function PurchaseOrderDetail() {
                   </Button>
                 )}
               </div>
+              {isOpen && (
+                <OrderCurrencyAction
+                  order={record}
+                  locked={currencyLocked}
+                  lockReason={currencyLockReason}
+                />
+              )}
               {record.status === 20 && (
                 <div className='flex items-center gap-2'>
                   <Checkbox
@@ -280,6 +312,7 @@ export function PurchaseOrderDetail() {
             <OrderLines
               order={record}
               lines={lines.data?.items ?? []}
+              currencyCode={record.currencyCode}
               pending={lines.isPending}
               error={lines.isError ? lines.error : null}
               editable={isOpen}
@@ -288,6 +321,7 @@ export function PurchaseOrderDetail() {
             <OrderExtras
               order={record}
               extras={extras.data?.items ?? []}
+              currencyCode={record.currencyCode}
               pending={extras.isPending}
               error={extras.isError ? extras.error : null}
               editable={isOpen}

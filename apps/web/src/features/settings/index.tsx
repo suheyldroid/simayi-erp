@@ -1,6 +1,5 @@
 import { Outlet } from '@tanstack/react-router'
 import { Separator } from '@/components/ui/separator'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -19,7 +18,6 @@ export function Settings({ children }: { children?: React.ReactNode }) {
     <>
       <Header>
         <Search className='me-auto' />
-        <ConfigDrawer />
         <ProfileDropdown />
       </Header>
 

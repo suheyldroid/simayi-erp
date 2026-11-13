@@ -79,6 +79,10 @@ export function RecipeSheet({
     const ingredients = rows.map((row, index) => {
       if (!row.item)
         throw new Error(`Choose an ingredient item for row ${index + 1}.`)
+      if (!row.item.units)
+        throw new Error(
+          `${row.item.name} has no unit assigned. Assign a unit in Items before using it in a recipe.`
+        )
       if (seen.has(row.item.uuid))
         throw new Error(`${row.item.name} is listed more than once.`)
       seen.add(row.item.uuid)
@@ -230,7 +234,7 @@ export function RecipeSheet({
                             className='text-xs text-muted-foreground'
                           >
                             {row.item
-                              ? `In ${row.item.units || 'units'} per one recipe unit.`
+                              ? `In ${row.item.units || 'an unresolved unit'} per one recipe unit.`
                               : 'Choose an item to see its units.'}{' '}
                             Decimals accept a comma or a dot, up to 5 places.
                           </p>

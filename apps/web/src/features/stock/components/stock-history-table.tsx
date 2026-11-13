@@ -30,6 +30,7 @@ export function StockHistoryTable({ rows }: { rows: StockTrackingEntry[] }) {
           <TableHead>Event</TableHead>
           <TableHead>Before</TableHead>
           <TableHead>After</TableHead>
+          <TableHead>Unit</TableHead>
           <TableHead>Notes</TableHead>
           <TableHead>Context</TableHead>
         </TableRow>
@@ -43,6 +44,7 @@ export function StockHistoryTable({ rows }: { rows: StockTrackingEntry[] }) {
             </TableCell>
             <TableCell>{row.quantityBefore ?? '—'}</TableCell>
             <TableCell>{row.quantityAfter ?? '—'}</TableCell>
+            <TableCell>{row.unitCode ?? 'Unknown unit'}</TableCell>
             <TableCell>{row.notes ?? '—'}</TableCell>
             <TableCell>
               {row.deltas != null && Object.keys(row.deltas).length > 0 ? (
@@ -60,7 +62,7 @@ export function StockHistoryTable({ rows }: { rows: StockTrackingEntry[] }) {
         ))}
         {rows.length === 0 && (
           <TableRow>
-            <TableCell colSpan={6}>No history yet.</TableCell>
+            <TableCell colSpan={7}>No history yet.</TableCell>
           </TableRow>
         )}
       </TableBody>

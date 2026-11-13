@@ -15,7 +15,8 @@ import {
   type RecipeOption,
 } from '@/features/recipes/components/recipe-select'
 import { errorMessage, saleShortages } from '../api'
-import { SalesPageModel, type SaleInput } from '../model'
+import { SalesPageModel, type SaleInput, type SalesChannel } from '../model'
+import { ChannelSelect } from './channel-select'
 
 function newRequestKey() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
@@ -36,6 +37,7 @@ export function SaleForm({
 }) {
   const quantityId = useId()
   const [recipe, setRecipe] = useState<RecipeOption | null>(null)
+  const [channel, setChannel] = useState<SalesChannel | null>(null)
   const [quantity, setQuantity] = useState('1')
   const [requestKey, setRequestKey] = useState(newRequestKey)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -44,6 +46,11 @@ export function SaleForm({
   function chooseRecipe(next: RecipeOption | null) {
     if (next?.uuid !== recipe?.uuid) setRequestKey(newRequestKey())
     setRecipe(next)
+  }
+
+  function chooseChannel(next: SalesChannel | null) {
+    if (next?.uuid !== channel?.uuid) setRequestKey(newRequestKey())
+    setChannel(next)
   }
 
   function changeQuantity(value: string) {
@@ -83,9 +90,14 @@ export function SaleForm({
               setValidationError('Choose a recipe')
               return
             }
+            if (!channel) {
+              setValidationError('Choose a sales channel')
+              return
+            }
             try {
               const body = SalesPageModel.input.parse({
                 recipeUuid: recipe.uuid,
+                channelUuid: channel.uuid,
                 quantity: Number(quantity),
                 requestKey,
               })
@@ -103,6 +115,11 @@ export function SaleForm({
                 value={recipe}
                 disabled={pending}
                 onChange={chooseRecipe}
+              />
+              <ChannelSelect
+                value={channel}
+                disabled={pending}
+                onChange={chooseChannel}
               />
               <div className='space-y-2'>
                 <Label htmlFor={quantityId}>Quantity</Label>

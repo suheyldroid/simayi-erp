@@ -90,6 +90,41 @@ export function SaleDetail() {
                 <dd>{record.recipeName || '—'}</dd>
                 <dt>Recipe version</dt>
                 <dd>{record.recipeVersion}</dd>
+                <dt>Channel</dt>
+                <dd>{record.channelName ?? '—'}</dd>
+                <dt>Sale date</dt>
+                <dd>{record.businessDate ?? '—'}</dd>
+                <dt>Batch</dt>
+                <dd>
+                  {record.batchUuid == null ? (
+                    '—'
+                  ) : (
+                    <Link
+                      to='/o/$organizationSlug/sales/batches/$batchId'
+                      params={{
+                        organizationSlug,
+                        batchId: record.batchUuid,
+                      }}
+                      className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
+                    >
+                      {record.batchReference ?? record.batchUuid}
+                    </Link>
+                  )}
+                </dd>
+                {record.sourceRow != null && (
+                  <>
+                    <dt>Source</dt>
+                    <dd>
+                      {record.sourceSheet ?? 'Sheet'} row {record.sourceRow}
+                      {record.sourceChannelText
+                        ? ` · ${record.sourceChannelText}`
+                        : ''}
+                      {record.sourceProductText
+                        ? ` · ${record.sourceProductText}`
+                        : ''}
+                    </dd>
+                  </>
+                )}
                 <dt>Quantity</dt>
                 <dd>{record.quantity}</dd>
                 <dt>Recorded</dt>
@@ -205,7 +240,7 @@ function IngredientRow({ ingredient }: { ingredient: SaleIngredient }) {
       <TableCell>{ingredient.quantityPerRecipe}</TableCell>
       <TableCell>{ingredient.requiredQuantity}</TableCell>
       <TableCell>{ingredient.consumedQuantity}</TableCell>
-      <TableCell>{ingredient.itemUnits || '—'}</TableCell>
+      <TableCell>{ingredient.itemUnits || 'Unknown unit'}</TableCell>
       <TableCell>{ingredient.note || '—'}</TableCell>
     </TableRow>
   )

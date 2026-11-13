@@ -9,7 +9,7 @@ export function ItemStockPanel({ item }: { item: Item }) {
         <p className='text-sm text-muted-foreground'>Current stock</p>
         <p className='text-2xl font-semibold'>
           {item.stock}
-          {item.units ? ` ${item.units}` : ''}
+          {item.units ? ` ${item.units}` : ' · unit unresolved'}
         </p>
         <p className='text-sm text-muted-foreground'>
           Minimum {item.minimumStock} · version {item.version}
