@@ -35,6 +35,8 @@ export function ItemSelect({
   excludeIds = [],
   activeOnly = true,
   disabled = false,
+  invalid = false,
+  describedBy,
   onChange,
 }: {
   label: string
@@ -47,6 +49,9 @@ export function ItemSelect({
    */
   activeOnly?: boolean
   disabled?: boolean
+  /** Marks the combobox invalid when a field-level message explains why. */
+  invalid?: boolean
+  describedBy?: string
   onChange: (next: ItemOption | null) => void
 }) {
   const triggerId = useId()
@@ -96,6 +101,8 @@ export function ItemSelect({
               variant='outline'
               role='combobox'
               disabled={disabled}
+              aria-invalid={invalid || undefined}
+              aria-describedby={describedBy}
               title={
                 value == null
                   ? undefined

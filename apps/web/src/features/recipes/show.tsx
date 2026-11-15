@@ -245,34 +245,84 @@ function RecipeDetailView({ uuid }: { uuid: string | null }) {
             </section>
             <section className='space-y-2'>
               <h3 className='text-xl font-semibold'>Ingredients</h3>
+              <p className='text-sm text-muted-foreground'>
+                Quantities are per one unit of this recipe. A nested recipe
+                contributes its own recipe units, and a sale expands every level
+                and deducts the leaf items multiplied along the path.
+              </p>
               <Table>
                 <caption className='sr-only'>
-                  Ingredient items and quantities of this recipe
+                  Ingredient items and nested recipes with their quantities for
+                  this recipe
                 </caption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Ingredient</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>IPN</TableHead>
                     <TableHead>Quantity per recipe</TableHead>
-                    <TableHead>Units</TableHead>
+                    <TableHead>Unit</TableHead>
                     <TableHead>Note</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {record.ingredients.map((ingredient) => (
-                    <TableRow key={ingredient.uuid}>
-                      <TableCell>{ingredient.item.name}</TableCell>
-                      <TableCell>{ingredient.item.ipn || '—'}</TableCell>
-                      <TableCell>{ingredient.quantity}</TableCell>
-                      <TableCell>
-                        {ingredient.item.units || 'Unresolved'}
-                      </TableCell>
-                      <TableCell>{ingredient.note || '—'}</TableCell>
-                    </TableRow>
-                  ))}
+                  {record.ingredients.map((ingredient) =>
+                    ingredient.kind === 'item' ? (
+                      <TableRow key={ingredient.uuid}>
+                        <TableCell>{ingredient.item.name}</TableCell>
+                        <TableCell>Item</TableCell>
+                        <TableCell>{ingredient.item.ipn || '—'}</TableCell>
+                        <TableCell>{ingredient.quantity}</TableCell>
+                        <TableCell>
+                          {ingredient.item.units || 'Unresolved'}
+                        </TableCell>
+                        <TableCell>{ingredient.note || '—'}</TableCell>
+                        <TableCell>
+                          <Link
+                            to='/o/$organizationSlug/settings/items/$itemId'
+                            params={{
+                              organizationSlug,
+                              itemId: ingredient.item.uuid,
+                            }}
+                            aria-label={`Details for item ${ingredient.item.name}`}
+                            className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
+                          >
+                            Details
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      <TableRow key={ingredient.uuid}>
+                        <TableCell>{ingredient.recipe.name}</TableCell>
+                        <TableCell>
+                          {ingredient.recipe.active
+                            ? `Recipe (v${ingredient.recipe.version})`
+                            : `Recipe (v${ingredient.recipe.version}, inactive)`}
+                        </TableCell>
+                        <TableCell>—</TableCell>
+                        <TableCell>{ingredient.quantity}</TableCell>
+                        <TableCell>recipe units</TableCell>
+                        <TableCell>{ingredient.note || '—'}</TableCell>
+                        <TableCell>
+                          <Link
+                            to='/o/$organizationSlug/settings/recipes/$recipeId'
+                            params={{
+                              organizationSlug,
+                              recipeId: ingredient.recipe.uuid,
+                            }}
+                            aria-label={`Details for recipe ${ingredient.recipe.name}`}
+                            className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
+                          >
+                            Details
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )}
                   {record.ingredients.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5}>
+                      <TableCell colSpan={7}>
                         This recipe has no ingredients.
                       </TableCell>
                     </TableRow>
@@ -325,7 +375,7 @@ function RecipeDetailView({ uuid }: { uuid: string | null }) {
         title='Delete recipe'
         desc={
           deleteDraft
-            ? `Delete “${deleteDraft.name}”? Historical sale snapshots keep their recorded ingredients and stock consumption.`
+            ? `Delete “${deleteDraft.name}”? Historical sale snapshots keep their recorded ingredients and stock consumption. A recipe that another recipe uses as an ingredient cannot be deleted.`
             : ''
         }
         confirmText='Delete'
@@ -342,8 +392,8 @@ function RecipeDetailView({ uuid }: { uuid: string | null }) {
       >
         {deletion.isError && (
           <p role='alert' className='text-sm text-destructive'>
-            {errorMessage(deletion.error)} Cancel and choose Delete again to use
-            the latest recipe version.
+            {errorMessage(deletion.error)} Cancel, reload the recipe, and try
+            again.
           </p>
         )}
       </ConfirmDialog>

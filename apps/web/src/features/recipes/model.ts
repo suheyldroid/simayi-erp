@@ -26,19 +26,6 @@ const quantity = z
         'Quantity must be greater than zero.'
       )
   )
-const ingredientItem = z.object({
-  uuid: resourceUuid,
-  name: z.string(),
-  ipn: z.string().nullable(),
-  units: z.string(),
-})
-const ingredient = z.object({
-  uuid: resourceUuid,
-  itemUuid: resourceUuid,
-  item: ingredientItem,
-  quantity: z.string(),
-  note: z.string(),
-})
 const price = z.string().trim().max(20)
 const sellingPrice = price
   .refine(
@@ -62,14 +49,47 @@ const summary = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 })
+const itemIngredientItem = z.object({
+  uuid: resourceUuid,
+  name: z.string(),
+  ipn: z.string().nullable(),
+  units: z.string(),
+})
+const ingredient = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('item'),
+    uuid: resourceUuid,
+    itemUuid: resourceUuid,
+    item: itemIngredientItem,
+    quantity: z.string(),
+    note: z.string(),
+  }),
+  z.object({
+    kind: z.literal('recipe'),
+    uuid: resourceUuid,
+    recipeUuid: resourceUuid,
+    recipe: summary,
+    quantity: z.string(),
+    note: z.string(),
+  }),
+])
 const detail = summary.extend({
   ingredients: z.array(ingredient),
 })
-const ingredientInput = z.object({
-  itemUuid: resourceUuid,
-  quantity,
-  note: z.string().trim().max(500).optional(),
-})
+const ingredientInput = z.discriminatedUnion('kind', [
+  z.strictObject({
+    kind: z.literal('item'),
+    itemUuid: resourceUuid,
+    quantity,
+    note: z.string().trim().max(500).optional(),
+  }),
+  z.strictObject({
+    kind: z.literal('recipe'),
+    recipeUuid: resourceUuid,
+    quantity,
+    note: z.string().trim().max(500).optional(),
+  }),
+])
 const fields = {
   name: z.string().trim().min(1).max(100),
   description: z.string().trim().max(250).optional(),

@@ -23,8 +23,8 @@ export function Recipes() {
       <div>
         <h2 className='text-2xl font-bold'>Recipes</h2>
         <p className='text-muted-foreground'>
-          Recipes define the ingredient items and per-unit quantities that are
-          deducted from stock when a recipe is sold.
+          Recipes define the ingredient items, nested recipes and per-unit
+          quantities that are deducted from stock when a recipe is sold.
         </p>
       </div>
       <RecipeDirectory />

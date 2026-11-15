@@ -41,12 +41,23 @@ function ingredientCountLabel(count: number) {
 export function RecipeSelect({
   label,
   value,
+  excludeIds = [],
   disabled = false,
+  showPrice = true,
+  invalid = false,
+  describedBy,
   onChange,
 }: {
   label: string
   value: RecipeOption | null
+  /** Recipes already chosen elsewhere; they stay visible but cannot be picked. */
+  excludeIds?: readonly string[]
   disabled?: boolean
+  /** Show the recorded price/unpriced badge next to each result. */
+  showPrice?: boolean
+  /** Marks the combobox invalid when a field-level message explains why. */
+  invalid?: boolean
+  describedBy?: string
   onChange: (next: RecipeOption | null) => void
 }) {
   const triggerId = useId()
@@ -57,8 +68,8 @@ export function RecipeSelect({
     queryKey: [
       'recipe',
       'recipes',
-      'select',
       organizationCacheScope(),
+      'select',
       'active',
       page,
       search,
@@ -68,6 +79,7 @@ export function RecipeSelect({
     enabled: open,
   })
   const recipes = options.data?.items ?? []
+  const excluded = new Set(excludeIds)
   const total = options.data?.total ?? 0
   const hasNext = (page + 1) * PAGE_SIZE < total
 
@@ -90,6 +102,8 @@ export function RecipeSelect({
               variant='outline'
               role='combobox'
               disabled={disabled}
+              aria-invalid={invalid || undefined}
+              aria-describedby={describedBy}
               title={
                 value == null
                   ? undefined
@@ -165,43 +179,54 @@ export function RecipeSelect({
                   <>
                     <CommandEmpty>No recipes found.</CommandEmpty>
                     <CommandGroup>
-                      {recipes.map((recipe) => (
-                        <CommandItem
-                          key={recipe.uuid}
-                          value={recipe.uuid}
-                          disabled={disabled}
-                          onSelect={() => {
-                            onChange({
-                              uuid: recipe.uuid,
-                              name: recipe.name,
-                              version: recipe.version,
-                              ingredientCount: recipe.ingredientCount,
-                              sellingPrice: recipe.sellingPrice,
-                              priceCurrencyCode: recipe.priceCurrencyCode,
-                            })
-                            setOpen(false)
-                          }}
-                        >
-                          <CheckIcon
-                            className={cn(
-                              'size-4',
-                              value?.uuid === recipe.uuid
-                                ? 'opacity-100'
-                                : 'opacity-0'
-                            )}
-                          />
-                          <span className='min-w-0 flex-1 truncate'>
-                            {recipe.name}
-                          </span>
-                          <span className='shrink-0 text-xs text-muted-foreground'>
-                            {recipe.sellingPrice === null
-                              ? 'Unpriced'
-                              : `${recipe.sellingPrice} ${recipe.priceCurrencyCode ?? ''}`.trim()}
-                            {' · '}
-                            {ingredientCountLabel(recipe.ingredientCount)}
-                          </span>
-                        </CommandItem>
-                      ))}
+                      {recipes.map((recipe) => {
+                        const alreadyAdded = excluded.has(recipe.uuid)
+                        return (
+                          <CommandItem
+                            key={recipe.uuid}
+                            value={recipe.uuid}
+                            disabled={disabled || alreadyAdded}
+                            onSelect={() => {
+                              onChange({
+                                uuid: recipe.uuid,
+                                name: recipe.name,
+                                version: recipe.version,
+                                ingredientCount: recipe.ingredientCount,
+                                sellingPrice: recipe.sellingPrice,
+                                priceCurrencyCode: recipe.priceCurrencyCode,
+                              })
+                              setOpen(false)
+                            }}
+                          >
+                            <CheckIcon
+                              className={cn(
+                                'size-4',
+                                value?.uuid === recipe.uuid
+                                  ? 'opacity-100'
+                                  : 'opacity-0'
+                              )}
+                            />
+                            <span className='min-w-0 flex-1 truncate'>
+                              {recipe.name}
+                            </span>
+                            <span className='shrink-0 text-xs text-muted-foreground'>
+                              {showPrice
+                                ? `${
+                                    recipe.sellingPrice === null
+                                      ? 'Unpriced'
+                                      : `${recipe.sellingPrice} ${recipe.priceCurrencyCode ?? ''}`.trim()
+                                  } · `
+                                : ''}
+                              {ingredientCountLabel(recipe.ingredientCount)}
+                            </span>
+                            {alreadyAdded ? (
+                              <span className='shrink-0 text-xs text-muted-foreground'>
+                                Already used
+                              </span>
+                            ) : null}
+                          </CommandItem>
+                        )
+                      })}
                     </CommandGroup>
                   </>
                 )}
