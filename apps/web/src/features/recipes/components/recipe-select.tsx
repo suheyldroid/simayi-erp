@@ -26,7 +26,12 @@ const PAGE_SIZE = 20
 
 export type RecipeOption = Pick<
   RecipeSummary,
-  'uuid' | 'name' | 'version' | 'ingredientCount'
+  | 'uuid'
+  | 'name'
+  | 'version'
+  | 'ingredientCount'
+  | 'sellingPrice'
+  | 'priceCurrencyCode'
 >
 
 function ingredientCountLabel(count: number) {
@@ -171,6 +176,8 @@ export function RecipeSelect({
                               name: recipe.name,
                               version: recipe.version,
                               ingredientCount: recipe.ingredientCount,
+                              sellingPrice: recipe.sellingPrice,
+                              priceCurrencyCode: recipe.priceCurrencyCode,
                             })
                             setOpen(false)
                           }}
@@ -187,6 +194,10 @@ export function RecipeSelect({
                             {recipe.name}
                           </span>
                           <span className='shrink-0 text-xs text-muted-foreground'>
+                            {recipe.sellingPrice === null
+                              ? 'Unpriced'
+                              : `${recipe.sellingPrice} ${recipe.priceCurrencyCode ?? ''}`.trim()}
+                            {' · '}
                             {ingredientCountLabel(recipe.ingredientCount)}
                           </span>
                         </CommandItem>

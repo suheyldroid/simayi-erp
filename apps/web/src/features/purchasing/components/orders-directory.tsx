@@ -44,12 +44,7 @@ function purchaseOrderColumns(
       header: 'Total',
       accessorFn: (order) => order.totalPrice ?? '',
       enableSorting: false,
-      cell: ({ row }) =>
-        row.original.totalPrice == null
-          ? '—'
-          : `${row.original.totalPrice} ${
-              row.original.currencyCode ?? 'Unknown currency'
-            }`,
+      cell: ({ row }) => row.original.totalPrice ?? '—',
     },
     {
       id: 'target',
@@ -126,6 +121,8 @@ export function OrdersDirectory({
     onSuccess: async (created) => {
       setCreating(false)
       await client.invalidateQueries({ queryKey: ['purchasing', scope] })
+      // Creation writes the finance reservation of the new order.
+      await client.invalidateQueries({ queryKey: ['finance', scope] })
       toast.success('Purchase order created')
       await navigate({
         to: '/o/$organizationSlug/purchasing/$orderId',
@@ -202,8 +199,8 @@ export function OrdersDirectory({
             Select Details on an order to open it.
           </p>
           <p className='text-sm text-muted-foreground'>
-            Every total carries its own order currency. Amounts are not
-            converted, rounded, or summed across currencies.
+            Line prices carry the fixed system currency. Historical totals are
+            never converted, rounded, or summed across currencies.
           </p>
           <SortableDataTable
             data={data.items}

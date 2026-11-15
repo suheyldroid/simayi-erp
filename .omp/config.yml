@@ -1,0 +1,9 @@
+modelRoleStorage: project
+modelRoles:
+  default: openai-codex-2/gpt-6.1-sol
+  worker: commandcode/deepseek/deepseek-v4.1-flash:high
+  advisor: openai-codex-3/gpt-6.1-sol
+retry:
+  fallbackChains:
+    commandcode/deepseek/deepseek-v4.1-flash:
+      - cursor-sdk/default:off

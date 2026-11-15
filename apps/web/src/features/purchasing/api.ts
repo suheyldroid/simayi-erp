@@ -5,7 +5,7 @@ import {
   type ExtraInput,
   type LineInput,
   type OrderInput,
-  type OrderPatchInput,
+  type PurchaseLine,
   type ReceiveInput,
 } from './model'
 
@@ -45,13 +45,6 @@ export const purchasingApi = {
       (await api.post<unknown>('/order/purchase-orders/', body)).data
     )
   },
-  async updateOrder(uuid: string, body: OrderPatchInput) {
-    return PurchasingModel.order.parse(
-      (
-        await api.patch<unknown>(`/order/purchase-orders/${uuid}`, body)
-      ).data
-    )
-  },
   async act(
     uuid: string,
     action: 'place' | 'hold' | 'cancel' | 'complete',
@@ -67,13 +60,32 @@ export const purchasingApi = {
     )
   },
   async lines(orderUuid: string) {
-    return PurchasingModel.lines.parse(
-      (
-        await api.get<unknown>(`/order/purchase-orders/${orderUuid}/lines/`, {
-          params: { limit: 100, offset: 0 },
-        })
-      ).data
-    )
+    // Every page is read so the detail listing and the bulk receive form see
+    // the whole line set, never only the first page of the API's page size.
+    const limit = 100
+    const seen = new Set<string>()
+    const items: PurchaseLine[] = []
+    const readPage = async (offset: number) =>
+      PurchasingModel.lines.parse(
+        (
+          await api.get<unknown>(`/order/purchase-orders/${orderUuid}/lines/`, {
+            params: { limit, offset },
+          })
+        ).data
+      )
+    let offset = 0
+    let page = await readPage(offset)
+    for (;;) {
+      for (const line of page.items) {
+        if (seen.has(line.uuid)) continue
+        seen.add(line.uuid)
+        items.push(line)
+      }
+      offset += page.items.length
+      if (page.items.length < limit || offset >= page.total) break
+      page = await readPage(offset)
+    }
+    return { items, total: page.total, limit, offset: 0 }
   },
   async addLine(orderUuid: string, body: LineInput) {
     return PurchasingModel.line.parse(

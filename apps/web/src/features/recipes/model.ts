@@ -39,11 +39,24 @@ const ingredient = z.object({
   quantity: z.string(),
   note: z.string(),
 })
+const price = z.string().trim().max(20)
+const sellingPrice = price
+  .refine(
+    (value) => /^\d{1,13}(?:\.\d{1,6})?$/.test(value.replace(/,/g, '.')),
+    'Use a nonnegative price with up to 6 decimals.'
+  )
+  .transform((value) => value.replace(/,/g, '.'))
+
 const summary = z.object({
   uuid: resourceUuid,
   name: z.string(),
   description: z.string(),
   active: z.boolean(),
+  sellingPrice: z.string().nullable(),
+  priceCurrencyCode: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .nullable(),
   version: z.number().int().nonnegative(),
   ingredientCount: z.number().int().nonnegative(),
   createdAt: z.string(),
@@ -64,6 +77,7 @@ const fields = {
 }
 const createInput = z.object({
   ...fields,
+  sellingPrice: sellingPrice.nullable().optional(),
   ingredients: z.array(ingredientInput).min(1).max(500),
 })
 const updateInput = z.object({
@@ -71,6 +85,7 @@ const updateInput = z.object({
   name: fields.name.optional(),
   description: fields.description,
   active: fields.active,
+  sellingPrice: sellingPrice.nullable().optional(),
   ingredients: z.array(ingredientInput).min(1).max(500).optional(),
 })
 

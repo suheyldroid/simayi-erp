@@ -1,0 +1,1 @@
+Received the selector and Owner/RESTRICT contract. OperationsTenant is idle: stock, order, and build were restored to the pre-cutover snapshot and I am not writing organizationId, accessTeamId, organizationId_id, or team fields. No schema edits from me.

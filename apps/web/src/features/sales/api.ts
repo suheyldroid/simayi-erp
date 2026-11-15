@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { errorMessage } from '@/lib/api-error'
 import { api } from '@/lib/auth'
-import { SalesPageModel, type SaleInput } from './model'
+import { SalesPageModel, type SaleInput, type SaleReceiptInput } from './model'
 
 export { errorMessage }
 
@@ -61,6 +61,11 @@ export const salesApi = {
   async record(body: SaleInput) {
     return SalesPageModel.sale.parse(
       (await api.post<unknown>('/sales/', body)).data
+    )
+  },
+  async receipt(uuid: string, body: SaleReceiptInput) {
+    return SalesPageModel.sale.parse(
+      (await api.post<unknown>(`/sales/${uuid}/receipts/`, body)).data
     )
   },
 }

@@ -1,4 +1,5 @@
-import { useForm, useWatch } from 'react-hook-form'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -9,7 +10,6 @@ import {
   type SessionUser,
 } from '@/lib/auth'
 import { imageUrl } from '@/lib/image-url'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -21,156 +21,156 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { SheetFooter } from '@/components/ui/sheet'
+import { ImageInput } from '@/components/image-input'
 import {
   profileFormSchema,
   profileUpdateInput,
   type ProfileFormValues,
 } from '../model'
+import { avatarReferencePrefix, profileAvatarApi } from './avatar-api'
 
 /**
  * Edits the signed-in user's native Better Auth account through
- * `authClient.updateUser`. No organization is selected or required, and no
- * organization-scoped UserProfile record is read or written.
+ * `authClient.updateUser`. The parent Sheet owns the header and dismissal; this
+ * form reports its in-flight state so no request can be abandoned mid-save.
  */
-export function ProfileForm({ user }: { user: SessionUser }) {
+export function ProfileForm({
+  user,
+  onSaved,
+  onCancel,
+  onPendingChange,
+}: {
+  user: SessionUser
+  onSaved: () => void
+  onCancel: () => void
+  onPendingChange: (pending: boolean) => void
+}) {
   const client = useQueryClient()
+  const [image, setImage] = useState<string | null>(user.image ?? null)
+  const [file, setFile] = useState<File | null>(null)
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: { name: user.name, image: user.image ?? '' },
+    defaultValues: { name: user.name },
     mode: 'onChange',
   })
-  const name = useWatch({ control: form.control, name: 'name' })
-  const image = useWatch({ control: form.control, name: 'image' })
-  const preview = image.trim()
-  const initials = name.trim().slice(0, 2).toUpperCase() || 'U'
 
   async function submit(values: ProfileFormValues) {
+    if (pending) return
+    const submittedImage = image
+    const submittedFile = file
+    setPending(true)
+    onPendingChange(true)
+    setError(null)
     form.clearErrors('root')
-    const input = profileUpdateInput(values)
-    let failure: string | null = null
+    let saved = false
     try {
+      const imageRef = submittedFile
+        ? (await profileAvatarApi.upload(submittedFile)).reference
+        : submittedImage
+      // Keep the uploaded reference if the native update fails; a retry must
+      // reuse it instead of uploading the same file again.
+      if (submittedFile) {
+        setImage(imageRef ?? null)
+        setFile(null)
+      }
+      const input = profileUpdateInput(values, imageRef ?? null)
       const result = await authClient.updateUser(input)
       if (result.error) {
-        failure = result.error.message ?? 'Could not update your profile.'
+        setError(result.error.message ?? 'Could not update your profile.')
+        return
       }
-    } catch (error) {
-      failure =
-        error instanceof Error && error.message
-          ? error.message
+      form.reset({ name: input.name })
+      // The native endpoint rewrites the session cookie; refetch both the
+      // global account session (header name/avatar) and the organization shell
+      // session, plus the platform user caches that project this account.
+      await Promise.all([
+        client.invalidateQueries({ queryKey: sessionQuery.queryKey }),
+        client.invalidateQueries({ queryKey: organizationSessionQueryKey }),
+        client.invalidateQueries({ queryKey: ['users'] }),
+        client.invalidateQueries({ queryKey: ['user', user.id] }),
+        client.invalidateQueries({ queryKey: ['user-options'] }),
+      ])
+      toast.success('Profile updated.')
+      saved = true
+    } catch (caught) {
+      setError(
+        caught instanceof Error && caught.message
+          ? caught.message
           : 'Could not reach the account service. Try again.'
+      )
+    } finally {
+      setPending(false)
+      onPendingChange(false)
     }
-    if (failure) {
-      // Keep the entered values so the user can correct and retry.
-      form.setError('root', { message: failure })
-      return
-    }
-    form.reset({ name: input.name, image: input.image ?? '' })
-    // The native endpoint rewrites the session cookie; refetch both the global
-    // account session (header name/avatar) and the organization shell session,
-    // plus the platform user caches that project this account.
-    await Promise.all([
-      client.invalidateQueries({ queryKey: sessionQuery.queryKey }),
-      client.invalidateQueries({ queryKey: organizationSessionQueryKey }),
-      client.invalidateQueries({ queryKey: ['users'] }),
-      client.invalidateQueries({ queryKey: ['user', user.id] }),
-      client.invalidateQueries({ queryKey: ['user-options'] }),
-    ])
-    toast.success('Profile updated.')
+    if (saved) onSaved()
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(submit)}>
-        {/* A disabled fieldset freezes the editable inputs while the update is
-            in flight, so no keystroke can be silently replaced by the reset. */}
-        <fieldset disabled={form.formState.isSubmitting} className='space-y-8'>
-          <div className='flex items-center gap-4'>
-            <Avatar className='size-16 rounded-lg'>
-              <AvatarImage
-                src={preview ? imageUrl(preview) : undefined}
-                alt=''
-              />
-              <AvatarFallback className='rounded-lg'>{initials}</AvatarFallback>
-            </Avatar>
-            <p className='text-sm text-muted-foreground'>Avatar preview</p>
-          </div>
-
-          <FormField
-            control={form.control}
-            name='name'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input
-                    autoComplete='name'
-                    maxLength={150}
-                    placeholder='Your name'
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  This is the name shown in the header and account menus.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name='image'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Avatar URL</FormLabel>
-                <FormControl>
-                  <Input
-                    type='url'
-                    inputMode='url'
-                    maxLength={2048}
-                    placeholder='https://example.com/avatar.png'
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Absolute http(s) URL of your avatar image. Leave it empty to
-                  remove the avatar.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className='space-y-2'>
-            <Label htmlFor='profile-email'>Email</Label>
-            <Input
-              id='profile-email'
-              type='email'
-              value={user.email}
-              readOnly
-              aria-describedby='profile-email-description'
+      <form
+        className='flex min-h-0 flex-1 flex-col'
+        onSubmit={form.handleSubmit(submit)}
+      >
+        <div className='min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-4'>
+          <fieldset disabled={pending} className='space-y-6'>
+            <ImageInput
+              image={image}
+              file={file}
+              disabled={pending}
+              resolveImage={imageUrl}
+              credentialImagePrefix={avatarReferencePrefix}
+              label='Avatar'
+              alt='Avatar preview'
+              onChange={(next) => {
+                setImage(next.image)
+                setFile(next.file)
+              }}
             />
-            <p
-              id='profile-email-description'
-              className='text-sm text-muted-foreground'
-            >
-              Read-only. Email changes are not enabled in this deployment:
-              Better Auth's change-email flow is off and no verification email
-              sender is configured.
-            </p>
-          </div>
 
-          {form.formState.errors.root ? (
+            <FormField
+              control={form.control}
+              name='name'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      autoComplete='name'
+                      maxLength={150}
+                      placeholder='Your name'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    This is the name shown in the header and account menus.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </fieldset>
+          {error ? (
             <p role='alert' className='text-sm text-destructive'>
-              {form.formState.errors.root.message}
+              {error}
             </p>
           ) : null}
-
-          <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Updating…' : 'Update profile'}
+        </div>
+        <SheetFooter>
+          <Button
+            type='button'
+            variant='outline'
+            disabled={pending}
+            onClick={onCancel}
+          >
+            Cancel
           </Button>
-        </fieldset>
+          <Button type='submit' disabled={pending}>
+            {pending ? 'Saving…' : 'Save profile'}
+          </Button>
+        </SheetFooter>
       </form>
     </Form>
   )

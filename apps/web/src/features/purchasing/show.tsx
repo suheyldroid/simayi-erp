@@ -14,8 +14,8 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { currencyApi } from '@/features/currency/api'
 import { errorMessage, purchasingApi } from './api'
-import { OrderCurrencyAction } from './components/order-currency'
 import { OrderExtras } from './components/order-extras'
 import { OrderLines } from './components/order-lines'
 import { OrderReceive } from './components/order-receive'
@@ -62,11 +62,16 @@ export function PurchaseOrderDetail() {
     },
     enabled: uuid !== null,
   })
+  const preference = useQuery({
+    queryKey: ['system-preference'],
+    queryFn: () => currencyApi.preference(),
+  })
   const record = order.data
   const action = useMutation({
     mutationFn: (input: {
       name: 'place' | 'hold' | 'complete'
       acceptIncomplete?: boolean
+      scope: string
     }) => {
       if (!order.data) throw new Error('Purchase order is not loaded')
       return purchasingApi.act(order.data.uuid, input.name, {
@@ -74,19 +79,27 @@ export function PurchaseOrderDetail() {
         acceptIncomplete: input.acceptIncomplete,
       })
     },
-    onSuccess: async (updated) => {
+    onSuccess: async (updated, input) => {
       await client.invalidateQueries({ queryKey: ['purchasing'] })
+      // Completion turns the finance reservation into the exact cash purchase
+      // and settles the supplier payable in the same order transaction.
+      await client.invalidateQueries({
+        queryKey: ['supplier-ledger', input.scope],
+      })
+      await client.invalidateQueries({ queryKey: ['finance', input.scope] })
       toast.success(`Order is ${updated.statusLabel.toLowerCase()}`)
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   })
   const cancelMutation = useMutation({
-    mutationFn: (target: { uuid: string; version: number }) =>
+    mutationFn: (target: { uuid: string; version: number; scope: string }) =>
       purchasingApi.act(target.uuid, 'cancel', { version: target.version }),
-    onSuccess: async (updated) => {
+    onSuccess: async (updated, target) => {
       setCancelOpen(false)
       setCancelTarget(null)
       await client.invalidateQueries({ queryKey: ['purchasing'] })
+      // Cancelling releases the finance reservation and never debits cash.
+      await client.invalidateQueries({ queryKey: ['finance', target.scope] })
       toast.success(`Order is ${updated.statusLabel.toLowerCase()}`)
     },
     onError: (caught) => toast.error(errorMessage(caught)),
@@ -97,24 +110,86 @@ export function PurchaseOrderDetail() {
       : undefined
   const isOpen =
     record?.status === 10 || record?.status === 20 || record?.status === 25
-  const lineCount = lines.data?.items.length
-  const extraCount = extras.data?.items.length
-  // A legacy null currency can be assigned while open; a known currency only
-  // changes before any line or extra line exists.
-  const currencyLocked =
-    record?.currencyCode != null &&
-    (lineCount === undefined ||
-      extraCount === undefined ||
-      lineCount > 0 ||
-      extraCount > 0)
-  const currencyLockReason =
-    record?.currencyCode == null
-      ? ''
-      : lines.isError || extras.isError
-        ? 'Load the order lines before changing the currency.'
-        : lineCount === undefined || extraCount === undefined
-          ? 'Checking the order lines before the currency can change…'
-          : 'The currency cannot change while this order has item lines or extra lines.'
+  const receivedLines = lines.data?.items ?? []
+  const receivedExtras = extras.data?.items ?? []
+  const linesLoaded = lines.isSuccess && extras.isSuccess
+  const effectiveCurrency = preference.data?.defaultCurrencyCode ?? null
+  // Every amount is labelled from its own line snapshot; nothing is assumed
+  // from the current system currency when lines disagree or predate it.
+  const pricedCurrencies = new Set<string>()
+  let unknownCurrency = false
+  for (const line of receivedLines) {
+    if (line.purchasePrice === null) continue
+    if (line.currencyCode === null) unknownCurrency = true
+    else pricedCurrencies.add(line.currencyCode)
+  }
+  for (const extra of receivedExtras) {
+    if (extra.price === null) continue
+    if (extra.currencyCode === null) unknownCurrency = true
+    else pricedCurrencies.add(extra.currencyCode)
+  }
+  const mixedCurrency = pricedCurrencies.size > 1
+  const singleCurrency =
+    !unknownCurrency && pricedCurrencies.size === 1
+      ? [...pricedCurrencies][0]
+      : null
+  const totalCurrencyNote =
+    lines.isError || extras.isError
+      ? ' · line currency unavailable'
+      : !linesLoaded
+        ? ' · loading line currencies…'
+        : mixedCurrency
+          ? ' · mixed line currencies'
+          : unknownCurrency
+            ? ' · unknown legacy currency'
+            : ''
+  const requirements = [
+    {
+      label: 'A supplier is assigned',
+      met: record?.supplierUuid != null,
+    },
+    {
+      label: `The system currency is configured${
+        effectiveCurrency ? ` (${effectiveCurrency})` : ''
+      }`,
+      met: effectiveCurrency !== null,
+    },
+    {
+      label: 'At least one item or extra line exists',
+      met: receivedLines.length + receivedExtras.length > 0,
+    },
+    {
+      label: 'Every item and extra line has a price',
+      met:
+        linesLoaded &&
+        receivedLines.every((line) => line.purchasePrice !== null) &&
+        receivedExtras.every((extra) => extra.price !== null),
+    },
+    {
+      label: `Every line price is in the system currency${
+        effectiveCurrency ? ` (${effectiveCurrency})` : ''
+      }`,
+      met:
+        linesLoaded &&
+        !unknownCurrency &&
+        !mixedCurrency &&
+        pricedCurrencies.size > 0 &&
+        [...pricedCurrencies].every((code) => code === effectiveCurrency),
+    },
+    {
+      label: 'All lines are received, or the incomplete completion is checked',
+      met:
+        linesLoaded &&
+        (receivedLines.every(
+          (line) =>
+            !isPositiveDecimal(
+              subtractDecimalStrings(line.quantity, line.received)
+            )
+        ) ||
+          acceptIncomplete),
+    },
+  ]
+  const completable = requirements.every((requirement) => requirement.met)
   const cancelDialogOpen =
     cancelOpen &&
     cancelTarget !== null &&
@@ -126,7 +201,11 @@ export function PurchaseOrderDetail() {
       setCancelOpen(false)
       return
     }
-    cancelMutation.mutate(cancelTarget)
+    cancelMutation.mutate({
+      uuid: cancelTarget.uuid,
+      version: cancelTarget.version,
+      scope: organizationCacheScope(),
+    })
   }
   return (
     <>
@@ -211,10 +290,9 @@ export function PurchaseOrderDetail() {
                 <dd>
                   {record.totalPrice == null
                     ? '—'
-                    : `${record.totalPrice} ${record.currencyCode ?? 'Unknown currency'}`}
+                    : `${record.totalPrice}${singleCurrency ? ` ${singleCurrency}` : ''}`}
+                  {record.totalPrice == null ? '' : totalCurrencyNote}
                 </dd>
-                <dt>Currency</dt>
-                <dd>{record.currencyCode ?? 'Unknown currency (legacy)'}</dd>
                 <dt>Target date</dt>
                 <dd>{record.targetDate ?? '—'}</dd>
                 <dt>Creation date</dt>
@@ -234,7 +312,12 @@ export function PurchaseOrderDetail() {
                   <Button
                     type='button'
                     disabled={action.isPending}
-                    onClick={() => action.mutate({ name: 'place' })}
+                    onClick={() =>
+                      action.mutate({
+                        name: 'place',
+                        scope: organizationCacheScope(),
+                      })
+                    }
                   >
                     Place
                   </Button>
@@ -244,7 +327,12 @@ export function PurchaseOrderDetail() {
                     type='button'
                     variant='outline'
                     disabled={action.isPending}
-                    onClick={() => action.mutate({ name: 'hold' })}
+                    onClick={() =>
+                      action.mutate({
+                        name: 'hold',
+                        scope: organizationCacheScope(),
+                      })
+                    }
                   >
                     Hold
                   </Button>
@@ -273,21 +361,67 @@ export function PurchaseOrderDetail() {
                 {record.status === 20 && (
                   <Button
                     type='button'
-                    disabled={action.isPending}
+                    disabled={action.isPending || !completable}
                     onClick={() =>
-                      action.mutate({ name: 'complete', acceptIncomplete })
+                      action.mutate({
+                        name: 'complete',
+                        acceptIncomplete,
+                        scope: organizationCacheScope(),
+                      })
                     }
                   >
                     Complete
                   </Button>
                 )}
               </div>
-              {isOpen && (
-                <OrderCurrencyAction
-                  order={record}
-                  locked={currencyLocked}
-                  lockReason={currencyLockReason}
-                />
+              {record.status === 20 && (
+                <div className='space-y-2 rounded-md border border-border p-3'>
+                  <h3 className='text-sm font-medium'>
+                    Completion requirements
+                  </h3>
+                  <p className='text-sm text-muted-foreground'>
+                    An open order holds its known priced lines in finance
+                    without debiting cash. Completion is the only purchase
+                    transition that turns that hold into the exact cash purchase
+                    and settles the supplier payable; the final total is every
+                    priced item and extra line, all in the fixed system
+                    currency.
+                  </p>
+                  <ul className='space-y-1 text-sm'>
+                    {requirements.map((requirement) => (
+                      <li key={requirement.label} className='flex gap-2'>
+                        <span
+                          className={
+                            requirement.met
+                              ? 'text-muted-foreground'
+                              : 'text-destructive'
+                          }
+                        >
+                          {requirement.met ? 'Ready' : 'Missing'}
+                        </span>
+                        <span>{requirement.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {preference.isError && (
+                    <p role='alert' className='text-sm text-destructive'>
+                      Could not load the system currency.{' '}
+                      <Button
+                        type='button'
+                        variant='outline'
+                        onClick={() => void preference.refetch()}
+                      >
+                        Retry
+                      </Button>
+                    </p>
+                  )}
+                  {!linesLoaded && (
+                    <p className='text-sm text-muted-foreground'>
+                      Load the item and extra lines to evaluate the price and
+                      receipt requirements.
+                    </p>
+                  )}
+                </div>
               )}
               {record.status === 20 && (
                 <div className='flex items-center gap-2'>
@@ -312,7 +446,7 @@ export function PurchaseOrderDetail() {
             <OrderLines
               order={record}
               lines={lines.data?.items ?? []}
-              currencyCode={record.currencyCode}
+              systemCurrency={effectiveCurrency}
               pending={lines.isPending}
               error={lines.isError ? lines.error : null}
               editable={isOpen}
@@ -321,21 +455,14 @@ export function PurchaseOrderDetail() {
             <OrderExtras
               order={record}
               extras={extras.data?.items ?? []}
-              currencyCode={record.currencyCode}
+              systemCurrency={effectiveCurrency}
               pending={extras.isPending}
               error={extras.isError ? extras.error : null}
               editable={isOpen}
               onRetry={() => void extras.refetch()}
             />
-            {record.status === 20 && (
-              <OrderReceive
-                order={record}
-                lines={(lines.data?.items ?? []).filter((line) =>
-                  isPositiveDecimal(
-                    subtractDecimalStrings(line.quantity, line.received)
-                  )
-                )}
-              />
+            {record.status === 20 && lines.data && (
+              <OrderReceive order={record} lines={lines.data.items} />
             )}
           </>
         )}

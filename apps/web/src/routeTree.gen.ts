@@ -39,6 +39,10 @@ import { Route as AuthenticatedSystemSettingsSystemUnitsIndexRouteImport } from 
 import { Route as AuthenticatedSystemSettingsSystemUnitsUnitIdRouteImport } from './routes/_authenticated/_system/settings/system/units/$unitId'
 import { Route as AuthenticatedSystemSettingsSystemUsersIndexRouteImport } from './routes/_authenticated/_system/settings/system/users/index'
 import { Route as AuthenticatedSystemSettingsSystemUsersUserIdRouteImport } from './routes/_authenticated/_system/settings/system/users/$userId'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/finance/index'
+import { Route as AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/finance/$movementId'
+import { Route as AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/pos-devices/index'
+import { Route as AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/route'
 import { Route as AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/purchasing/index'
 import { Route as AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/purchasing/$orderId'
 import { Route as AuthenticatedOOrganizationSlugWorkspaceSalesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/sales/index'
@@ -53,8 +57,11 @@ import { Route as AuthenticatedOOrganizationSlugSettingsItemsIndexRouteImport } 
 import { Route as AuthenticatedOOrganizationSlugSettingsItemsItemIdRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/items/$itemId'
 import { Route as AuthenticatedOOrganizationSlugSettingsRecipesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/recipes/index'
 import { Route as AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/recipes/$recipeId'
+import { Route as AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/index'
 import { Route as AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/sales/batches/index'
 import { Route as AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/sales/batches/$batchId'
+import { Route as AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/index'
+import { Route as AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/$reportId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -223,6 +230,32 @@ const AuthenticatedSystemSettingsSystemUsersUserIdRoute =
     path: '/users/$userId',
     getParentRoute: () => AuthenticatedSystemSettingsSystemRouteRoute,
   } as any)
+const AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRouteImport.update({
+    id: '/finance/',
+    path: '/finance/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute =
+  AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRouteImport.update({
+    id: '/finance/$movementId',
+    path: '/finance/$movementId',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRouteImport.update({
+    id: '/pos-devices/',
+    path: '/pos-devices/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute =
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteImport.update(
+    {
+      id: '/pos-devices/$deviceId',
+      path: '/pos-devices/$deviceId',
+      getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+    } as any,
+  )
 const AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute =
   AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRouteImport.update({
     id: '/purchasing/',
@@ -309,6 +342,15 @@ const AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute =
     path: '/recipes/$recipeId',
     getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
   } as any)
+const AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute,
+    } as any,
+  )
 const AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRoute =
   AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRouteImport.update({
     id: '/sales/batches/',
@@ -321,6 +363,24 @@ const AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRoute =
     path: '/sales/batches/$batchId',
     getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
   } as any)
+const AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute =
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRouteImport.update(
+    {
+      id: '/z-reports/',
+      path: '/z-reports/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute =
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRouteImport.update(
+    {
+      id: '/z-reports/$reportId',
+      path: '/z-reports/$reportId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute,
+    } as any,
+  )
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedSystemIndexRoute
@@ -346,8 +406,10 @@ export interface FileRoutesByFullPath {
   '/o/$organizationSlug/settings/teams': typeof AuthenticatedOOrganizationSlugSettingsTeamsRoute
   '/o/$organizationSlug/': typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
   '/o/$organizationSlug/settings/': typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
+  '/o/$organizationSlug/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteWithChildren
   '/settings/system/units/$unitId': typeof AuthenticatedSystemSettingsSystemUnitsUnitIdRoute
   '/settings/system/users/$userId': typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
+  '/o/$organizationSlug/finance/$movementId': typeof AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute
   '/o/$organizationSlug/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute
   '/o/$organizationSlug/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
   '/o/$organizationSlug/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
@@ -357,6 +419,8 @@ export interface FileRoutesByFullPath {
   '/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
   '/settings/system/units/': typeof AuthenticatedSystemSettingsSystemUnitsIndexRoute
   '/settings/system/users/': typeof AuthenticatedSystemSettingsSystemUsersIndexRoute
+  '/o/$organizationSlug/finance/': typeof AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRoute
+  '/o/$organizationSlug/pos-devices/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRoute
   '/o/$organizationSlug/purchasing/': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute
   '/o/$organizationSlug/sales/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
   '/o/$organizationSlug/stock/': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
@@ -365,7 +429,10 @@ export interface FileRoutesByFullPath {
   '/o/$organizationSlug/settings/items/': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
   '/o/$organizationSlug/settings/recipes/': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
   '/o/$organizationSlug/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRoute
+  '/o/$organizationSlug/pos-devices/$deviceId/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute
   '/o/$organizationSlug/sales/batches/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRoute
+  '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/o/$organizationSlug/pos-devices/$deviceId/z-reports/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedSystemIndexRoute
@@ -390,6 +457,7 @@ export interface FileRoutesByTo {
   '/o/$organizationSlug/settings': typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
   '/settings/system/units/$unitId': typeof AuthenticatedSystemSettingsSystemUnitsUnitIdRoute
   '/settings/system/users/$userId': typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
+  '/o/$organizationSlug/finance/$movementId': typeof AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute
   '/o/$organizationSlug/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute
   '/o/$organizationSlug/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
   '/o/$organizationSlug/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
@@ -399,6 +467,8 @@ export interface FileRoutesByTo {
   '/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
   '/settings/system/units': typeof AuthenticatedSystemSettingsSystemUnitsIndexRoute
   '/settings/system/users': typeof AuthenticatedSystemSettingsSystemUsersIndexRoute
+  '/o/$organizationSlug/finance': typeof AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRoute
+  '/o/$organizationSlug/pos-devices': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRoute
   '/o/$organizationSlug/purchasing': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute
   '/o/$organizationSlug/sales': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
   '/o/$organizationSlug/stock': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
@@ -407,7 +477,10 @@ export interface FileRoutesByTo {
   '/o/$organizationSlug/settings/items': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
   '/o/$organizationSlug/settings/recipes': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
   '/o/$organizationSlug/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRoute
+  '/o/$organizationSlug/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute
   '/o/$organizationSlug/sales/batches': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRoute
+  '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/o/$organizationSlug/pos-devices/$deviceId/z-reports': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -437,8 +510,10 @@ export interface FileRoutesById {
   '/_authenticated/o/$organizationSlug/settings/teams': typeof AuthenticatedOOrganizationSlugSettingsTeamsRoute
   '/_authenticated/o/$organizationSlug/_workspace/': typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
   '/_authenticated/o/$organizationSlug/settings/': typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
+  '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteWithChildren
   '/_authenticated/_system/settings/system/units/$unitId': typeof AuthenticatedSystemSettingsSystemUnitsUnitIdRoute
   '/_authenticated/_system/settings/system/users/$userId': typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
+  '/_authenticated/o/$organizationSlug/_workspace/finance/$movementId': typeof AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute
   '/_authenticated/o/$organizationSlug/_workspace/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute
   '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
   '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
@@ -448,6 +523,8 @@ export interface FileRoutesById {
   '/_authenticated/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
   '/_authenticated/_system/settings/system/units/': typeof AuthenticatedSystemSettingsSystemUnitsIndexRoute
   '/_authenticated/_system/settings/system/users/': typeof AuthenticatedSystemSettingsSystemUsersIndexRoute
+  '/_authenticated/o/$organizationSlug/_workspace/finance/': typeof AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRoute
+  '/_authenticated/o/$organizationSlug/_workspace/pos-devices/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/purchasing/': typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/sales/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/stock/': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
@@ -456,7 +533,10 @@ export interface FileRoutesById {
   '/_authenticated/o/$organizationSlug/settings/items/': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
   '/_authenticated/o/$organizationSlug/settings/recipes/': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRoute
+  '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/sales/batches/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRoute
+  '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -484,8 +564,10 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/settings/teams'
     | '/o/$organizationSlug/'
     | '/o/$organizationSlug/settings/'
+    | '/o/$organizationSlug/pos-devices/$deviceId'
     | '/settings/system/units/$unitId'
     | '/settings/system/users/$userId'
+    | '/o/$organizationSlug/finance/$movementId'
     | '/o/$organizationSlug/purchasing/$orderId'
     | '/o/$organizationSlug/sales/$saleId'
     | '/o/$organizationSlug/stock/$itemId'
@@ -495,6 +577,8 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/settings/recipes/$recipeId'
     | '/settings/system/units/'
     | '/settings/system/users/'
+    | '/o/$organizationSlug/finance/'
+    | '/o/$organizationSlug/pos-devices/'
     | '/o/$organizationSlug/purchasing/'
     | '/o/$organizationSlug/sales/'
     | '/o/$organizationSlug/stock/'
@@ -503,7 +587,10 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/settings/items/'
     | '/o/$organizationSlug/settings/recipes/'
     | '/o/$organizationSlug/sales/batches/$batchId'
+    | '/o/$organizationSlug/pos-devices/$deviceId/'
     | '/o/$organizationSlug/sales/batches/'
+    | '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId'
+    | '/o/$organizationSlug/pos-devices/$deviceId/z-reports/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -528,6 +615,7 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/settings'
     | '/settings/system/units/$unitId'
     | '/settings/system/users/$userId'
+    | '/o/$organizationSlug/finance/$movementId'
     | '/o/$organizationSlug/purchasing/$orderId'
     | '/o/$organizationSlug/sales/$saleId'
     | '/o/$organizationSlug/stock/$itemId'
@@ -537,6 +625,8 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/settings/recipes/$recipeId'
     | '/settings/system/units'
     | '/settings/system/users'
+    | '/o/$organizationSlug/finance'
+    | '/o/$organizationSlug/pos-devices'
     | '/o/$organizationSlug/purchasing'
     | '/o/$organizationSlug/sales'
     | '/o/$organizationSlug/stock'
@@ -545,7 +635,10 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/settings/items'
     | '/o/$organizationSlug/settings/recipes'
     | '/o/$organizationSlug/sales/batches/$batchId'
+    | '/o/$organizationSlug/pos-devices/$deviceId'
     | '/o/$organizationSlug/sales/batches'
+    | '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId'
+    | '/o/$organizationSlug/pos-devices/$deviceId/z-reports'
   id:
     | '__root__'
     | '/_authenticated'
@@ -574,8 +667,10 @@ export interface FileRouteTypes {
     | '/_authenticated/o/$organizationSlug/settings/teams'
     | '/_authenticated/o/$organizationSlug/_workspace/'
     | '/_authenticated/o/$organizationSlug/settings/'
+    | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId'
     | '/_authenticated/_system/settings/system/units/$unitId'
     | '/_authenticated/_system/settings/system/users/$userId'
+    | '/_authenticated/o/$organizationSlug/_workspace/finance/$movementId'
     | '/_authenticated/o/$organizationSlug/_workspace/purchasing/$orderId'
     | '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId'
     | '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId'
@@ -585,6 +680,8 @@ export interface FileRouteTypes {
     | '/_authenticated/o/$organizationSlug/settings/recipes/$recipeId'
     | '/_authenticated/_system/settings/system/units/'
     | '/_authenticated/_system/settings/system/users/'
+    | '/_authenticated/o/$organizationSlug/_workspace/finance/'
+    | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/'
     | '/_authenticated/o/$organizationSlug/_workspace/purchasing/'
     | '/_authenticated/o/$organizationSlug/_workspace/sales/'
     | '/_authenticated/o/$organizationSlug/_workspace/stock/'
@@ -593,7 +690,10 @@ export interface FileRouteTypes {
     | '/_authenticated/o/$organizationSlug/settings/items/'
     | '/_authenticated/o/$organizationSlug/settings/recipes/'
     | '/_authenticated/o/$organizationSlug/_workspace/sales/batches/$batchId'
+    | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/'
     | '/_authenticated/o/$organizationSlug/_workspace/sales/batches/'
+    | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/$reportId'
+    | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -821,6 +921,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSystemSettingsSystemUsersUserIdRouteImport
       parentRoute: typeof AuthenticatedSystemSettingsSystemRouteRoute
     }
+    '/_authenticated/o/$organizationSlug/_workspace/finance/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/finance/'
+      path: '/finance'
+      fullPath: '/o/$organizationSlug/finance/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/finance/$movementId': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/finance/$movementId'
+      path: '/finance/$movementId'
+      fullPath: '/o/$organizationSlug/finance/$movementId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/pos-devices/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/pos-devices/'
+      path: '/pos-devices'
+      fullPath: '/o/$organizationSlug/pos-devices/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId'
+      path: '/pos-devices/$deviceId'
+      fullPath: '/o/$organizationSlug/pos-devices/$deviceId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
     '/_authenticated/o/$organizationSlug/_workspace/purchasing/': {
       id: '/_authenticated/o/$organizationSlug/_workspace/purchasing/'
       path: '/purchasing'
@@ -919,6 +1047,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRouteImport
       parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
     }
+    '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/'
+      path: '/'
+      fullPath: '/o/$organizationSlug/pos-devices/$deviceId/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute
+    }
     '/_authenticated/o/$organizationSlug/_workspace/sales/batches/': {
       id: '/_authenticated/o/$organizationSlug/_workspace/sales/batches/'
       path: '/sales/batches'
@@ -932,6 +1067,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/o/$organizationSlug/sales/batches/$batchId'
       preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRouteImport
       parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/'
+      path: '/z-reports'
+      fullPath: '/o/$organizationSlug/pos-devices/$deviceId/z-reports/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/$reportId': {
+      id: '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/$reportId'
+      path: '/z-reports/$reportId'
+      fullPath: '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute
     }
   }
 }
@@ -1003,12 +1152,37 @@ const AuthenticatedSystemRouteRouteWithChildren =
     AuthenticatedSystemRouteRouteChildren,
   )
 
+interface AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteChildren {
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute
+}
+
+const AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteChildren: AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteChildren =
+  {
+    AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute,
+    AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute:
+      AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute,
+    AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute,
+  }
+
+const AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteWithChildren =
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute._addFileChildren(
+    AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteChildren,
+  )
+
 interface AuthenticatedOOrganizationSlugWorkspaceRouteRouteChildren {
   AuthenticatedOOrganizationSlugWorkspaceIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteWithChildren
+  AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute: typeof AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute
   AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute: typeof AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute
   AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
   AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute: typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
   AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute
+  AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRoute
+  AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRoute
   AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute
   AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
   AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute: typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
@@ -1021,6 +1195,10 @@ const AuthenticatedOOrganizationSlugWorkspaceRouteRouteChildren: AuthenticatedOO
   {
     AuthenticatedOOrganizationSlugWorkspaceIndexRoute:
       AuthenticatedOOrganizationSlugWorkspaceIndexRoute,
+    AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute:
+      AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteWithChildren,
+    AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute:
+      AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute,
     AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute:
       AuthenticatedOOrganizationSlugWorkspacePurchasingOrderIdRoute,
     AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute:
@@ -1029,6 +1207,10 @@ const AuthenticatedOOrganizationSlugWorkspaceRouteRouteChildren: AuthenticatedOO
       AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute,
     AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute:
       AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute,
+    AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspaceFinanceIndexRoute,
+    AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRoute:
+      AuthenticatedOOrganizationSlugWorkspacePosDevicesIndexRoute,
     AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute:
       AuthenticatedOOrganizationSlugWorkspacePurchasingIndexRoute,
     AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute:

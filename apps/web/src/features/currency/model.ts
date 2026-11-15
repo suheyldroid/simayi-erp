@@ -12,5 +12,5 @@ export const CurrencyModel = {
   currency,
   catalog: z.object({ items: z.array(currency) }),
   preference: z.object({ defaultCurrencyCode: currencyCode.nullable() }),
-  preferenceInput: z.object({ defaultCurrencyCode: currencyCode.nullable() }),
+  preferenceInput: z.object({ defaultCurrencyCode: currencyCode }),
 }

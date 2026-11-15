@@ -54,6 +54,18 @@ export type OrganizationRecord = z.infer<typeof organizationSchema>
 export type OrgMember = z.infer<typeof memberSchema>
 export type OrgTeam = z.infer<typeof teamSchema>
 
+/** Initials used by the shared organization avatar fallback. */
+export function organizationInitials(
+  organization: Pick<OrganizationRecord, 'name' | 'slug'>
+) {
+  const words = (organization.name.trim() || organization.slug.trim())
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+  if (words.length === 0) return '?'
+  return words.map((word) => word[0]?.toUpperCase() ?? '').join('')
+}
+
 /**
  * Native Better Auth organization roles. Role assignments are plain strings on
  * the membership; these are the only values the UI offers.

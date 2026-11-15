@@ -41,7 +41,10 @@ export const UsersModel = {
     limit: z.number().int().positive(),
     offset: z.number().int().nonnegative(),
   }),
-  profileBody: z.object({ name: z.string(), image: z.string().nullable() }),
+  profileBody: z.object({
+    name: z.string().optional(),
+    image: z.string().nullable().optional(),
+  }),
 }
 
 export type User = z.infer<typeof UsersModel.adminUser>

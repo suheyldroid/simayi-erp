@@ -15,6 +15,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { OrdersDirectory } from '@/features/purchasing/components/orders-directory'
 import { errorMessage, supplierApi } from './api'
 import { SupplierForm } from './components/supplier-form'
+import { SupplierLedgerPanel } from './components/supplier-ledger'
 import { formatSupplierAddress } from './format'
 import { supplierImagePrefix } from './image-api'
 import type { Supplier, SupplierInput } from './model'
@@ -210,6 +211,15 @@ export function SupplierDetail() {
             />
           </section>
         ) : null}
+        {eligibleRead && supplier ? (
+          <section className='space-y-4 rounded-md border border-border p-4'>
+            <SupplierLedgerPanel
+              key={`${organizationSlug}:${supplier.uuid}`}
+              supplierUuid={supplier.uuid}
+              supplierName={supplier.name}
+            />
+          </section>
+        ) : null}
         {editingEligible && editing ? (
           <SupplierForm
             supplier={editing}
@@ -229,7 +239,7 @@ export function SupplierDetail() {
               if (!open && !remove.isPending) setDeleting(null)
             }}
             title='Delete supplier'
-            desc={`Delete ${deleting.name}? Purchase orders keep their supplier reference as empty. Archived history is not changed.`}
+            desc={`Delete ${deleting.name}? Purchase orders keep their supplier reference as empty. A supplier with ledger entries or posted payments cannot be deleted.`}
             destructive
             confirmText='Delete'
             isLoading={remove.isPending}

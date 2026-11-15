@@ -1,0 +1,1 @@
+CatalogApproved: confirmed. No signature change. Keep actor: TenantActor in the former userId slot, db where it is, organizationId immediately after db on internal helpers. AccessService.context/has/require/mutate, erp_settings, teamIds, and canManageAllRecords stay as contracted. tenant: true and actor only.

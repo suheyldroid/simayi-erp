@@ -60,6 +60,7 @@ export function RecipeSheet({
   const editing = recipe !== undefined
   const [name, setName] = useState(recipe?.name ?? '')
   const [description, setDescription] = useState(recipe?.description ?? '')
+  const [sellingPrice, setSellingPrice] = useState(recipe?.sellingPrice ?? '')
   const [active, setActive] = useState(recipe?.active ?? true)
   const [rows, setRows] = useState<DraftRow[]>(() =>
     recipe && recipe.ingredients.length > 0
@@ -105,6 +106,7 @@ export function RecipeSheet({
       name,
       description,
       active,
+      sellingPrice: sellingPrice.trim() === '' ? null : sellingPrice,
       ingredients,
     })
   }
@@ -161,6 +163,28 @@ export function RecipeSheet({
                   rows={3}
                   placeholder='Optional description'
                 />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='recipe-price'>Selling price</Label>
+                <Input
+                  id='recipe-price'
+                  value={sellingPrice}
+                  onChange={(event) => setSellingPrice(event.target.value)}
+                  inputMode='decimal'
+                  maxLength={20}
+                  placeholder='e.g. 12.50 or 12,50'
+                  aria-describedby='recipe-price-hint'
+                />
+                <p
+                  id='recipe-price-hint'
+                  className='text-xs text-muted-foreground'
+                >
+                  {recipe?.priceCurrencyCode
+                    ? `Currently recorded in ${recipe.priceCurrencyCode}; an unchanged amount keeps it, while a changed amount is recorded in the fixed system currency. `
+                    : 'Quoted in the fixed system currency. '}
+                  Leave it empty for an unpriced recipe; a sale requires a
+                  price. Decimals accept a comma or a dot, up to 6 places.
+                </p>
               </div>
               <FlagInput
                 name='active'

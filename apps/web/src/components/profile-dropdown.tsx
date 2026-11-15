@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { sessionQuery } from '@/lib/auth'
+import { imageUrl } from '@/lib/image-url'
 import useDialogState from '@/hooks/use-dialog-state'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SignOutDialog } from '@/components/sign-out-dialog'
+import { avatarReferencePrefix } from '@/features/settings/profile/avatar-api'
 
 /**
  * Header account menu. It is the only entry point to account settings now that
@@ -38,8 +40,13 @@ export function ProfileDropdown() {
           >
             <Avatar className='h-8 w-8'>
               <AvatarImage
-                src={user?.image ?? undefined}
+                src={user?.image ? imageUrl(user.image) : undefined}
                 alt={user?.name ?? ''}
+                crossOrigin={
+                  user?.image?.startsWith(avatarReferencePrefix)
+                    ? 'use-credentials'
+                    : undefined
+                }
               />
               <AvatarFallback>
                 {user?.name.slice(0, 2).toUpperCase() ?? 'U'}

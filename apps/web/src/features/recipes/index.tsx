@@ -55,6 +55,15 @@ function RecipeDirectory() {
         cell: ({ getValue }) => String(getValue() ?? '') || '—',
       },
       {
+        id: 'price',
+        header: 'Price',
+        accessorFn: (recipe) => recipe.sellingPrice ?? '',
+        cell: ({ row }) =>
+          row.original.sellingPrice === null
+            ? '—'
+            : `${row.original.sellingPrice} ${row.original.priceCurrencyCode ?? ''}`.trim(),
+      },
+      {
         id: 'ingredients',
         header: 'Ingredients',
         accessorFn: (recipe) => recipe.ingredientCount,
@@ -123,6 +132,15 @@ function RecipeDirectory() {
           'sales-picker',
           organizationCacheScope(),
         ],
+      }),
+      // Pricing a recipe captures the organization finance currency, so the
+      // finance summary can appear configured after a recipe save; priced
+      // recipe data also feeds sale pickers and batch previews.
+      client.invalidateQueries({
+        queryKey: ['finance', organizationCacheScope()],
+      }),
+      client.invalidateQueries({
+        queryKey: ['sales', organizationCacheScope()],
       }),
     ])
   }

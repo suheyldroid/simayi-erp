@@ -67,6 +67,15 @@ function saleColumns(organizationSlug: string): SortableColumn<SaleSummary>[] {
       cell: ({ getValue }) => String(getValue() ?? ''),
     },
     {
+      id: 'total',
+      header: 'Total',
+      accessorFn: (sale) => sale.totalPrice ?? '',
+      cell: ({ row }) =>
+        row.original.totalPrice === null
+          ? '—'
+          : `${row.original.totalPrice} ${row.original.currencyCode ?? ''}`.trim(),
+    },
+    {
       id: 'ingredients',
       header: 'Ingredients',
       accessorFn: (sale) => sale.ingredientCount,

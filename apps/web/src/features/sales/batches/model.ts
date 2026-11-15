@@ -70,6 +70,8 @@ const previewRow = z.object({
   channelName: z.string().nullable(),
   recipeUuid: resourceUuid.nullable(),
   recipeName: z.string().nullable(),
+  unitPrice: z.string().nullable(),
+  lineTotal: z.string().nullable(),
   issues: z.array(issue),
 })
 
@@ -116,6 +118,10 @@ const preview = z.object({
   quantityColumn: column.nullable(),
   productCodeColumn: column.nullable(),
   excludedRows: z.array(z.number().int().positive()),
+  currencyCode: z
+    .string()
+    .regex(/^[A-Z]{3}$/)
+    .nullable(),
   grid: z.array(previewGridRow),
   gridTruncated: z.boolean(),
   rows: z.array(previewRow),

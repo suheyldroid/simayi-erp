@@ -1,11 +1,9 @@
-import { useId, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { isPositiveDecimal } from '@/lib/decimal-string'
+import { isPositiveDecimal, subtractDecimalStrings } from '@/lib/decimal-string'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Sheet,
   SheetContent,
@@ -14,17 +12,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import {
+  SortableDataTable,
+  type SortableColumn,
+} from '@/components/data-table/sortable-data-table'
 import { FieldInput } from '@/components/field-input'
-import { itemApi } from '@/features/items/api'
+import {
+  ItemSelect,
+  type ItemOption,
+} from '@/features/items/components/item-select'
 import { errorMessage, purchasingApi } from '../api'
 import {
   PurchasingModel,
@@ -33,32 +30,23 @@ import {
   type PurchaseOrder,
 } from '../model'
 
-type ItemChoice = { uuid: string; name: string; ipn: string | null; units: string }
-
 function PurchaseLineForm({
   version,
-  currencyCode,
+  systemCurrency,
   pending,
   error,
   onClose,
   onSubmit,
 }: {
   version: number
-  currencyCode: string | null
+  systemCurrency: string | null
   pending: boolean
   error: unknown
   onClose: () => void
   onSubmit: (body: LineInput) => void
 }) {
-  const itemSearchId = useId()
-  const [item, setItem] = useState<ItemChoice | null>(null)
-  const [search, setSearch] = useState('')
+  const [item, setItem] = useState<ItemOption | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
-  const items = useQuery({
-    queryKey: ['item', 'items', 'purchasing', organizationCacheScope(), search],
-    queryFn: () => itemApi.items({ page: 0, search, limit: 8 }),
-    enabled: search.trim().length > 0,
-  })
   return (
     <Sheet
       open
@@ -70,10 +58,10 @@ function PurchaseLineForm({
         <SheetHeader>
           <SheetTitle>Add line</SheetTitle>
           <SheetDescription>
-            An item and its ordered quantity in the item's stock unit. Prices
-            use the order currency ({currencyCode ?? 'unknown currency'}). The
-            order version is sent with the line so a stale order cannot be
-            changed.
+            An item and its ordered quantity in the item's stock unit. A written
+            price uses the fixed system currency (
+            {systemCurrency ?? 'not configured'}). The order version is sent
+            with the line so a stale order cannot be changed.
           </SheetDescription>
         </SheetHeader>
         <form
@@ -108,63 +96,20 @@ function PurchaseLineForm({
         >
           <div className='flex-1 space-y-4 overflow-y-auto px-4 pb-4'>
             <fieldset disabled={pending} className='space-y-4'>
-              <div className='space-y-2'>
-                <Label htmlFor={itemSearchId}>Item</Label>
-                <Input
-                  id={itemSearchId}
-                  aria-label='Search items by name or IPN'
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder='Search items by name or IPN'
-                  maxLength={150}
-                />
-                {item && (
-                  <p className='text-sm'>
-                    Selected: {item.name}
-                    {item.ipn ? ` · ${item.ipn}` : ''} ·{' '}
-                    {item.units || 'unit unresolved'}
-                  </p>
-                )}
-                {search.trim() !== '' && items.isFetching && (
-                  <p role='status'>Loading items…</p>
-                )}
-                {items.isError && (
-                  <p role='alert'>{errorMessage(items.error)}</p>
-                )}
-                {search.trim() !== '' && items.data && (
-                  <ul className='space-y-1'>
-                    {items.data.items.map((entry) => (
-                      <li key={entry.uuid}>
-                        <Button
-                          type='button'
-                          variant='link'
-                          className='h-auto p-0'
-                          onClick={() => {
-                            setItem({
-                              uuid: entry.uuid,
-                              name: entry.name,
-                              ipn: entry.ipn,
-                              units: entry.units,
-                            })
-                            setSearch('')
-                          }}
-                        >
-                          {entry.name}
-                          {entry.ipn ? ` · ${entry.ipn}` : ''}
-                        </Button>
-                      </li>
-                    ))}
-                    {items.data.items.length === 0 && (
-                      <li className='text-sm text-muted-foreground'>
-                        No items found.
-                      </li>
-                    )}
-                  </ul>
-                )}
-              </div>
+              <ItemSelect
+                label='Item'
+                value={item}
+                activeOnly={false}
+                disabled={pending}
+                onChange={setItem}
+              />
               <div className='space-y-2'>
                 <FieldInput
-                  field={{ name: 'quantity', label: 'Quantity', required: true }}
+                  field={{
+                    name: 'quantity',
+                    label: 'Quantity',
+                    required: true,
+                  }}
                 />
                 <p className='text-xs text-muted-foreground'>
                   {item
@@ -175,7 +120,7 @@ function PurchaseLineForm({
               <FieldInput
                 field={{
                   name: 'purchasePrice',
-                  label: `Unit price (${currencyCode ?? 'unknown currency'})`,
+                  label: `Unit price (${systemCurrency ?? 'system currency'})`,
                 }}
               />
             </fieldset>
@@ -207,7 +152,7 @@ function PurchaseLineForm({
 export function OrderLines({
   order,
   lines,
-  currencyCode,
+  systemCurrency,
   pending,
   error,
   editable,
@@ -215,7 +160,7 @@ export function OrderLines({
 }: {
   order: PurchaseOrder
   lines: PurchaseLine[]
-  currencyCode: string | null
+  systemCurrency: string | null
   pending: boolean
   error: unknown
   editable: boolean
@@ -225,19 +170,24 @@ export function OrderLines({
   const [adding, setAdding] = useState(false)
   const [removeLine, setRemoveLine] = useState<PurchaseLine | null>(null)
   const save = useMutation({
-    mutationFn: (body: LineInput) => purchasingApi.addLine(order.uuid, body),
-    onSuccess: async () => {
+    mutationFn: (input: { body: LineInput; scope: string }) =>
+      purchasingApi.addLine(order.uuid, input.body),
+    onSuccess: async (_line, input) => {
       await client.invalidateQueries({ queryKey: ['purchasing'] })
+      // The line write refreshes the finance reservation of the order.
+      await client.invalidateQueries({ queryKey: ['finance', input.scope] })
       setAdding(false)
       toast.success('Line added')
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   })
   const remove = useMutation({
-    mutationFn: (line: PurchaseLine) =>
-      purchasingApi.removeLine(order.uuid, line.uuid, order.version),
-    onSuccess: async () => {
+    mutationFn: (input: { line: PurchaseLine; scope: string }) =>
+      purchasingApi.removeLine(order.uuid, input.line.uuid, order.version),
+    onSuccess: async (_result, input) => {
       await client.invalidateQueries({ queryKey: ['purchasing'] })
+      // The line write refreshes the finance reservation of the order.
+      await client.invalidateQueries({ queryKey: ['finance', input.scope] })
       setRemoveLine(null)
       toast.success('Line deleted')
     },
@@ -245,6 +195,80 @@ export function OrderLines({
   })
   const canRemoveLine =
     removeLine !== null && editable && !isPositiveDecimal(removeLine.received)
+  const columns: SortableColumn<PurchaseLine>[] = [
+    {
+      id: 'item',
+      header: 'Item',
+      accessorFn: (line) => line.item?.name ?? '',
+      cell: ({ row }) => row.original.item?.name ?? '—',
+    },
+    {
+      id: 'ipn',
+      header: 'IPN',
+      // Free-form codes: the numeric collator misorders dotted fractions, so
+      // this column stays unsorted instead of promising an order it cannot keep.
+      enableSorting: false,
+      accessorFn: (line) => line.item?.ipn ?? '',
+      cell: ({ row }) => row.original.item?.ipn || '—',
+    },
+    {
+      id: 'quantity',
+      header: 'Ordered',
+      // Exact decimal strings stay strings; sorting them through Number() would
+      // corrupt the order, so every quantity column is unsorted.
+      enableSorting: false,
+      meta: { numeric: true },
+      accessorFn: (line) => line.quantity,
+      cell: ({ row }) => row.original.quantity,
+    },
+    {
+      id: 'received',
+      header: 'Received',
+      enableSorting: false,
+      meta: { numeric: true },
+      accessorFn: (line) => line.received,
+      cell: ({ row }) => row.original.received,
+    },
+    {
+      id: 'outstanding',
+      header: 'Outstanding',
+      enableSorting: false,
+      meta: { numeric: true },
+      cell: ({ row }) =>
+        subtractDecimalStrings(row.original.quantity, row.original.received),
+    },
+    {
+      id: 'unit',
+      header: 'Unit',
+      accessorFn: (line) => line.unitCode ?? '',
+      cell: ({ row }) => row.original.unitCode ?? 'Unknown unit',
+    },
+    {
+      id: 'price',
+      header: 'Unit price',
+      enableSorting: false,
+      cell: ({ row }) =>
+        row.original.purchasePrice == null
+          ? '—'
+          : `${row.original.purchasePrice} ${row.original.currencyCode ?? 'Unknown currency'}`,
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      enableSorting: false,
+      cell: ({ row }) =>
+        editable && !isPositiveDecimal(row.original.received) ? (
+          <Button
+            type='button'
+            variant='outline'
+            disabled={remove.isPending}
+            onClick={() => setRemoveLine(row.original)}
+          >
+            Delete
+          </Button>
+        ) : null,
+    },
+  ]
   return (
     <section className='space-y-2'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
@@ -268,62 +292,25 @@ export function OrderLines({
           </Button>
         </p>
       )}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Item</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Received</TableHead>
-            <TableHead>Unit</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {lines.map((line) => (
-            <TableRow key={line.uuid}>
-              <TableCell>
-                {line.item
-                  ? `${line.item.name}${line.item.ipn ? ` · ${line.item.ipn}` : ''}`
-                  : '—'}
-              </TableCell>
-              <TableCell>{line.quantity}</TableCell>
-              <TableCell>{line.received}</TableCell>
-              <TableCell>{line.unitCode ?? 'Unknown unit'}</TableCell>
-              <TableCell>
-                {line.purchasePrice == null
-                  ? '—'
-                  : `${line.purchasePrice} ${currencyCode ?? 'Unknown currency'}`}
-              </TableCell>
-              <TableCell>
-                {editable && !isPositiveDecimal(line.received) && (
-                  <Button
-                    type='button'
-                    variant='outline'
-                    disabled={remove.isPending}
-                    onClick={() => setRemoveLine(line)}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-          {lines.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6}>No lines yet.</TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      {!pending && error == null && (
+        <SortableDataTable
+          data={lines}
+          columns={columns}
+          getRowId={(line) => line.uuid}
+          caption='Purchase order lines'
+          emptyMessage='No lines yet.'
+        />
+      )}
       {editable && adding && (
         <PurchaseLineForm
           version={order.version}
-          currencyCode={currencyCode}
+          systemCurrency={systemCurrency}
           pending={save.isPending}
           error={save.error}
           onClose={() => setAdding(false)}
-          onSubmit={(body) => save.mutate(body)}
+          onSubmit={(body) =>
+            save.mutate({ body, scope: organizationCacheScope() })
+          }
         />
       )}
       <ConfirmDialog
@@ -344,7 +331,10 @@ export function OrderLines({
             isPositiveDecimal(removeLine.received)
           )
             return
-          remove.mutate(removeLine)
+          remove.mutate({
+            line: removeLine,
+            scope: organizationCacheScope(),
+          })
         }}
       />
     </section>

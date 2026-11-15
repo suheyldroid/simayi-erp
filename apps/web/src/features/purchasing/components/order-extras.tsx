@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -30,14 +31,14 @@ import {
 
 function PurchaseExtraForm({
   version,
-  currencyCode,
+  systemCurrency,
   pending,
   error,
   onClose,
   onSubmit,
 }: {
   version: number
-  currencyCode: string | null
+  systemCurrency: string | null
   pending: boolean
   error: unknown
   onClose: () => void
@@ -55,10 +56,10 @@ function PurchaseExtraForm({
         <SheetHeader>
           <SheetTitle>Add extra line</SheetTitle>
           <SheetDescription>
-            Charges that are not item lines, such as shipping or fees. Prices
-            use the order currency ({currencyCode ?? 'unknown currency'}). The
-            order version is sent with the extra so a stale order cannot be
-            changed.
+            Charges that are not item lines, such as shipping or fees. A written
+            price uses the fixed system currency (
+            {systemCurrency ?? 'not configured'}). The order version is sent
+            with the extra so a stale order cannot be changed.
           </SheetDescription>
         </SheetHeader>
         <form
@@ -97,7 +98,7 @@ function PurchaseExtraForm({
               <FieldInput
                 field={{
                   name: 'price',
-                  label: `Price (${currencyCode ?? 'unknown currency'})`,
+                  label: `Price (${systemCurrency ?? 'system currency'})`,
                 }}
               />
             </fieldset>
@@ -129,7 +130,7 @@ function PurchaseExtraForm({
 export function OrderExtras({
   order,
   extras,
-  currencyCode,
+  systemCurrency,
   pending,
   error,
   editable,
@@ -137,7 +138,7 @@ export function OrderExtras({
 }: {
   order: PurchaseOrder
   extras: PurchaseExtra[]
-  currencyCode: string | null
+  systemCurrency: string | null
   pending: boolean
   error: unknown
   editable: boolean
@@ -147,19 +148,24 @@ export function OrderExtras({
   const [adding, setAdding] = useState(false)
   const [removeExtra, setRemoveExtra] = useState<PurchaseExtra | null>(null)
   const save = useMutation({
-    mutationFn: (body: ExtraInput) => purchasingApi.addExtra(order.uuid, body),
-    onSuccess: async () => {
+    mutationFn: (input: { body: ExtraInput; scope: string }) =>
+      purchasingApi.addExtra(order.uuid, input.body),
+    onSuccess: async (_extra, input) => {
       await client.invalidateQueries({ queryKey: ['purchasing'] })
+      // The extra-line write refreshes the finance reservation of the order.
+      await client.invalidateQueries({ queryKey: ['finance', input.scope] })
       setAdding(false)
       toast.success('Extra line added')
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   })
   const remove = useMutation({
-    mutationFn: (extra: PurchaseExtra) =>
-      purchasingApi.removeExtra(order.uuid, extra.uuid, order.version),
-    onSuccess: async () => {
+    mutationFn: (input: { extra: PurchaseExtra; scope: string }) =>
+      purchasingApi.removeExtra(order.uuid, input.extra.uuid, order.version),
+    onSuccess: async (_result, input) => {
       await client.invalidateQueries({ queryKey: ['purchasing'] })
+      // The extra-line write refreshes the finance reservation of the order.
+      await client.invalidateQueries({ queryKey: ['finance', input.scope] })
       setRemoveExtra(null)
       toast.success('Extra line deleted')
     },
@@ -206,7 +212,7 @@ export function OrderExtras({
               <TableCell>
                 {line.price == null
                   ? '—'
-                  : `${line.price} ${currencyCode ?? 'Unknown currency'}`}
+                  : `${line.price} ${line.currencyCode ?? 'Unknown currency'}`}
               </TableCell>
               <TableCell>
                 {editable && (
@@ -232,11 +238,13 @@ export function OrderExtras({
       {editable && adding && (
         <PurchaseExtraForm
           version={order.version}
-          currencyCode={currencyCode}
+          systemCurrency={systemCurrency}
           pending={save.isPending}
           error={save.error}
           onClose={() => setAdding(false)}
-          onSubmit={(body) => save.mutate(body)}
+          onSubmit={(body) =>
+            save.mutate({ body, scope: organizationCacheScope() })
+          }
         />
       )}
       <ConfirmDialog
@@ -252,7 +260,10 @@ export function OrderExtras({
         isLoading={remove.isPending}
         handleConfirm={() => {
           if (removeExtra === null || !editable) return
-          remove.mutate(removeExtra)
+          remove.mutate({
+            extra: removeExtra,
+            scope: organizationCacheScope(),
+          })
         }}
       />
     </section>

@@ -1,6 +1,4 @@
 import { useId, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,15 +11,15 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { FieldInput } from '@/components/field-input'
-import { currencyApi } from '@/features/currency/api'
-import { CurrencySelect } from '@/features/currency/components/currency-select'
-import { supplierApi } from '@/features/supplier/api'
-import type { Supplier } from '@/features/supplier/model'
+import {
+  SupplierSelect,
+  type SupplierOption,
+} from '@/features/supplier/components/supplier-select'
 import { errorMessage } from '../api'
 import { PurchasingModel, type OrderInput } from '../model'
 
-/** Actual supplier identity subset used when the create form has no picker. */
-export type PurchaseOrderSupplier = Pick<Supplier, 'uuid' | 'name' | 'contact'>
+/** Supplier identity used when a fixed supplier context binds the form. */
+export type PurchaseOrderSupplier = SupplierOption
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? '')
 
@@ -39,37 +37,10 @@ export function PurchaseOrderForm({
   onClose: () => void
   onSubmit: (body: OrderInput) => void
 }) {
-  const supplierSearchId = useId()
   const targetDateId = useId()
   const [supplier, setSupplier] = useState<PurchaseOrderSupplier | null>(null)
-  const [search, setSearch] = useState('')
-  const [currencyChoice, setCurrencyChoice] = useState<
-    string | null | undefined
-  >(undefined)
   const [validationError, setValidationError] = useState<string | null>(null)
   const chosenSupplier = fixedSupplier ?? supplier
-  const preference = useQuery({
-    queryKey: ['system-preference'],
-    queryFn: () => currencyApi.preference(),
-  })
-  // Untouched (`undefined`) follows the system default; an explicit null means
-  // the user cleared it and must choose before submitting.
-  const currencyCode =
-    currencyChoice === undefined
-      ? (preference.data?.defaultCurrencyCode ?? null)
-      : currencyChoice
-  const currencyPending = preference.isPending && currencyChoice === undefined
-  const suppliers = useQuery({
-    queryKey: [
-      'supplier',
-      organizationCacheScope(),
-      'list',
-      'purchase-order-picker',
-      search,
-    ],
-    queryFn: () => supplierApi.list(0, search),
-    enabled: fixedSupplier === undefined,
-  })
   return (
     <Sheet
       open
@@ -93,16 +64,6 @@ export function PurchaseOrderForm({
               setValidationError('Choose a supplier')
               return
             }
-            // An untouched default that could not be read is left for the
-            // server to resolve; an explicit clear still demands a choice.
-            const deferToSystemDefault =
-              preference.isError && currencyChoice === undefined
-            if (currencyCode == null && !deferToSystemDefault) {
-              setValidationError(
-                'Choose a currency for this order, or ask a platform administrator to set a system default in Settings → System → Currency.'
-              )
-              return
-            }
             const form = new FormData(event.currentTarget)
             const reference = text(form, 'reference').trim()
             const description = text(form, 'description').trim()
@@ -111,7 +72,6 @@ export function PurchaseOrderForm({
             try {
               const body = PurchasingModel.orderInput.parse({
                 supplierUuid: chosenSupplier.uuid,
-                ...(currencyCode == null ? {} : { currencyCode }),
                 ...(reference === '' ? {} : { reference }),
                 ...(description === '' ? {} : { description }),
                 ...(supplierReference === '' ? {} : { supplierReference }),
@@ -138,89 +98,12 @@ export function PurchaseOrderForm({
                   </p>
                 </div>
               ) : (
-                <div className='space-y-2'>
-                  <Label htmlFor={supplierSearchId}>Supplier</Label>
-                  <Input
-                    id={supplierSearchId}
-                    aria-label='Search suppliers'
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder='Search suppliers'
-                    maxLength={100}
-                  />
-                  {supplier && (
-                    <p className='text-sm'>
-                      Selected: {supplier.name}
-                      {supplier.contact ? ` · ${supplier.contact}` : ''}
-                    </p>
-                  )}
-                  {suppliers.isPending && (
-                    <p role='status'>Loading suppliers…</p>
-                  )}
-                  {suppliers.isError && (
-                    <p role='alert'>{errorMessage(suppliers.error)}</p>
-                  )}
-                  {suppliers.data && (
-                    <ul className='space-y-1'>
-                      {suppliers.data.items.slice(0, 8).map((entry) => (
-                        <li key={entry.uuid}>
-                          <Button
-                            type='button'
-                            variant='link'
-                            className='h-auto p-0'
-                            onClick={() => {
-                              setSupplier({
-                                uuid: entry.uuid,
-                                name: entry.name,
-                                contact: entry.contact,
-                              })
-                              setSearch('')
-                            }}
-                          >
-                            {entry.name}
-                            {entry.contact ? ` · ${entry.contact}` : ''}
-                          </Button>
-                        </li>
-                      ))}
-                      {suppliers.data.items.length === 0 && (
-                        <li className='text-sm text-muted-foreground'>
-                          No suppliers found.
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                </div>
-              )}
-              <CurrencySelect
-                value={currencyCode}
-                disabled={pending}
-                onChange={setCurrencyChoice}
-              />
-              {preference.isPending && currencyChoice === undefined && (
-                <p role='status' className='text-sm text-muted-foreground'>
-                  Loading the system default currency…
-                </p>
-              )}
-              {preference.isError && currencyChoice === undefined && (
-                <p role='alert'>
-                  Could not load the system default currency. You can still
-                  choose one for this order, or submit and let the server apply
-                  its default.{' '}
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() => void preference.refetch()}
-                  >
-                    Retry
-                  </Button>
-                </p>
-              )}
-              {currencyCode == null && preference.isSuccess && (
-                <p className='text-xs text-muted-foreground'>
-                  No system default currency is configured. Choose one for this
-                  order; only a platform administrator can set the default in
-                  Settings → System → Currency.
-                </p>
+                <SupplierSelect
+                  label='Supplier'
+                  value={supplier}
+                  disabled={pending}
+                  onChange={setSupplier}
+                />
               )}
               <FieldInput
                 field={{ name: 'reference', label: 'Reference', maxLength: 64 }}
@@ -246,6 +129,7 @@ export function PurchaseOrderForm({
               </div>
               <p className='text-sm text-muted-foreground'>
                 The order reference is generated by the server when left blank.
+                Item and extra line prices use the configured system currency.
               </p>
             </fieldset>
             {(validationError != null || error != null) && (
@@ -263,7 +147,7 @@ export function PurchaseOrderForm({
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={pending || currencyPending}>
+            <Button type='submit' disabled={pending}>
               Create order
             </Button>
           </SheetFooter>

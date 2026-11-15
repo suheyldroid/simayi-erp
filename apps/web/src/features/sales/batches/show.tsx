@@ -28,6 +28,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { BatchZReports } from '@/features/pos-devices/components/batch-reports'
 import { batchRowProblems, errorMessage, salesBatchesApi } from './api'
 import { BatchMapping } from './components/batch-mapping'
 import type { BatchPatch, BatchPreview, BatchPreviewRow } from './model'
@@ -418,6 +419,8 @@ export function SalesBatchDetail() {
               </section>
             )}
 
+            {record.status === 20 && <BatchZReports batchUuid={record.uuid} />}
+
             <ConfirmDialog
               open={deleteOpen}
               onOpenChange={setDeleteOpen}
@@ -427,7 +430,7 @@ export function SalesBatchDetail() {
               desc={
                 isDraft
                   ? 'The draft and its stored workbook are removed. Stock is not changed.'
-                  : 'This reverses exactly the stock consumed by this batch, removes its sales and deletes the batch. Other sales are untouched.'
+                  : 'This reverses exactly the stock consumed by this batch, removes its sales and deletes the batch. Other sales are untouched. A batch whose sales have any receipt history or that has linked POS Z reports cannot be deleted.'
               }
               confirmText={
                 isDraft ? 'Delete draft' : 'Delete and reverse stock'
@@ -485,10 +488,16 @@ function DraftPreview({
           {analysis.includedRows} included rows · {analysis.saleQuantity} parsed
           quantity · {analysis.excludedRowsCount} excluded ·{' '}
           {analysis.emptyRowCount} empty rows skipped ·{' '}
-          {analysis.blockingIssueCount} rows with blocking issues
+          {analysis.blockingIssueCount} rows with blocking issues · prices in{' '}
+          {analysis.currencyCode ?? 'an unset currency'}
           {analysis.rowsTruncated
             ? ' · the preview is truncated; reduce the worksheet or contact support'
             : ''}
+        </p>
+        <p className='text-sm text-muted-foreground'>
+          Every included row needs an active recipe with a selling price in the
+          batch currency. An unpriced recipe or a currency mismatch is a
+          blocking issue, so processing records nothing until it is fixed.
         </p>
         {analysis.channels.length > 0 && (
           <div className='flex flex-wrap gap-2 text-sm'>
@@ -526,6 +535,8 @@ function DraftPreview({
                 <TableHead>Product</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Mapped recipe</TableHead>
+                <TableHead>Unit price</TableHead>
+                <TableHead>Line total</TableHead>
                 <TableHead>Issues</TableHead>
               </TableRow>
             </TableHeader>
@@ -534,13 +545,14 @@ function DraftPreview({
                 <PreviewRow
                   key={row.row}
                   row={row}
+                  analysisCurrency={analysis.currencyCode}
                   excluded={excluded.includes(row.row)}
                   onToggle={(checked) => onToggle(row.row, checked)}
                 />
               ))}
               {analysis.rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={9}>
                     No data rows were found below the header row.
                   </TableCell>
                 </TableRow>
@@ -621,10 +633,12 @@ function DraftPreview({
 
 function PreviewRow({
   row,
+  analysisCurrency,
   excluded,
   onToggle,
 }: {
   row: BatchPreviewRow
+  analysisCurrency: string | null
   excluded: boolean
   onToggle: (checked: boolean) => void
 }) {
@@ -653,6 +667,16 @@ function PreviewRow({
         {row.quantity !== null ? ` (${row.quantity})` : ''}
       </TableCell>
       <TableCell>{row.recipeName ?? '—'}</TableCell>
+      <TableCell>
+        {row.unitPrice === null
+          ? '—'
+          : `${row.unitPrice} ${analysisCurrency ?? ''}`.trim()}
+      </TableCell>
+      <TableCell>
+        {row.lineTotal === null
+          ? '—'
+          : `${row.lineTotal} ${analysisCurrency ?? ''}`.trim()}
+      </TableCell>
       <TableCell>
         {excluded ? (
           'Excluded'

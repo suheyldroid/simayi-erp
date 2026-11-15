@@ -23,6 +23,7 @@ import {
   organizationApi,
   organizationErrorMessage,
 } from './api'
+import { organizationLogoApi, organizationLogoPrefix } from './logo-api'
 import { slugFromName, type OrganizationRecord } from './model'
 
 async function availableSlug(name: string) {
@@ -38,33 +39,10 @@ async function availableSlug(name: string) {
 }
 
 /**
- * The native organization logo is a stored string, not a media reference with
- * its own upload endpoint. Read the selected file into a persistent data URI
- * before the create/update request so the picker's blob URL is only a preview.
- */
-function readLogoFile(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string' && reader.result.length > 0) {
-        resolve(reader.result)
-        return
-      }
-      reject(new Error('Could not read the selected logo file.'))
-    }
-    reader.onerror = () =>
-      reject(
-        reader.error ?? new Error('Could not read the selected logo file.')
-      )
-    reader.onabort = () =>
-      reject(new Error('Reading the selected logo file was cancelled.'))
-    reader.readAsDataURL(file)
-  })
-}
-
-/**
- * Native organization create. The current active organization is preserved so
- * global pages never switch tenant as a side effect of creating one.
+ * Native organization create. The selected logo is uploaded first and the
+ * native create stores only its canonical `/media/...` reference. The current
+ * active organization is preserved so global pages never switch tenant as a
+ * side effect of creating one.
  */
 export function CreateOrganizationSheet() {
   const client = useQueryClient()
@@ -92,8 +70,14 @@ export function CreateOrganizationSheet() {
     setError('')
     try {
       const logoRef = submittedFile
-        ? await readLogoFile(submittedFile)
+        ? (await organizationLogoApi.upload(submittedFile)).reference
         : submittedLogo
+      // Keep the uploaded reference if the native create fails; a retry must
+      // reuse it instead of uploading the same file again.
+      if (submittedFile) {
+        setLogo(logoRef ?? null)
+        setFile(null)
+      }
       await organizationApi.create({
         name: submittedName.trim(),
         slug: await availableSlug(submittedName),
@@ -162,6 +146,7 @@ export function CreateOrganizationSheet() {
               file={file}
               disabled={pending}
               resolveImage={imageUrl}
+              credentialImagePrefix={organizationLogoPrefix}
               label='Logo'
               alt='Organization logo preview'
               onChange={(next) => {
@@ -225,12 +210,24 @@ export function EditOrganizationSheet({
     setError('')
     try {
       const logoRef = submittedFile
-        ? await readLogoFile(submittedFile)
+        ? (await organizationLogoApi.upload(submittedFile)).reference
         : submittedLogo
+      // Keep the uploaded reference if the native update fails; a retry must
+      // reuse it instead of uploading the same file again.
+      if (submittedFile) {
+        setLogo(logoRef ?? null)
+        setFile(null)
+      }
+      // Omit an unchanged logo entirely: re-sending a historical data URI would
+      // be rejected and must not be written again. Changing or removing it
+      // sends the canonical reference or null explicitly.
+      const logoChanged =
+        submittedFile !== null ||
+        (logoRef ?? null) !== (organization.logo ?? null)
       const updated = await organizationApi.update(organization.id, {
         name: submittedName.trim(),
         slug: submittedSlug.trim(),
-        logo: logoRef ?? null,
+        ...(logoChanged ? { logo: logoRef ?? null } : {}),
       })
       const renamed = updated !== null && updated.slug !== organization.slug
       if (renamed) {
@@ -339,6 +336,7 @@ export function EditOrganizationSheet({
                 file={file}
                 disabled={pending}
                 resolveImage={imageUrl}
+                credentialImagePrefix={organizationLogoPrefix}
                 label='Logo'
                 alt='Organization logo preview'
                 onChange={(next) => {

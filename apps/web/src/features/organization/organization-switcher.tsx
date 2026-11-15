@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { organizationSessionQuery } from '@/lib/auth'
+import { imageUrl } from '@/lib/image-url'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -15,7 +17,9 @@ import {
   organizationErrorMessage,
   organizationPath,
 } from './api'
+import { organizationLogoPrefix } from './logo-api'
 import { useOrganizationMemberships } from './membership-query'
+import { organizationInitials } from './model'
 
 /**
  * Organization-boundary switcher. It only ever activates a native membership
@@ -30,6 +34,9 @@ export function OrganizationSwitcher() {
   const [error, setError] = useState('')
 
   const memberships = organizations.isSuccess ? organizations.data : []
+  const activeOrganization =
+    memberships.find((item) => item.id === activeOrganizationId) ?? null
+  const activeLogo = activeOrganization?.logo ?? null
 
   async function select(next: string) {
     if (next === activeOrganizationId) return
@@ -57,6 +64,26 @@ export function OrganizationSwitcher() {
 
   return (
     <div className='space-y-2 px-2'>
+      {activeLogo ? (
+        <Avatar className='mx-auto size-16 rounded-md group-data-[collapsible=icon]:hidden'>
+          <AvatarImage
+            key={activeLogo}
+            src={imageUrl(activeLogo)}
+            alt=''
+            className='object-contain'
+            crossOrigin={
+              activeLogo.startsWith(organizationLogoPrefix)
+                ? 'use-credentials'
+                : undefined
+            }
+          />
+          <AvatarFallback className='rounded-md text-sm'>
+            {activeOrganization
+              ? organizationInitials(activeOrganization)
+              : '?'}
+          </AvatarFallback>
+        </Avatar>
+      ) : null}
       <Label htmlFor='active-organization' className='sr-only'>
         Organization
       </Label>

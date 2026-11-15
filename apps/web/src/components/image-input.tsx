@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const imageAccept = 'image/png,image/jpeg,image/webp'
-const imageMaxBytes = 512 * 1024
+const imageMaxBytes = 1024 * 1024
 const allowedTypes = new Set(imageAccept.split(','))
 
 type Selection = { file: File; url: string }
@@ -80,7 +80,7 @@ export function ImageInput({
       return
     }
     if (next.size > imageMaxBytes) {
-      setError('Images must be 512 KB or smaller.')
+      setError('Images must be 1 MB or smaller.')
       return
     }
     dropSelection()
@@ -155,7 +155,7 @@ export function ImageInput({
               ? `New file: ${file.name}`
               : image
                 ? 'Current image. A new file uploads when you save.'
-                : 'PNG, JPEG, or WebP up to 512 KB.'}
+                : 'PNG, JPEG, or WebP up to 1 MB.'}
           </p>
           {error && (
             <p id={errorId} role='alert' className='text-sm text-destructive'>

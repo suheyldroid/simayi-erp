@@ -1,0 +1,1 @@
+Acknowledged. CatalogTenant will not apply the withdrawn schema, access, header, or member contracts. None of them are present in common, company, or part: no TenantActor, AccessService, organizationId, access helpers, or access-policy package. Cutover stays stopped.

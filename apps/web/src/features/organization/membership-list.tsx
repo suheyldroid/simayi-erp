@@ -1,10 +1,13 @@
 import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
+import { imageUrl } from '@/lib/image-url'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   SortableDataTable,
   type SortableColumn,
 } from '@/components/data-table/sortable-data-table'
-import type { OrganizationRecord } from './model'
+import { organizationLogoPrefix } from './logo-api'
+import { organizationInitials, type OrganizationRecord } from './model'
 
 function organizationName(organization: OrganizationRecord) {
   return (
@@ -25,6 +28,35 @@ export function MembershipOrganizationsTable({
 }) {
   const columns = useMemo<SortableColumn<OrganizationRecord>[]>(
     () => [
+      {
+        id: 'logo',
+        header: 'Logo',
+        enableSorting: false,
+        meta: { label: 'Logo', width: 56 },
+        cell: ({ row }) => {
+          const organization = row.original
+          return (
+            <Avatar className='size-8 rounded-md border border-border'>
+              {organization.logo ? (
+                <AvatarImage
+                  key={organization.logo}
+                  src={imageUrl(organization.logo)}
+                  alt=''
+                  className='object-contain'
+                  crossOrigin={
+                    organization.logo.startsWith(organizationLogoPrefix)
+                      ? 'use-credentials'
+                      : undefined
+                  }
+                />
+              ) : null}
+              <AvatarFallback className='rounded-md text-xs'>
+                {organizationInitials(organization)}
+              </AvatarFallback>
+            </Avatar>
+          )
+        },
+      },
       {
         id: 'name',
         header: 'Name',

@@ -75,6 +75,15 @@ function RecipeDetailView({ uuid }: { uuid: string | null }) {
           organizationCacheScope(),
         ],
       }),
+      // Pricing a recipe captures the organization finance currency, so the
+      // finance summary can appear configured after a recipe save; priced
+      // recipe data also feeds sale pickers and batch previews.
+      client.invalidateQueries({
+        queryKey: ['finance', organizationCacheScope()],
+      }),
+      client.invalidateQueries({
+        queryKey: ['sales', organizationCacheScope()],
+      }),
     ])
   }
   const update = useMutation({
@@ -220,6 +229,12 @@ function RecipeDetailView({ uuid }: { uuid: string | null }) {
                 <dd>{record.active ? 'Yes' : 'No'}</dd>
                 <dt>Version</dt>
                 <dd>{record.version}</dd>
+                <dt>Selling price</dt>
+                <dd>
+                  {record.sellingPrice === null
+                    ? 'Not priced'
+                    : `${record.sellingPrice} ${record.priceCurrencyCode ?? ''}`.trim()}
+                </dd>
                 <dt>Ingredients</dt>
                 <dd>{record.ingredientCount}</dd>
                 <dt>Created</dt>

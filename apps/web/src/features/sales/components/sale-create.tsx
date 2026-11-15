@@ -90,6 +90,12 @@ export function SaleForm({
               setValidationError('Choose a recipe')
               return
             }
+            if (recipe.sellingPrice === null) {
+              setValidationError(
+                'This recipe has no selling price. Set one in Recipes before selling it.'
+              )
+              return
+            }
             if (!channel) {
               setValidationError('Choose a sales channel')
               return
@@ -116,6 +122,19 @@ export function SaleForm({
                 disabled={pending}
                 onChange={chooseRecipe}
               />
+              {recipe != null && recipe.sellingPrice === null && (
+                <p role='alert' className='text-sm text-destructive'>
+                  This recipe has no selling price. Set one in Recipes before
+                  selling it.
+                </p>
+              )}
+              {recipe != null && recipe.sellingPrice !== null && (
+                <p className='text-sm text-muted-foreground'>
+                  Unit price: {recipe.sellingPrice}{' '}
+                  {recipe.priceCurrencyCode ?? ''}. The sale total is this price
+                  times the quantity and is frozen when the sale is recorded.
+                </p>
+              )}
               <ChannelSelect
                 value={channel}
                 disabled={pending}
@@ -167,7 +186,10 @@ export function SaleForm({
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={pending}>
+            <Button
+              type='submit'
+              disabled={pending || recipe?.sellingPrice === null}
+            >
               Record sale
             </Button>
           </SheetFooter>

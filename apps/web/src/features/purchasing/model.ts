@@ -48,7 +48,6 @@ const order = z.object({
   supplierReference: z.string(),
   responsibleUuid: resourceUuid.nullable(),
   totalPrice: decimal.nullable(),
-  currencyCode: z.string().nullable(),
   startDate: z.string().nullable(),
   targetDate: z.string().nullable(),
   creationDate: z.string().nullable(),
@@ -77,6 +76,7 @@ const line = z.object({
   received: decimal,
   discount: decimal,
   purchasePrice: decimal.nullable(),
+  currencyCode: z.string().nullable(),
   line: z.string(),
   lineInt: z.number().int(),
   reference: z.string(),
@@ -91,6 +91,7 @@ const extra = z.object({
   quantity: decimal,
   discount: decimal,
   price: decimal.nullable(),
+  currencyCode: z.string().nullable(),
   line: z.string(),
   lineInt: z.number().int(),
   reference: z.string(),
@@ -118,7 +119,6 @@ export const PurchasingModel = {
   success: z.object({ success: z.literal(true) }),
   orderInput: z.object({
     supplierUuid: resourceUuid,
-    currencyCode: z.string().regex(/^[A-Z]{3}$/).optional(),
     reference: z.string().trim().min(1).max(64).optional(),
     description: z.string().max(250).optional(),
     supplierReference: z.string().max(64).optional(),
@@ -126,10 +126,6 @@ export const PurchasingModel = {
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/)
       .optional(),
-  }),
-  orderUpdateInput: z.object({
-    version: z.number().int().nonnegative(),
-    currencyCode: z.string().regex(/^[A-Z]{3}$/),
   }),
   lineInput: z.object({
     version: z.number().int().nonnegative(),
@@ -154,8 +150,7 @@ export const PurchasingModel = {
           notes: z.string().max(512).optional(),
         })
       )
-      .min(1)
-      .max(100),
+      .min(1),
   }),
   receivedItems: z.object({ items: z.array(ItemsModel.item) }),
 }
@@ -163,7 +158,6 @@ export type PurchaseOrder = z.infer<typeof order>
 export type PurchaseLine = z.infer<typeof line>
 export type PurchaseExtra = z.infer<typeof extra>
 export type OrderInput = z.infer<typeof PurchasingModel.orderInput>
-export type OrderPatchInput = z.infer<typeof PurchasingModel.orderUpdateInput>
 export type LineInput = z.infer<typeof PurchasingModel.lineInput>
 export type ExtraInput = z.infer<typeof PurchasingModel.extraInput>
 export type ReceiveInput = z.infer<typeof PurchasingModel.receiveInput>

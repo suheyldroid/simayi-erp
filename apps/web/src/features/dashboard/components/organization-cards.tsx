@@ -2,19 +2,14 @@ import { Link } from '@tanstack/react-router'
 import { imageUrl } from '@/lib/image-url'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { organizationLogoPrefix } from '@/features/organization/logo-api'
 import { useOrganizationMemberships } from '@/features/organization/membership-query'
-import type { OrganizationRecord } from '@/features/organization/model'
+import {
+  organizationInitials,
+  type OrganizationRecord,
+} from '@/features/organization/model'
 import { CreateOrganizationSheet } from '@/features/organization/organization-forms'
 import { errorMessage } from '../api'
-
-function organizationInitials(organization: OrganizationRecord) {
-  const words = (organization.name.trim() || organization.slug.trim())
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-  if (words.length === 0) return '?'
-  return words.map((word) => word[0]?.toUpperCase() ?? '').join('')
-}
 
 /**
  * Pure navigation card. The card itself only navigates to the organization
@@ -36,7 +31,15 @@ function OrganizationCard({
       >
         <Avatar className='size-9 shrink-0 rounded-md border border-border'>
           {organization.logo ? (
-            <AvatarImage src={imageUrl(organization.logo)} alt='' />
+            <AvatarImage
+              src={imageUrl(organization.logo)}
+              alt=''
+              crossOrigin={
+                organization.logo.startsWith(organizationLogoPrefix)
+                  ? 'use-credentials'
+                  : undefined
+              }
+            />
           ) : null}
           <AvatarFallback className='rounded-md text-xs'>
             {organizationInitials(organization)}

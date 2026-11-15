@@ -1,0 +1,11 @@
+All four web blockers are closed in current source. No mismatches.
+
+1. Delete no longer calls GET /organization/deletion. EditOrganizationForm shows Delete when canDelete is true, and organizationApi.remove calls authClient.organization.delete. A result.error.code of ERP_REFERENCE maps to the ERP-records message. That code is what OrganizationRetention.occupied throws.
+
+2. isOrganizationMismatch now reads code from { error: { code } } and from a top-level code, and still requires HTTP 409. The axios response interceptor and the query/mutation error handlers reload on that match, so a pinned GET /me after a cross-tab switch reloads instead of keeping the last session.access.
+
+3. usersApi.list calls authClient.admin.listUsers. UserDirectory still uses usersApi.list, so the platform directory is no longer GET /users.
+
+4. organizationApi.checkSlug returns false when result.error.code is ORGANIZATION_SLUG_ALREADY_TAKEN, which is the code APIError.from sends for that organization error. Other check failures still throw. unusedSlug therefore retries the next candidate.
+
+No tests or typechecks run.

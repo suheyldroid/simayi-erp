@@ -90,6 +90,7 @@ export function UserDetail() {
 function AccountPanel({ user }: { user: User }) {
   const [statusOpen, setStatusOpen] = useState(false)
   const [sheet, setSheet] = useState<'profile' | 'password' | null>(null)
+  const [profilePending, setProfilePending] = useState(false)
   const deactivating = user.isActive && !user.banned
   return (
     <>
@@ -150,14 +151,23 @@ function AccountPanel({ user }: { user: User }) {
       <Sheet
         open={sheet === 'profile'}
         onOpenChange={(open) => {
+          if (!open && profilePending) return
           if (!open) setSheet(null)
         }}
       >
-        <SheetContent className='flex w-full flex-col sm:max-w-md'>
+        <SheetContent
+          className='flex w-full flex-col sm:max-w-md'
+          onEscapeKeyDown={(event) => {
+            if (profilePending) event.preventDefault()
+          }}
+          onInteractOutside={(event) => {
+            if (profilePending) event.preventDefault()
+          }}
+        >
           <SheetHeader>
             <SheetTitle>Edit account profile</SheetTitle>
             <SheetDescription>
-              Update the name and avatar URL for {user.email}.
+              Update the name or upload an avatar for {user.email}.
             </SheetDescription>
           </SheetHeader>
           {sheet === 'profile' ? (
@@ -165,6 +175,8 @@ function AccountPanel({ user }: { user: User }) {
               key={user.id}
               user={user}
               onSaved={() => setSheet(null)}
+              onCancel={() => setSheet(null)}
+              onPendingChange={setProfilePending}
             />
           ) : null}
         </SheetContent>

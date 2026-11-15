@@ -20,7 +20,7 @@ export const currencyApi = {
       (await globalApi.get<unknown>('/system-preferences')).data
     )
   },
-  async savePreference(defaultCurrencyCode: string | null) {
+  async savePreference(defaultCurrencyCode: string) {
     return CurrencyModel.preference.parse(
       (
         await globalApi.patch<unknown>(

@@ -4,12 +4,14 @@ import {
   Boxes,
   Building,
   Building2,
+  CreditCard,
   LayoutDashboard,
   LayoutGrid,
   ListTree,
   Package,
   Receipt,
   ShoppingCart,
+  Wallet,
   Users,
   UsersRound,
 } from 'lucide-react'
@@ -53,6 +55,8 @@ export type OrganizationNavEntry = {
     | '/o/$organizationSlug/stock'
     | '/o/$organizationSlug/purchasing'
     | '/o/$organizationSlug/sales'
+    | '/o/$organizationSlug/pos-devices'
+    | '/o/$organizationSlug/finance'
     | '/o/$organizationSlug/settings'
   icon: ElementType
   /** Overview already is this workspace; it is not repeated as a section card. */
@@ -92,6 +96,18 @@ export const organizationNavEntries: readonly OrganizationNavEntry[] = [
     title: 'Sales',
     to: '/o/$organizationSlug/sales',
     icon: Receipt,
+  },
+  {
+    title: 'POS devices',
+    to: '/o/$organizationSlug/pos-devices',
+    icon: CreditCard,
+    matchChildren: true,
+  },
+  {
+    title: 'Finance',
+    to: '/o/$organizationSlug/finance',
+    icon: Wallet,
+    matchChildren: true,
   },
 ]
 

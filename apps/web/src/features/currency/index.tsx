@@ -6,44 +6,40 @@ import { currencyApi, errorMessage } from './api'
 import { CurrencySelect } from './components/currency-select'
 
 /**
- * System currency preference. This is a singleton setting, not a resource
+ * System currency setup. This is a singleton setting, not a resource
  * collection: the currency list itself is server-owned and read-only, and the
- * default applies to new purchase orders in every organization.
+ * chosen currency is written once, then governs every new price everywhere.
  */
 export function CurrencySettings() {
   const client = useQueryClient()
-  const [choice, setChoice] = useState<string | null | undefined>(undefined)
+  const [choice, setChoice] = useState<string | null>(null)
   const preference = useQuery({
     queryKey: ['system-preference'],
     queryFn: () => currencyApi.preference(),
   })
-  const catalog = useQuery({
-    queryKey: ['currency', 'catalog'],
-    queryFn: () => currencyApi.currencies(),
-  })
   const saved = preference.data?.defaultCurrencyCode ?? null
-  // `undefined` means untouched: the page follows the saved value. An explicit
-  // null is the user clearing the default.
-  const value = choice === undefined ? saved : choice
-  const dirty = preference.isSuccess && value !== saved
   const save = useMutation({
-    mutationFn: (code: string | null) => currencyApi.savePreference(code),
+    mutationFn: (code: string) => currencyApi.savePreference(code),
     onSuccess: async (next) => {
       client.setQueryData(['system-preference'], next)
-      setChoice(undefined)
-      toast.success('Default currency saved')
+      toast.success('System currency saved')
       await client.invalidateQueries({ queryKey: ['system-preference'] })
     },
-    onError: (error) => toast.error(errorMessage(error)),
+    onError: (error) => {
+      toast.error(errorMessage(error))
+      // A conflict means another request configured it first; show the stored
+      // code instead of leaving the setup form on screen.
+      void preference.refetch()
+    },
   })
   return (
     <section className='space-y-6'>
       <div>
         <h2 className='text-2xl font-bold'>Currency</h2>
         <p className='text-muted-foreground'>
-          System-wide default currency for new purchase orders in every
-          organization. The catalog is fixed by the server; this page only
-          selects a default.
+          One system currency for every organization. It is chosen once and then
+          fixed: new purchase line prices, recipe prices, and financial amounts
+          are recorded in it.
         </p>
       </div>
       <div className='space-y-4 rounded-md border border-border p-4'>
@@ -56,76 +52,51 @@ export function CurrencySettings() {
             </Button>
           </p>
         )}
-        {preference.isSuccess && (
+        {preference.isSuccess && saved !== null && (
           <>
             <p className='text-sm'>
-              Current default:{' '}
-              <span className='font-medium'>
-                {saved ?? 'No default currency'}
-              </span>
+              System currency: <span className='font-medium'>{saved}</span>
             </p>
-            <form
-              className='space-y-4'
-              onSubmit={(event) => {
-                event.preventDefault()
-                if (!dirty || save.isPending) return
-                save.mutate(value)
-              }}
-            >
-              <CurrencySelect
-                value={value}
-                disabled={save.isPending}
-                onChange={setChoice}
-              />
-              {catalog.isPending && (
-                <p role='status' className='text-sm text-muted-foreground'>
-                  Loading currency catalog…
-                </p>
-              )}
-              {catalog.isError && (
-                <p role='alert'>
-                  Could not load the currency catalog.{' '}
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() => void catalog.refetch()}
-                  >
-                    Retry
-                  </Button>
-                </p>
-              )}
-              {catalog.isSuccess && catalog.data.items.length === 0 && (
-                <p role='status' className='text-sm text-muted-foreground'>
-                  The server returned no currencies. A default cannot be
-                  selected until the catalog is available.
-                </p>
-              )}
-              {save.error != null && (
-                <p role='alert' className='text-sm text-destructive'>
-                  {errorMessage(save.error)}
-                </p>
-              )}
-              <div className='flex flex-wrap items-center gap-2'>
-                <Button type='submit' disabled={!dirty || save.isPending}>
-                  Save default
-                </Button>
-                {choice !== undefined && (
-                  <Button
-                    type='button'
-                    variant='outline'
-                    disabled={save.isPending}
-                    onClick={() => setChoice(undefined)}
-                  >
-                    Reset
-                  </Button>
-                )}
-              </div>
-            </form>
             <p className='text-sm text-muted-foreground'>
-              A purchase order keeps the currency it was created with. Amounts
-              are stored as exact decimal strings and are never converted,
-              rounded, or summed across currencies. When no default is set, an
-              order must explicitly choose one.
+              This is a permanent choice. It cannot be cleared, switched, or
+              replaced here, and existing amounts are never converted or
+              relabelled.
+            </p>
+          </>
+        )}
+        {preference.isSuccess && saved === null && (
+          <>
+            <p className='text-sm'>
+              System currency:{' '}
+              <span className='font-medium'>Not configured</span>
+            </p>
+            <CurrencySelect
+              value={choice}
+              allowClear={false}
+              disabled={save.isPending}
+              onChange={setChoice}
+            />
+            {save.error != null && (
+              <p role='alert' className='text-sm text-destructive'>
+                {errorMessage(save.error)}
+              </p>
+            )}
+            <div className='flex flex-wrap items-center gap-2'>
+              <Button
+                type='button'
+                disabled={choice === null || save.isPending}
+                onClick={() => {
+                  if (choice === null) return
+                  save.mutate(choice)
+                }}
+              >
+                Save system currency
+              </Button>
+            </div>
+            <p className='text-sm text-muted-foreground'>
+              After it is saved the system currency is read-only. Amounts are
+              stored as exact decimal strings and are never converted, rounded,
+              or summed across currencies.
             </p>
           </>
         )}

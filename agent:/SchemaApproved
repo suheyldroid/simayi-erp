@@ -1,0 +1,3 @@
+SchemaApproved: the three schema changes match the contract. StockItem.accessUser and StockItemTracking.accessUser are Restrict. UserProfile.organization and UserSetting.organization are Cascade, so the organization-delete hook no longer deletes those rows ahead of the native transaction. Helper models are counted as occupied ERP data and stay Restrict. Team.organization Cascade and the lowercase legacy_group_<id> role keys are correct. Organization admin still has no ERP scope row.
+
+One remaining pointer: ParameterTemplate.selectionlist references SelectionList.id alone. Point it at the same-organization pair so a template cannot reference another organization's list.
