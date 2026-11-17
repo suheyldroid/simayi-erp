@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { sleep, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,7 +20,8 @@ import { Input } from '@/components/ui/input'
 
 const formSchema = z.object({
   email: z.email({
-    error: (iss) => (iss.input === '' ? 'Please enter your email.' : undefined),
+    error: (iss) =>
+      iss.input === '' ? t('global:auth.validation.emailRequired') : undefined,
   }),
 })
 
@@ -39,14 +41,14 @@ export function ForgotPasswordForm({
     setIsLoading(true)
 
     toast.promise(sleep(2000), {
-      loading: 'Sending email...',
+      loading: t('global:auth.forgotPassword.sending'),
       success: () => {
         setIsLoading(false)
         form.reset()
         navigate({ to: '/otp' })
-        return `Email sent to ${data.email}`
+        return t('global:auth.forgotPassword.sent', { email: data.email })
       },
-      error: 'Error',
+      error: t('global:shared.error'),
     })
   }
 
@@ -62,16 +64,19 @@ export function ForgotPasswordForm({
           name='email'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('global:auth.emailLabel')}</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input
+                  placeholder={t('global:auth.emailPlaceholder')}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <Button className='mt-2' disabled={isLoading}>
-          Continue
+          {t('global:auth.forgotPassword.continue')}
           {isLoading ? <Loader2 className='animate-spin' /> : <ArrowRight />}
         </Button>
       </form>

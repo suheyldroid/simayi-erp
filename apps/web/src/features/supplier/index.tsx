@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -12,9 +13,11 @@ export function Suppliers() {
       </Header>
       <Main className='space-y-6'>
         <div>
-          <h1 className='text-2xl font-bold'>Suppliers</h1>
+          <h1 className='text-2xl font-bold'>
+            {t('operations:supplier.index.title')}
+          </h1>
           <p className='text-muted-foreground'>
-            Supplier contact details and the primary delivery address.
+            {t('operations:supplier.index.description')}
           </p>
         </div>
         <SupplierDirectory />

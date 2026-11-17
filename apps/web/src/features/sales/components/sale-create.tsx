@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,11 +26,13 @@ function newRequestKey() {
 }
 
 export function SaleForm({
+  branchName,
   pending,
   error,
   onClose,
   onSubmit,
 }: {
+  branchName: string
   pending: boolean
   error: unknown
   onClose: () => void
@@ -74,11 +77,11 @@ export function SaleForm({
     >
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
         <SheetHeader>
-          <SheetTitle>Record sale</SheetTitle>
+          <SheetTitle>{t('operations:sales.create.title')}</SheetTitle>
           <SheetDescription>
-            Records an active recipe and consumes its ingredient stock. The
-            request key keeps a repeated submission from recording the sale
-            twice.
+            {t('operations:sales.create.description', {
+              branch: branchName,
+            })}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -87,17 +90,19 @@ export function SaleForm({
             event.preventDefault()
             if (pending) return
             if (!recipe) {
-              setValidationError('Choose a recipe')
+              setValidationError(t('operations:sales.create.chooseRecipe'))
+              return
+            }
+            if (!recipe.sellable) {
+              setValidationError(t('operations:sales.create.notSellable'))
               return
             }
             if (recipe.sellingPrice === null) {
-              setValidationError(
-                'This recipe has no selling price. Set one in Recipes before selling it.'
-              )
+              setValidationError(t('operations:sales.create.missingPrice'))
               return
             }
             if (!channel) {
-              setValidationError('Choose a sales channel')
+              setValidationError(t('operations:sales.create.chooseChannel'))
               return
             }
             try {
@@ -117,22 +122,30 @@ export function SaleForm({
           <div className='flex-1 space-y-4 overflow-y-auto px-4 pb-4'>
             <fieldset disabled={pending} className='space-y-4'>
               <RecipeSelect
-                label='Recipe'
+                label={t('operations:sales.create.recipe')}
                 value={recipe}
                 disabled={pending}
+                sellableOnly
                 onChange={chooseRecipe}
               />
-              {recipe != null && recipe.sellingPrice === null && (
+              {recipe != null && !recipe.sellable && (
                 <p role='alert' className='text-sm text-destructive'>
-                  This recipe has no selling price. Set one in Recipes before
-                  selling it.
+                  {t('operations:sales.create.notSellable')}
                 </p>
               )}
+              {recipe != null &&
+                recipe.sellable &&
+                recipe.sellingPrice === null && (
+                  <p role='alert' className='text-sm text-destructive'>
+                    {t('operations:sales.create.missingPrice')}
+                  </p>
+                )}
               {recipe != null && recipe.sellingPrice !== null && (
                 <p className='text-sm text-muted-foreground'>
-                  Unit price: {recipe.sellingPrice}{' '}
-                  {recipe.priceCurrencyCode ?? ''}. The sale total is this price
-                  times the quantity and is frozen when the sale is recorded.
+                  {t('operations:sales.create.unitPriceNote', {
+                    price: recipe.sellingPrice,
+                    currency: recipe.priceCurrencyCode ?? '',
+                  })}
                 </p>
               )}
               <ChannelSelect
@@ -141,7 +154,9 @@ export function SaleForm({
                 onChange={chooseChannel}
               />
               <div className='space-y-2'>
-                <Label htmlFor={quantityId}>Quantity</Label>
+                <Label htmlFor={quantityId}>
+                  {t('operations:sales.create.quantity')}
+                </Label>
                 <Input
                   id={quantityId}
                   name='quantity'
@@ -161,16 +176,21 @@ export function SaleForm({
             )}
             {shortages.length > 0 && (
               <div role='alert' className='space-y-1 text-sm'>
-                <p className='font-medium'>Insufficient ingredient stock</p>
+                <p className='font-medium'>
+                  {t('operations:sales.create.shortageTitle')}
+                </p>
                 <ul className='space-y-1'>
                   {shortages.map((shortage) => (
                     <li key={shortage.componentName}>
-                      {shortage.componentName}: needed {shortage.required}
-                      {shortage.componentUnits
-                        ? ` ${shortage.componentUnits}`
-                        : ''}
-                      , available {shortage.available}, missing{' '}
-                      {shortage.missing}
+                      {t('operations:sales.create.shortageLine', {
+                        name: shortage.componentName,
+                        required: shortage.required,
+                        units: shortage.componentUnits
+                          ? ` ${shortage.componentUnits}`
+                          : '',
+                        available: shortage.available,
+                        missing: shortage.missing,
+                      })}
                     </li>
                   ))}
                 </ul>
@@ -184,13 +204,17 @@ export function SaleForm({
               onClick={onClose}
               disabled={pending}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button
               type='submit'
-              disabled={pending || recipe?.sellingPrice === null}
+              disabled={
+                pending ||
+                (recipe !== null &&
+                  (!recipe.sellable || recipe.sellingPrice === null))
+              }
             >
-              Record sale
+              {t('operations:sales.create.submit')}
             </Button>
           </SheetFooter>
         </form>

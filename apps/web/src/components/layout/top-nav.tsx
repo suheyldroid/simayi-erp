@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Menu } from 'lucide-react'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,7 +30,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
             className={cn('md:size-7 lg:hidden', className)}
           >
             <Menu />
-            <span className='sr-only'>Toggle navigation menu</span>
+            <span className='sr-only'>{t('common:a11y.toggleNavigation')}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent side='bottom' align='start'>

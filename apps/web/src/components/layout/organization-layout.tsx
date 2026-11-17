@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Outlet } from '@tanstack/react-router'
 import { organizationSessionQuery } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { useOrganizationBoundary } from '@/lib/organization-boundary'
 import { Button } from '@/components/ui/button'
 
@@ -32,8 +33,8 @@ export function OrganizationLayout() {
   if (sessionRequest.isError) {
     return (
       <BoundarySurface
-        title='Could not verify this organization.'
-        description='Your membership could not be checked.'
+        title={t('common:states.membershipCheckFailed')}
+        description={t('common:states.membershipCheckFailedDescription')}
         onRetry={() => void sessionRequest.refetch()}
       />
     )
@@ -43,8 +44,8 @@ export function OrganizationLayout() {
     return (
       <BoundarySurface
         busy
-        title='Checking organization…'
-        description='Confirming your membership in this organization.'
+        title={t('common:states.verifyingOrganization')}
+        description={t('common:states.checkingMembership')}
       />
     )
   }
@@ -52,8 +53,8 @@ export function OrganizationLayout() {
   if (!session || !verified) {
     return (
       <BoundarySurface
-        title='Organization membership changed.'
-        description='Reload to continue with the requested organization.'
+        title={t('common:states.membershipChanged')}
+        description={t('common:states.membershipChangedDescription')}
         onRetry={() => window.location.reload()}
       />
     )
@@ -81,7 +82,7 @@ function BoundarySurface({
       </div>
       {onRetry ? (
         <Button variant='outline' onClick={onRetry}>
-          Retry
+          {t('common:actions.retry')}
         </Button>
       ) : null}
     </div>

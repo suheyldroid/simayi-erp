@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useOptionalBranch } from '@/lib/branch-boundary'
+import {
+  captureBranchScope,
+  isBranchScopeCurrent,
+  type CapturedBranchScope,
+} from '@/lib/branch-scope'
+import { t } from '@/lib/i18n'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,12 +61,13 @@ function PurchaseExtraForm({
     >
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
         <SheetHeader>
-          <SheetTitle>Add extra line</SheetTitle>
+          <SheetTitle>
+            {t('operations:purchasing.extras.createTitle')}
+          </SheetTitle>
           <SheetDescription>
-            Charges that are not item lines, such as shipping or fees. A written
-            price uses the fixed system currency (
-            {systemCurrency ?? 'not configured'}). The order version is sent
-            with the extra so a stale order cannot be changed.
+            {t('operations:purchasing.extras.createDescription', {
+              currency: systemCurrency ?? t('operations:common.notConfigured'),
+            })}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -88,17 +96,25 @@ function PurchaseExtraForm({
               <FieldInput
                 field={{
                   name: 'description',
-                  label: 'Description',
+                  label: t('operations:purchasing.extras.description'),
                   maxLength: 250,
                 }}
               />
               <FieldInput
-                field={{ name: 'quantity', label: 'Quantity', required: true }}
+                field={{
+                  name: 'quantity',
+                  label: t('operations:purchasing.extras.quantity'),
+                  required: true,
+                }}
               />
               <FieldInput
                 field={{
                   name: 'price',
-                  label: `Price (${systemCurrency ?? 'system currency'})`,
+                  label: t('operations:purchasing.extras.price', {
+                    currency:
+                      systemCurrency ??
+                      t('operations:purchasing.systemCurrency'),
+                  }),
                 }}
               />
             </fieldset>
@@ -115,10 +131,10 @@ function PurchaseExtraForm({
               onClick={onClose}
               disabled={pending}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button type='submit' disabled={pending}>
-              Add extra
+              {t('operations:purchasing.extras.submit')}
             </Button>
           </SheetFooter>
         </form>
@@ -145,62 +161,84 @@ export function OrderExtras({
   onRetry: () => void
 }) {
   const client = useQueryClient()
+  const selectedBranch = useOptionalBranch()
   const [adding, setAdding] = useState(false)
   const [removeExtra, setRemoveExtra] = useState<PurchaseExtra | null>(null)
   const save = useMutation({
-    mutationFn: (input: { body: ExtraInput; scope: string }) =>
-      purchasingApi.addExtra(order.uuid, input.body),
+    mutationFn: (input: {
+      body: ExtraInput
+      scope: string
+      ui: CapturedBranchScope
+    }) => purchasingApi.addExtra(order.uuid, input.body),
     onSuccess: async (_extra, input) => {
-      await client.invalidateQueries({ queryKey: ['purchasing'] })
+      await client.invalidateQueries({ queryKey: ['purchasing', input.scope] })
       // The extra-line write refreshes the finance reservation of the order.
       await client.invalidateQueries({ queryKey: ['finance', input.scope] })
+      if (!isBranchScopeCurrent(input.ui)) return
       setAdding(false)
-      toast.success('Extra line added')
+      toast.success(t('operations:purchasing.extras.added'))
     },
-    onError: (caught) => toast.error(errorMessage(caught)),
+    onError: (caught, input) => {
+      if (isBranchScopeCurrent(input.ui)) toast.error(errorMessage(caught))
+    },
   })
   const remove = useMutation({
-    mutationFn: (input: { extra: PurchaseExtra; scope: string }) =>
+    mutationFn: (input: {
+      extra: PurchaseExtra
+      scope: string
+      ui: CapturedBranchScope
+    }) =>
       purchasingApi.removeExtra(order.uuid, input.extra.uuid, order.version),
     onSuccess: async (_result, input) => {
-      await client.invalidateQueries({ queryKey: ['purchasing'] })
+      await client.invalidateQueries({ queryKey: ['purchasing', input.scope] })
       // The extra-line write refreshes the finance reservation of the order.
       await client.invalidateQueries({ queryKey: ['finance', input.scope] })
+      if (!isBranchScopeCurrent(input.ui)) return
       setRemoveExtra(null)
-      toast.success('Extra line deleted')
+      toast.success(t('operations:purchasing.extras.deleted'))
     },
-    onError: (caught) => toast.error(errorMessage(caught)),
+    onError: (caught, input) => {
+      if (isBranchScopeCurrent(input.ui)) toast.error(errorMessage(caught))
+    },
   })
   const canRemoveExtra = removeExtra !== null && editable
   return (
     <section className='space-y-2'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
-        <h2 className='text-xl font-semibold'>Extra lines</h2>
+        <h2 className='text-xl font-semibold'>
+          {t('operations:purchasing.extras.title')}
+        </h2>
         {editable && (
           <Button
             type='button'
             variant='outline'
             onClick={() => setAdding(true)}
           >
-            Add extra
+            {t('operations:purchasing.extras.add')}
           </Button>
         )}
       </div>
-      {pending && <p role='status'>Loading extra lines…</p>}
+      {pending && (
+        <p role='status'>{t('operations:purchasing.extras.loading')}</p>
+      )}
       {error != null && (
         <p role='alert'>
           {errorMessage(error)}{' '}
           <Button variant='outline' onClick={onRetry}>
-            Retry
+            {t('operations:common.retry')}
           </Button>
         </p>
       )}
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Description</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Price</TableHead>
+            <TableHead>
+              {t('operations:purchasing.extras.description')}
+            </TableHead>
+            <TableHead>{t('operations:purchasing.extras.quantity')}</TableHead>
+            <TableHead>
+              {t('operations:purchasing.extras.priceColumn')}
+            </TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -212,7 +250,10 @@ export function OrderExtras({
               <TableCell>
                 {line.price == null
                   ? '—'
-                  : `${line.price} ${line.currencyCode ?? 'Unknown currency'}`}
+                  : `${line.price} ${
+                      line.currencyCode ??
+                      t('operations:common.unknownCurrency')
+                    }`}
               </TableCell>
               <TableCell>
                 {editable && (
@@ -222,7 +263,7 @@ export function OrderExtras({
                     disabled={remove.isPending}
                     onClick={() => setRemoveExtra(line)}
                   >
-                    Delete
+                    {t('operations:common.delete')}
                   </Button>
                 )}
               </TableCell>
@@ -230,7 +271,9 @@ export function OrderExtras({
           ))}
           {extras.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4}>No extra lines yet.</TableCell>
+              <TableCell colSpan={4}>
+                {t('operations:purchasing.extras.empty')}
+              </TableCell>
             </TableRow>
           )}
         </TableBody>
@@ -243,7 +286,11 @@ export function OrderExtras({
           error={save.error}
           onClose={() => setAdding(false)}
           onSubmit={(body) =>
-            save.mutate({ body, scope: organizationCacheScope() })
+            save.mutate({
+              body,
+              scope: organizationCacheScope(),
+              ui: captureBranchScope(selectedBranch?.branch.uuid ?? null),
+            })
           }
         />
       )}
@@ -252,9 +299,9 @@ export function OrderExtras({
         onOpenChange={(open) => {
           if (!open) setRemoveExtra(null)
         }}
-        title='Delete extra line'
-        desc='The extra line is removed from this purchase order.'
-        confirmText='Delete'
+        title={t('operations:purchasing.extras.deleteTitle')}
+        desc={t('operations:purchasing.extras.deleteDescription')}
+        confirmText={t('operations:common.delete')}
         destructive
         disabled={!canRemoveExtra}
         isLoading={remove.isPending}
@@ -263,6 +310,7 @@ export function OrderExtras({
           remove.mutate({
             extra: removeExtra,
             scope: organizationCacheScope(),
+            ui: captureBranchScope(selectedBranch?.branch.uuid ?? null),
           })
         }}
       />

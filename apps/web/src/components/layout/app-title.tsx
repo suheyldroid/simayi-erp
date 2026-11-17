@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Menu, X } from 'lucide-react'
 import { useSidebar } from '@/stores/sidebar-store'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   SidebarMenu,
@@ -58,7 +59,7 @@ function ToggleSidebar({
     >
       <X className='md:hidden' />
       <Menu className='max-md:hidden' />
-      <span className='sr-only'>Toggle Sidebar</span>
+      <span className='sr-only'>{t('common:a11y.toggleSidebar')}</span>
     </Button>
   )
 }

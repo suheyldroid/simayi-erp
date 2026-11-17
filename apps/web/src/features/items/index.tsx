@@ -1,7 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useOrganizationSlug } from '@/lib/organization-boundary'
+import {
+  captureBranchScope,
+  isBranchScopeCurrent,
+  type CapturedBranchScope,
+} from '@/lib/branch-scope'
+import { locale, t } from '@/lib/i18n'
+import {
+  organizationLocation,
+  useOrganizationScope,
+} from '@/lib/organization-navigation'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,15 +25,16 @@ import type { Item } from './model'
 
 const PAGE_SIZE = 20
 
-const itemLabel = (item: Item) => item.name || item.ipn || 'Item'
+const itemLabel = (item: Item) =>
+  item.name || item.ipn || t('catalog:items.fallbackName')
 
 export function ItemsCatalog() {
   return (
     <section className='space-y-6'>
       <div>
-        <h2 className='text-2xl font-bold'>Items</h2>
+        <h2 className='text-2xl font-bold'>{t('catalog:items.title')}</h2>
         <p className='text-muted-foreground'>
-          Items, categories, and current stock balances.
+          {t('catalog:items.description')}
         </p>
       </div>
       <ItemDirectory />
@@ -34,22 +44,38 @@ export function ItemsCatalog() {
 
 function CreateItemAction() {
   const navigate = useNavigate()
-  const organizationSlug = useOrganizationSlug()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const [open, setOpen] = useState(false)
+  // The catalog write is a company request and survives a scope switch, so the
+  // destination scope is captured when the form opens: a stale settlement never
+  // navigates the newly selected scope.
+  const captured = useRef<CapturedBranchScope | null>(null)
   return (
     <>
-      <Button type='button' onClick={() => setOpen(true)}>
-        New item
+      <Button
+        type='button'
+        onClick={() => {
+          captured.current = captureBranchScope(branchUuid)
+          setOpen(true)
+        }}
+      >
+        {t('catalog:items.new')}
       </Button>
       <ItemForm
         draft={open ? { mode: 'create' } : null}
         canSubmit={open}
         onOpenChange={setOpen}
         onSaved={(saved) => {
-          void navigate({
-            to: '/o/$organizationSlug/settings/items/$itemId',
-            params: { organizationSlug, itemId: saved.uuid },
-          })
+          const scope = captured.current
+          if (scope === null || !isBranchScopeCurrent(scope)) return
+          void navigate(
+            organizationLocation(
+              organizationSlug,
+              scope.branchUuid,
+              '/settings/items/$itemId',
+              { itemId: saved.uuid }
+            )
+          )
         }}
       />
     </>
@@ -57,7 +83,7 @@ function CreateItemAction() {
 }
 
 function ItemDirectory() {
-  const organizationSlug = useOrganizationSlug()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const [page, setPage] = useState(0)
   const [draft, setDraft] = useState('')
   const [search, setSearch] = useState('')
@@ -69,7 +95,7 @@ function ItemDirectory() {
     () => [
       {
         id: 'name',
-        header: 'Name',
+        header: t('catalog:common.name'),
         accessorFn: (item) => itemLabel(item),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
@@ -81,41 +107,43 @@ function ItemDirectory() {
       },
       {
         id: 'category',
-        header: 'Category',
+        header: t('catalog:common.category'),
         accessorFn: (item) => item.category?.pathstring ?? '',
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
-        id: 'stock',
-        header: 'Stock',
-        accessorFn: (item) => item.stock,
-        enableSorting: false,
-        cell: ({ getValue }) => String(getValue() ?? ''),
-      },
-      {
         id: 'status',
-        header: 'Status',
-        accessorFn: (item) => (item.active ? 'Active' : 'Inactive'),
+        header: t('catalog:common.status'),
+        accessorFn: (item) =>
+          item.active
+            ? t('catalog:common.active')
+            : t('catalog:common.inactive'),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: t('catalog:common.actions'),
         enableSorting: false,
-        meta: { label: 'Actions', width: 110 },
+        meta: { label: t('catalog:common.actions'), width: 110 },
         cell: ({ row }) => (
           <Link
-            to='/o/$organizationSlug/settings/items/$itemId'
-            params={{ organizationSlug, itemId: row.original.uuid }}
-            aria-label={`View details for ${itemLabel(row.original)}`}
+            {...organizationLocation(
+              organizationSlug,
+              branchUuid,
+              '/settings/items/$itemId',
+              { itemId: row.original.uuid }
+            )}
+            aria-label={t('catalog:items.viewDetails', {
+              name: itemLabel(row.original),
+            })}
             className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
           >
-            Details
+            {t('catalog:common.details')}
           </Link>
         ),
       },
     ],
-    [organizationSlug]
+    [organizationSlug, branchUuid]
   )
   return (
     <div className='space-y-4'>
@@ -129,40 +157,43 @@ function ItemDirectory() {
           }}
         >
           <Input
-            aria-label='Search items'
-            placeholder='Search name, description, or IPN'
+            aria-label={t('catalog:items.searchLabel')}
+            placeholder={t('catalog:items.searchPlaceholder')}
             maxLength={100}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             className='max-w-sm'
           />
-          <Button variant='outline'>Find</Button>
+          <Button variant='outline'>{t('catalog:common.find')}</Button>
         </form>
         <CreateItemAction />
       </div>
-      {items.isPending && <p role='status'>Loading items…</p>}
+      {items.isPending && <p role='status'>{t('catalog:items.loading')}</p>}
       {items.isError && (
         <p role='alert'>
           {errorMessage(items.error)}{' '}
           <Button variant='outline' onClick={() => void items.refetch()}>
-            Retry
+            {t('catalog:common.retry')}
           </Button>
         </p>
       )}
       {items.data && (
         <>
           <p className='text-sm text-muted-foreground'>
-            {items.data.total} items. Sorting applies to this page only.
+            {t('catalog:items.summary', {
+              total: items.data.total.toLocaleString(locale),
+              sortingNote: t('catalog:common.sortingNote'),
+            })}
           </p>
           <p className='text-sm text-muted-foreground'>
-            Select Details in a row to open its item.
+            {t('catalog:items.openHint')}
           </p>
           <SortableDataTable
             data={items.data.items}
             columns={columns}
             getRowId={(item) => item.uuid}
-            caption='Items'
-            emptyMessage='No items match this search.'
+            caption={t('catalog:items.caption')}
+            emptyMessage={t('catalog:items.empty')}
           />
         </>
       )}

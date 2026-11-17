@@ -1,4 +1,5 @@
 import { Shield, UserCheck, Users, CreditCard } from 'lucide-react'
+import { t } from '@/lib/i18n'
 import { type UserStatus } from './schema'
 
 export const callTypes = new Map<UserStatus, string>([
@@ -11,24 +12,36 @@ export const callTypes = new Map<UserStatus, string>([
   ],
 ])
 
+/** Display label for a management status enum value. */
+export function userStatusLabel(status: UserStatus) {
+  return t(`global:users.management.filters.${status}`, {
+    defaultValue: status,
+  })
+}
+
+/** Display label for a management role enum value. */
+export function userRoleValueLabel(role: string) {
+  return t(`global:users.management.roles.${role}`, { defaultValue: role })
+}
+
 export const roles = [
   {
-    label: 'Superadmin',
+    label: t('global:users.management.roles.superadmin'),
     value: 'superadmin',
     icon: Shield,
   },
   {
-    label: 'Admin',
+    label: t('global:users.management.roles.admin'),
     value: 'admin',
     icon: UserCheck,
   },
   {
-    label: 'Manager',
+    label: t('global:users.management.roles.manager'),
     value: 'manager',
     icon: Users,
   },
   {
-    label: 'Cashier',
+    label: t('global:users.management.roles.cashier'),
     value: 'cashier',
     icon: CreditCard,
   },

@@ -1,7 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useOrganizationSlug } from '@/lib/organization-boundary'
+import {
+  captureBranchScope,
+  isBranchScopeCurrent,
+  type CapturedBranchScope,
+} from '@/lib/branch-scope'
+import { locale, t } from '@/lib/i18n'
+import {
+  organizationLocation,
+  useOrganizationScope,
+} from '@/lib/organization-navigation'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,9 +39,11 @@ export function ItemCategories() {
   return (
     <section className='space-y-6'>
       <div>
-        <h2 className='text-2xl font-bold'>Item categories</h2>
+        <h2 className='text-2xl font-bold'>
+          {t('catalog:itemCategories.title')}
+        </h2>
         <p className='text-muted-foreground'>
-          Category tree and the item categories inside it.
+          {t('catalog:itemCategories.description')}
         </p>
       </div>
       <CategoryDirectory />
@@ -42,22 +53,37 @@ export function ItemCategories() {
 
 function CreateCategoryAction() {
   const navigate = useNavigate()
-  const organizationSlug = useOrganizationSlug()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const [open, setOpen] = useState(false)
+  // The catalog write is a company request that survives a scope switch; the
+  // destination scope is captured when the form opens.
+  const captured = useRef<CapturedBranchScope | null>(null)
   return (
     <>
-      <Button type='button' onClick={() => setOpen(true)}>
-        New category
+      <Button
+        type='button'
+        onClick={() => {
+          captured.current = captureBranchScope(branchUuid)
+          setOpen(true)
+        }}
+      >
+        {t('catalog:itemCategories.new')}
       </Button>
       <CategoryForm
         draft={open ? { mode: 'create' } : null}
         canSubmit={open}
         onOpenChange={setOpen}
         onSaved={(saved) => {
-          void navigate({
-            to: '/o/$organizationSlug/settings/item-categories/$categoryId',
-            params: { organizationSlug, categoryId: saved.uuid },
-          })
+          const scope = captured.current
+          if (scope === null || !isBranchScopeCurrent(scope)) return
+          void navigate(
+            organizationLocation(
+              organizationSlug,
+              scope.branchUuid,
+              '/settings/item-categories/$categoryId',
+              { categoryId: saved.uuid }
+            )
+          )
         }}
       />
     </>
@@ -65,7 +91,7 @@ function CreateCategoryAction() {
 }
 
 function CategoryDirectory() {
-  const organizationSlug = useOrganizationSlug()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const [page, setPage] = useState(0)
   const [draft, setDraft] = useState('')
   const [search, setSearch] = useState('')
@@ -96,60 +122,63 @@ function CategoryDirectory() {
     () => [
       {
         id: 'name',
-        header: 'Name',
+        header: t('catalog:itemCategories.columns.name'),
         accessorFn: (category) => category.name,
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'pathstring',
-        header: 'Path',
+        header: t('catalog:itemCategories.columns.path'),
         accessorFn: (category) => category.pathstring,
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'kind',
-        header: 'Kind',
+        header: t('catalog:itemCategories.columns.kind'),
         accessorFn: (category) =>
-          category.structural ? 'Structural' : 'Items',
+          category.structural
+            ? t('catalog:itemCategories.kind.structural')
+            : t('catalog:itemCategories.kind.items'),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'items',
-        header: 'Items',
+        header: t('catalog:itemCategories.columns.items'),
         accessorFn: (category) => category.itemCount,
         meta: { numeric: true },
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'children',
-        header: 'Children',
+        header: t('catalog:itemCategories.columns.children'),
         accessorFn: (category) => category.childCount,
         meta: { numeric: true },
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: t('catalog:common.actions'),
         enableSorting: false,
-        meta: { label: 'Actions', width: 110 },
+        meta: { label: t('catalog:common.actions'), width: 110 },
         cell: ({ row }) => (
           <Link
-            to='/o/$organizationSlug/settings/item-categories/$categoryId'
-            params={{
+            {...organizationLocation(
               organizationSlug,
-              categoryId: row.original.uuid,
-            }}
-            aria-label={`View details for ${
-              row.original.pathstring || row.original.name
-            }`}
+              branchUuid,
+              '/settings/item-categories/$categoryId',
+              { categoryId: row.original.uuid }
+            )}
+            aria-label={t('catalog:itemCategories.viewDetails', {
+              name: row.original.pathstring || row.original.name,
+            })}
             className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
           >
-            Details
+            {t('catalog:common.details')}
           </Link>
         ),
       },
     ],
-    [organizationSlug]
+    [organizationSlug, branchUuid]
   )
   return (
     <div className='space-y-4'>
@@ -163,8 +192,8 @@ function CategoryDirectory() {
           }}
         >
           <Input
-            aria-label='Search categories'
-            placeholder='Search name, path, or description'
+            aria-label={t('catalog:itemCategories.searchLabel')}
+            placeholder={t('catalog:itemCategories.searchPlaceholder')}
             maxLength={100}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -179,12 +208,19 @@ function CategoryDirectory() {
               }
             }}
           >
-            <SelectTrigger className='w-40' aria-label='Category scope'>
+            <SelectTrigger
+              className='w-40'
+              aria-label={t('catalog:itemCategories.filters.scopeLabel')}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='all'>All categories</SelectItem>
-              <SelectItem value='roots'>Root categories</SelectItem>
+              <SelectItem value='all'>
+                {t('catalog:itemCategories.filters.scopeAll')}
+              </SelectItem>
+              <SelectItem value='roots'>
+                {t('catalog:itemCategories.filters.scopeRoots')}
+              </SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -200,43 +236,56 @@ function CategoryDirectory() {
               }
             }}
           >
-            <SelectTrigger className='w-40' aria-label='Category kind'>
+            <SelectTrigger
+              className='w-40'
+              aria-label={t('catalog:itemCategories.filters.kindLabel')}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='all'>Any kind</SelectItem>
-              <SelectItem value='structural'>Structural</SelectItem>
-              <SelectItem value='items'>Item categories</SelectItem>
+              <SelectItem value='all'>
+                {t('catalog:itemCategories.filters.kindAll')}
+              </SelectItem>
+              <SelectItem value='structural'>
+                {t('catalog:itemCategories.filters.kindStructural')}
+              </SelectItem>
+              <SelectItem value='items'>
+                {t('catalog:itemCategories.filters.kindItems')}
+              </SelectItem>
             </SelectContent>
           </Select>
-          <Button variant='outline'>Find</Button>
+          <Button variant='outline'>{t('catalog:common.find')}</Button>
         </form>
         <CreateCategoryAction />
       </div>
-      {categories.isPending && <p role='status'>Loading categories…</p>}
+      {categories.isPending && (
+        <p role='status'>{t('catalog:itemCategories.loading')}</p>
+      )}
       {categories.isError && (
         <p role='alert'>
           {errorMessage(categories.error)}{' '}
           <Button variant='outline' onClick={() => void categories.refetch()}>
-            Retry
+            {t('catalog:common.retry')}
           </Button>
         </p>
       )}
       {categories.data && (
         <>
           <p className='text-sm text-muted-foreground'>
-            {categories.data.total} categories. Sorting applies to this page
-            only.
+            {t('catalog:itemCategories.summary', {
+              total: categories.data.total.toLocaleString(locale),
+              sortingNote: t('catalog:common.sortingNote'),
+            })}
           </p>
           <p className='text-sm text-muted-foreground'>
-            Select Details in a row to open its category.
+            {t('catalog:itemCategories.openHint')}
           </p>
           <SortableDataTable
             data={categories.data.items}
             columns={columns}
             getRowId={(category) => category.uuid}
-            caption='Item categories'
-            emptyMessage='No categories match these filters.'
+            caption={t('catalog:itemCategories.caption')}
+            emptyMessage={t('catalog:itemCategories.empty')}
           />
         </>
       )}

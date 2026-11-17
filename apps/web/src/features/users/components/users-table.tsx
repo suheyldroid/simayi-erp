@@ -11,6 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import {
@@ -101,22 +102,34 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
     >
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Filter users...'
+        searchPlaceholder={t('global:users.management.searchPlaceholder')}
         searchKey='username'
         filters={[
           {
             columnId: 'status',
-            title: 'Status',
+            title: t('global:users.management.statusTitle'),
             options: [
-              { label: 'Active', value: 'active' },
-              { label: 'Inactive', value: 'inactive' },
-              { label: 'Invited', value: 'invited' },
-              { label: 'Suspended', value: 'suspended' },
+              {
+                label: t('global:users.management.filters.active'),
+                value: 'active',
+              },
+              {
+                label: t('global:users.management.filters.inactive'),
+                value: 'inactive',
+              },
+              {
+                label: t('global:users.management.filters.invited'),
+                value: 'invited',
+              },
+              {
+                label: t('global:users.management.filters.suspended'),
+                value: 'suspended',
+              },
             ],
           },
           {
             columnId: 'role',
-            title: 'Role',
+            title: t('global:users.management.roleTitle'),
             options: roles.map((role) => ({ ...role })),
           },
         ]}
@@ -180,7 +193,7 @@ export function UsersTable({ data, search, navigate }: DataTableProps) {
                   colSpan={columns.length}
                   className='h-24 text-center'
                 >
-                  No results.
+                  {t('global:users.management.noResults')}
                 </TableCell>
               </TableRow>
             )}

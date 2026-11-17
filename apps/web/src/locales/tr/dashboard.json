@@ -1,0 +1,274 @@
+{
+  "widgetTypes": {
+    "kpi": "Sayı (KPI)",
+    "column": "Sütun grafiği",
+    "bar": "Çubuk grafiği",
+    "line": "Çizgi grafiği",
+    "donut": "Halka grafiği"
+  },
+  "sources": {
+    "sales": "Satışlar",
+    "purchases": "Satınalma siparişleri",
+    "stock": "Mevcut stok"
+  },
+  "dateBasis": {
+    "sales": "Satış kayıt tarihi (UTC)",
+    "purchases": "Satınalma siparişi oluşturma tarihi (UTC)"
+  },
+  "dateRanges": {
+    "last_30_days": "Son 30 gün (UTC)",
+    "last_90_days": "Son 90 gün (UTC)",
+    "last_6_months": "Son 6 ay (UTC)",
+    "last_12_months": "Son 12 ay (UTC)",
+    "all_time": "Tüm zamanlar"
+  },
+  "groupBys": {
+    "time_day": "Gün (UTC)",
+    "time_week": "Hafta (UTC)",
+    "time_month": "Ay (UTC)",
+    "recipe": "Reçete (anlık görüntü)",
+    "status": "Sipariş durumu",
+    "supplier": "Tedarikçi",
+    "category": "Malzeme kategorisi",
+    "organization": "Şirket"
+  },
+  "measures": {
+    "sales": {
+      "count": {
+        "label": "Satış sayısı",
+        "unit": "satış"
+      },
+      "quantity": {
+        "label": "Satılan reçete birimleri",
+        "unit": "birim"
+      }
+    },
+    "purchases": {
+      "count": {
+        "label": "Satınalma siparişi sayısı",
+        "unit": "sipariş"
+      }
+    },
+    "stock": {
+      "critical_count": {
+        "label": "Kritik stok malzemeleri",
+        "unit": "malzeme"
+      },
+      "active_count": {
+        "label": "Aktif malzemeler",
+        "unit": "malzeme"
+      }
+    }
+  },
+  "series": {
+    "status": "Satınalma siparişi durumu"
+  },
+  "filters": {
+    "statuses": "Sipariş durumu filtresi"
+  },
+  "statuses": {
+    "10": "Beklemede",
+    "20": "Verildi",
+    "25": "Askıya alındı",
+    "30": "Tamamlandı",
+    "40": "İptal edildi",
+    "50": "Kayıp",
+    "60": "İade edildi"
+  },
+  "common": {
+    "retry": "Yeniden dene",
+    "loadingAccount": "Hesabınız yükleniyor…",
+    "accountError": "Hesabınız yüklenemedi.",
+    "total": "Toplam",
+    "other": "Diğer",
+    "noSupplier": "Tedarikçi yok",
+    "uncategorized": "Kategorisiz",
+    "currentSnapshot": "Mevcut anlık görüntü",
+    "currentStockSnapshot": "Mevcut stok anlık görüntüsü",
+    "weekOf": "{{date}} haftası",
+    "asOf": "{{basis}} · {{time}} UTC itibarıyla",
+    "unavailableLabel": "{{label}} (kullanılamıyor)",
+    "unavailableTooltip": "{{tooltip}} Şu anda kullanılamıyor."
+  },
+  "page": {
+    "title": "Pano",
+    "subtitle": "Kişisel panonuz ve hesabınıza açık özetler."
+  },
+  "overview": {
+    "title": "Genel bakış",
+    "subtitle": "{{organization}} için kişisel panonuz. Bu düzeni yalnızca siz düzenleyebilirsiniz; iş verileri her üyeyle paylaşılır.",
+    "dataScope": "Veri kapsamı:",
+    "branchOnly": "yalnızca {{branch}} şubesi",
+    "companyWide": "şirket geneli, tüm şubeler",
+    "hint": "Stok, satış ve satınalma tutarlarını daraltmak için şube yolunu açın; kayıtlı düzen aynı kalır."
+  },
+  "builder": {
+    "sectionGlobal": "Şirketleriniz genelinde kişisel pano",
+    "sectionBranch": "{{branch}} şubesi için kişisel pano",
+    "sectionOrganization": "Şirket geneli verilerle kişisel pano",
+    "introGlobal": "Üye olduğunuz her şirketi kapsayan kendi düzeniniz. Canlı iş sayılarını toplar; etkin şirketinizi ve iş erişiminizi asla değiştirmez.",
+    "introOrganization": "Bu şirketin içindeki kendi düzeniniz. Her üye aynı iş verilerini görür, ancak her hesap ayrı bir düzen tutar.",
+    "dataScope": "Veri kapsamı:",
+    "scopeBranch": "yalnızca {{branch}} şubesi",
+    "scopeCompany": "şirket geneli, tüm şubeler",
+    "scopeFixed": "Kayıtlı düzen, şube değiştirdiğinizde değişmez.",
+    "edit": "Panoyu düzenle",
+    "editTooltip": "Pano düzenini düzenle",
+    "loading": "Panonuz yükleniyor…",
+    "loadError": "Panonuz yüklenemedi.",
+    "addCard": "Kart ekle",
+    "addCardCta": "Kart ekle",
+    "save": "Kaydet",
+    "saving": "Kaydediliyor…",
+    "cancel": "İptal",
+    "editingHint": "Bir kartı taşımak için sürükleyin — ya da bir karta odaklanıp Enter'a basın ve ok tuşlarını kullanın — yeniden boyutlandırmak için kartın kenarını veya köşesini sürükleyerek istediğiniz sütun açıklığına ve satır yüksekliğine getirin. Escape süren hareketi iptal eder ve diğer kartlar yer açmak için yeniden akar. İptal, taslağın tamamını atar; siz Kaydet'i seçmeden hiçbir şey kaydedilmez.",
+    "catalogError": "Kart kataloğu yüklenemedi.",
+    "catalogLoading": "Kart kataloğu yükleniyor…",
+    "stale": "Bu pano başka bir oturumdan kaydedildi. Burada kaydetmek, üzerine yazmak yerine bir çakışma bildirir.",
+    "saveError": "Panonuz kaydedilemedi.",
+    "reload": "Kayıtlı düzeni yeniden yükle",
+    "emptyEditing": "Bu pano boş. Başlamak için bir kart ekleyin.",
+    "emptyView": "Panonuz boş.",
+    "placementError": "Bu kart ızgaraya yerleştirilemedi. Başka bir boyut deneyin ya da önce başka bir kartı taşıyın veya kaldırın.",
+    "discardTitle": "Pano değişiklikleri atılsın mı?",
+    "discardDesc": "Kaydedilmemiş kart değişiklikleriniz, konumlarınız ve boyutlarınız atılacak ve kayıtlı pano geri yüklenecek.",
+    "discardConfirm": "At",
+    "reloadTitle": "Kayıtlı düzen yeniden yüklensin mi?",
+    "reloadDesc": "En son kaydedilen pano yüklenebilsin diye kaydedilmemiş değişiklikleriniz atılacak.",
+    "reloadConfirm": "Yeniden yükle",
+    "removeTitle": "Bu kart kaldırılsın mı?",
+    "removeDesc": "\"{{title}}\" bu taslaktan kaldırılacak. Siz Kaydet'i seçmeden hiçbir şey kaydedilmez.",
+    "removeDescGeneric": "Bu kart taslaktan kaldırılacak.",
+    "removeConfirm": "Kaldır"
+  },
+  "grid": {
+    "cards": "Pano kartları",
+    "editingRegion": "Pano düzenleme ızgarası; her sütuna ulaşmak için yana kaydırın",
+    "editLabel": "{{title}} kartını düzenle",
+    "editTooltip": "Kartı düzenle",
+    "removeLabel": "{{title}} kartını kaldır",
+    "removeTooltip": "Kartı kaldır"
+  },
+  "card": {
+    "position": "sütun {{column}}, satır {{row}}"
+  },
+  "form": {
+    "addTitle": "Kart ekle",
+    "editTitle": "Kartı düzenle",
+    "description": "Desteklenen bir kaynak, ölçü ve görsel tür seçin, ardından kartın ızgara sütunlarını ve satırlarını ayarlayın. Önizleme, kartı kaydetmeden önce gerçek toplamları kullanır.",
+    "title": "Başlık",
+    "visualType": "Görsel tür",
+    "dataSource": "Veri kaynağı",
+    "measure": "Ölçü",
+    "grouping": "Gruplama",
+    "selectGrouping": "Bir gruplama seçin",
+    "snapshot": "Mevcut stok canlı bir anlık görüntüdür; geçerli bir tarih aralığı yoktur.",
+    "dateRange": "Tarih aralığı",
+    "selectDateRange": "Bir tarih aralığı seçin",
+    "splitSeries": "Seriyi böl",
+    "singleSeries": "Tek seri",
+    "width": "Genişlik (sütun)",
+    "height": "Yükseklik (satır)",
+    "gridHint": "Kartlar dört sütunlu bir ızgaraya oturur. Genişlik bir sütun sayısı, yükseklik herhangi bir tam satır sayısıdır; daha geniş bir kart sağ kenarını ızgarada korur.",
+    "statusHint": "Tüm durumları dahil etmek için hiçbir seçeneği işaretlemeyin.",
+    "preview": "Önizleme",
+    "previewRegion": "Kart önizlemesi",
+    "cancel": "İptal",
+    "saveCard": "Kartı kaydet"
+  },
+  "visualization": {
+    "loading": "Kart verileri yükleniyor…",
+    "error": "Bu kart yüklenemedi.",
+    "noResult": "Bu kart için sonuç döndürülmedi.",
+    "noRecords": "Bu kart için eşleşen kayıt yok.",
+    "zeroNote": "Eşleşen kayıt yok; grafik gerçek sıfır sayılarını gösteriyor.",
+    "viewDataTable": "Veri tablosunu görüntüle",
+    "dataTableCaption": "{{title}} sayısal değerleri",
+    "category": "Kategori"
+  },
+  "systemOverview": {
+    "heading": "Platform etkinliği",
+    "description": "Toplamlar tüm zamanları kapsar. Grafikler son altı UTC ayında oluşturulan kayıtları sayar.",
+    "loading": "Platform etkinliği yükleniyor…",
+    "error": "Platform etkinliği yüklenemedi.",
+    "statUsers": "Kullanıcılar",
+    "statUsersDescription": "Tüm zamanların platform hesapları",
+    "statOrganizations": "Şirketler",
+    "statOrganizationsDescription": "Tüm zamanların şirketleri",
+    "statSales": "Satışlar",
+    "statSalesDescription": "Tüm zamanların kayıtlı satışları",
+    "statPurchases": "Satınalma siparişleri",
+    "statPurchasesDescription": "Tüm zamanların satınalma siparişleri, tüm durumlar",
+    "userChartTitle": "Yeni kullanıcılar ve şirketler",
+    "userChartDescription": "Aylık oluşturulan yeni hesaplar ve şirketler ({{range}}). Bu dönemde {{users}} yeni kullanıcı ve {{organizations}} yeni şirket var.",
+    "userChartDescriptionNoRange": "Son altı ayda aylık oluşturulan yeni hesaplar ve şirketler. Bu dönemde {{users}} yeni kullanıcı ve {{organizations}} yeni şirket var.",
+    "userChartEmpty": "{{range}} aralığında yeni kullanıcı veya şirket oluşturulmadı.",
+    "userChartEmptyNoRange": "Son altı ayda yeni kullanıcı veya şirket oluşturulmadı.",
+    "userSeries": "Yeni kullanıcılar",
+    "organizationSeries": "Yeni şirketler",
+    "salesChartTitle": "Satışlar ve satınalma siparişleri",
+    "salesChartDescription": "Aylık oluşturulan satışlar ve satınalma siparişleri ({{range}}). Bu dönemde {{sales}} satış ve {{purchases}} satınalma siparişi var.",
+    "salesChartDescriptionNoRange": "Son altı ayda aylık oluşturulan satışlar ve satınalma siparişleri. Bu dönemde {{sales}} satış ve {{purchases}} satınalma siparişi var.",
+    "salesChartEmpty": "{{range}} aralığında satış veya satınalma siparişi oluşturulmadı.",
+    "salesChartEmptyNoRange": "Son altı ayda satış veya satınalma siparişi oluşturulmadı.",
+    "salesSeries": "Satışlar",
+    "purchaseSeries": "Satınalma siparişleri"
+  },
+  "activityChart": {
+    "viewMonthly": "Aylık değerleri görüntüle",
+    "month": "Ay",
+    "caption": "{{title}} aylık değerleri"
+  },
+  "criticalStock": {
+    "heading": "Kritik stok uyarıları",
+    "description": "Şirketlerinizin etkin bir şubesinde minimum stoğunda veya altında kalan etkin malzemeler. Her alarm bir şube bakiyesidir; bakiye satırı olmayan şube sıfır stok ve sıfır minimum olarak okunur.",
+    "count": "{{total}} etkin alarm",
+    "loading": "Kritik stok uyarıları yükleniyor…",
+    "error": "Kritik stok uyarıları yüklenemedi.",
+    "empty": "Kritik stok alarmı yok. Etkin tüm malzemeler minimum stoğunun üzerinde.",
+    "ipn": "IPN {{ipn}}",
+    "location": "{{organization}} /{{slug}} · {{branch}} şubesi",
+    "stockLabel": "Stok",
+    "minimumLabel": "minimum",
+    "unitUnresolved": " (birim belirlenemedi)",
+    "detailsAria": "{{item}} malzemesi için {{organization}}, {{branch}} şubesindeki detayları görüntüle",
+    "details": "Detaylar",
+    "showing": "{{shown}} / {{total}} kritik stok malzemesi gösteriliyor."
+  },
+  "organizations": {
+    "openAria": "{{name}} şirketinin çalışma alanını aç",
+    "heading": "Şirketleriniz",
+    "description": "Bu hesaptaki yerel üyelikler. Bir şirketin çalışma alanını kartından açın; etkinleştirme şirket bağlamında yönetilir.",
+    "directory": "Şirket dizini",
+    "loading": "Şirketler yükleniyor…",
+    "error": "Şirketler yüklenemedi.",
+    "empty": "Henüz bir şirkete üye değilsiniz. Başlamak için yukarıdaki düğmeyle bir tane oluşturun."
+  },
+  "validation": {
+    "titleRequired": "Bir kart başlığı girin.",
+    "titleTooLong": "Başlıklar 80 karakterle sınırlıdır.",
+    "chooseSource": "Bir veri kaynağı seçin.",
+    "typeUnavailable": "Bu görsel türü o kaynak için kullanılamaz.",
+    "chooseMeasure": "Bir ölçü seçin.",
+    "kpiGrouping": "Bir KPI'nın gruplama ekseni olamaz.",
+    "chooseGrouping": "Bir gruplama seçin.",
+    "groupingType": "Bu gruplama o görsel türünü desteklemiyor.",
+    "lineTemporal": "Bir çizgi grafiği zaman gruplaması gerektirir.",
+    "donutCategorical": "Bir halka grafiği kategorik gruplama gerektirir.",
+    "snapshotNoRange": "Mevcut stok, tarih aralığı olmayan bir anlık görüntüdür.",
+    "chooseRange": "Bir tarih aralığı seçin.",
+    "rangeUnavailable": "Bu tarih aralığı seçilen gruplama için kullanılamaz.",
+    "statusSeries": "Durum serileri yalnızca zaman içeren çizgi veya sütun grafiklerinde kullanılabilir.",
+    "statusUnavailable": "Durum filtreleri bu kaynak için kullanılamaz.",
+    "duplicateStatus": "Her durumu bir kez seçin.",
+    "unsupportedStatus": "Yalnızca desteklenen satınalma siparişi durumlarını seçin.",
+    "startColumn": "Bir başlangıç sütunu seçin.",
+    "startRow": "Bir başlangıç satırı seçin.",
+    "minColumns": "Bir kartın en az bir sütunu olmalı.",
+    "positiveRows": "Bir kartın satır sayısı pozitif bir tam sayı olmalı.",
+    "tooLarge": "Bu kart boyutu yerleştirilemeyecek kadar büyük.",
+    "fitColumns": "Bir kart {{columns}} sütunun içine sığmalı.",
+    "noSources": "Pano kataloğunda veri kaynağı yok.",
+    "newCardTitle": "Yeni kart"
+  }
+}

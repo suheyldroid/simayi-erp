@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { t } from '@/lib/i18n'
 import {
   Card,
   CardContent,
@@ -15,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { formatCount } from '../format'
 
 export type ActivitySeries = {
   key: string
@@ -112,7 +114,7 @@ export function ActivityChart({
                   <Tooltip
                     cursor={{ fill: 'var(--muted)', fillOpacity: 0.4 }}
                     formatter={(value, name) => [
-                      Number(value).toLocaleString(),
+                      formatCount(Number(value)),
                       name,
                     ]}
                     contentStyle={{
@@ -137,17 +139,17 @@ export function ActivityChart({
               </ResponsiveContainer>
               <details className='text-xs text-muted-foreground'>
                 <summary className='w-fit cursor-pointer rounded-sm focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'>
-                  View monthly values
+                  {t('dashboard:activityChart.viewMonthly')}
                 </summary>
                 <div className='mt-2 overflow-x-auto'>
                   <table className='w-full border-collapse text-left'>
                     <caption className='sr-only'>
-                      {title} monthly values
+                      {t('dashboard:activityChart.caption', { title })}
                     </caption>
                     <thead>
                       <tr className='border-b border-border'>
                         <th scope='col' className='py-1 pe-3 font-medium'>
-                          Month
+                          {t('dashboard:activityChart.month')}
                         </th>
                         {series.map((entry) => (
                           <th
@@ -174,7 +176,7 @@ export function ActivityChart({
                               key={entry.key}
                               className='py-1 pe-3 tabular-nums'
                             >
-                              {entry.values[monthIndex] ?? 0}
+                              {formatCount(entry.values[monthIndex] ?? 0)}
                             </td>
                           ))}
                         </tr>

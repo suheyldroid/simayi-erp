@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n'
 import { useOrganizationSettingsAccess } from './settings-access'
 import { OrganizationSettingsPage } from './settings-page'
 import { TeamsPanel } from './teams-panel'
@@ -19,7 +20,9 @@ function TeamsContent() {
     useOrganizationSettingsAccess()
   return (
     <section className='space-y-4'>
-      <h3 className='text-xl font-semibold'>Teams</h3>
+      <h3 className='text-xl font-semibold'>
+        {t('global:organizationTeams.heading')}
+      </h3>
       <TeamsPanel
         organizationId={organizationId}
         activeTeamId={activeTeamId}

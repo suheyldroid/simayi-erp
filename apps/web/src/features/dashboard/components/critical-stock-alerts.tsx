@@ -1,8 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { t } from '@/lib/i18n'
+import { organizationLocation } from '@/lib/organization-navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { errorMessage } from '../api'
+import { formatCount } from '../format'
 import { personalDashboardQueryOptions } from '../queries'
 
 /**
@@ -29,32 +32,30 @@ export function CriticalStockAlerts({
       <div className='flex flex-wrap items-end justify-between gap-2'>
         <div>
           <h2 id='critical-stock-heading' className='text-xl font-semibold'>
-            Critical stock alerts
+            {t('dashboard:criticalStock.heading')}
           </h2>
           <p className='text-sm text-muted-foreground'>
-            Active items at or below their minimum stock in any of your
-            organizations.
+            {t('dashboard:criticalStock.description')}
           </p>
         </div>
         {alerts ? (
           <p className='text-sm text-muted-foreground'>
-            {alerts.total === 1
-              ? '1 active alarm'
-              : `${alerts.total} active alarms`}
+            {t('dashboard:criticalStock.count', {
+              total: formatCount(alerts.total),
+            })}
           </p>
         ) : null}
       </div>
       {dashboard.isPending ? (
-        <p role='status'>Loading critical stock alerts…</p>
+        <p role='status'>{t('dashboard:criticalStock.loading')}</p>
       ) : null}
       {dashboard.isError ? (
         <div role='alert' className='space-y-2'>
           <p>
-            Could not load critical stock alerts.{' '}
-            {errorMessage(dashboard.error)}
+            {t('dashboard:criticalStock.error')} {errorMessage(dashboard.error)}
           </p>
           <Button variant='outline' onClick={() => void dashboard.refetch()}>
-            Retry
+            {t('dashboard:common.retry')}
           </Button>
         </div>
       ) : null}
@@ -63,8 +64,7 @@ export function CriticalStockAlerts({
           <CardContent className='px-4 py-2'>
             {alerts.total === 0 ? (
               <p className='py-3 text-sm text-muted-foreground'>
-                No critical stock alarms. Every active item is above its minimum
-                stock.
+                {t('dashboard:criticalStock.empty')}
               </p>
             ) : (
               <>
@@ -72,7 +72,7 @@ export function CriticalStockAlerts({
                   <ul className='divide-y divide-border'>
                     {alerts.items.map((item) => (
                       <li
-                        key={item.uuid}
+                        key={`${item.branchUuid}:${item.uuid}`}
                         className='flex flex-wrap items-start justify-between gap-3 py-3'
                       >
                         <div className='min-w-0 space-y-1'>
@@ -80,35 +80,48 @@ export function CriticalStockAlerts({
                             {item.name}
                             {item.ipn ? (
                               <span className='ms-2 text-xs font-normal text-muted-foreground'>
-                                IPN {item.ipn}
+                                {t('dashboard:criticalStock.ipn', {
+                                  ipn: item.ipn,
+                                })}
                               </span>
                             ) : null}
                           </p>
                           <p className='text-sm break-words text-muted-foreground'>
-                            {item.organizationName} /{item.organizationSlug}
+                            {t('dashboard:criticalStock.location', {
+                              organization: item.organizationName,
+                              slug: item.organizationSlug,
+                              branch: item.branchName,
+                            })}
                           </p>
                           <p className='text-sm'>
-                            Stock{' '}
+                            {t('dashboard:criticalStock.stockLabel')}{' '}
                             <span className='font-medium tabular-nums'>
                               {item.stock}
                             </span>{' '}
-                            / minimum{' '}
+                            / {t('dashboard:criticalStock.minimumLabel')}{' '}
                             <span className='font-medium tabular-nums'>
                               {item.minimumStock}
                             </span>
-                            {item.units ? ` ${item.units}` : ' (unit unresolved)'}
+                            {item.units
+                              ? ` ${item.units}`
+                              : t('dashboard:criticalStock.unitUnresolved')}
                           </p>
                         </div>
                         <Link
-                          to='/o/$organizationSlug/settings/items/$itemId'
-                          params={{
-                            organizationSlug: item.organizationSlug,
-                            itemId: item.uuid,
-                          }}
-                          aria-label={`View details for ${item.name} in ${item.organizationName}`}
+                          {...organizationLocation(
+                            item.organizationSlug,
+                            item.branchUuid,
+                            '/stock/$itemId',
+                            { itemId: item.uuid }
+                          )}
+                          aria-label={t('dashboard:criticalStock.detailsAria', {
+                            item: item.name,
+                            organization: item.organizationName,
+                            branch: item.branchName,
+                          })}
                           className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                         >
-                          Details
+                          {t('dashboard:criticalStock.details')}
                         </Link>
                       </li>
                     ))}
@@ -116,8 +129,10 @@ export function CriticalStockAlerts({
                 ) : null}
                 {alerts.items.length < alerts.total ? (
                   <p className='border-t border-border py-2 text-xs text-muted-foreground'>
-                    Showing {alerts.items.length} of {alerts.total} critical
-                    stock items.
+                    {t('dashboard:criticalStock.showing', {
+                      shown: formatCount(alerts.items.length),
+                      total: formatCount(alerts.total),
+                    })}
                   </p>
                 ) : null}
               </>

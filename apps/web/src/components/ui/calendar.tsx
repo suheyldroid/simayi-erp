@@ -1,10 +1,12 @@
 import * as React from 'react'
+import { format } from 'date-fns'
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-react'
 import { DayButton, DayPicker, getDefaultClassNames } from 'react-day-picker'
+import { dateLocale, locale, t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button, buttonVariants } from '@/components/ui/button'
 
@@ -32,9 +34,27 @@ function Calendar({
         className
       )}
       captionLayout={captionLayout}
+      locale={dateLocale}
+      labels={{
+        labelNext: () => t('common:calendar.nextMonth'),
+        labelPrevious: () => t('common:calendar.previousMonth'),
+        labelMonthDropdown: () => t('common:calendar.chooseMonth'),
+        labelYearDropdown: () => t('common:calendar.chooseYear'),
+        labelWeekNumber: (week: number) =>
+          t('common:calendar.weekNumber', { week }),
+        labelDayButton: (date, modifiers) => {
+          const day = format(date, 'd MMMM yyyy EEEE', { locale: dateLocale })
+          if (modifiers.today && modifiers.selected)
+            return t('common:calendar.todaySelected', { date: day })
+          if (modifiers.today) return t('common:calendar.today', { date: day })
+          if (modifiers.selected)
+            return t('common:calendar.selected', { date: day })
+          return day
+        },
+      }}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString('default', { month: 'short' }),
+          date.toLocaleString(locale, { month: 'short' }),
         ...formatters,
       }}
       classNames={{
@@ -187,7 +207,7 @@ function CalendarDayButton({
       ref={ref}
       variant='ghost'
       size='icon'
-      data-day={day.date.toLocaleDateString()}
+      data-day={day.date.toLocaleDateString(locale)}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

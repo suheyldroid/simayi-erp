@@ -1,5 +1,7 @@
 import { errorMessage } from '@/lib/api-error'
 import { api } from '@/lib/auth'
+import type { BranchRecord } from '@/lib/branch-boundary'
+import { branchesApi } from '@/features/branches/api'
 import {
   PurchasingModel,
   type ExtraInput,
@@ -7,9 +9,12 @@ import {
   type OrderInput,
   type PurchaseLine,
   type ReceiveInput,
+  type ReverseInput,
 } from './model'
 
 export { errorMessage }
+
+const RECEIPTS_PAGE_SIZE = 20
 
 export const purchasingApi = {
   async orders(input: {
@@ -17,6 +22,8 @@ export const purchasingApi = {
     search?: string
     open?: boolean
     supplierUuid?: string
+    branchUuid?: string
+    company?: boolean
   }) {
     const page = input.page ?? 0
     return PurchasingModel.orders.parse(
@@ -30,6 +37,10 @@ export const purchasingApi = {
             ...(input.supplierUuid === undefined
               ? {}
               : { supplierUuid: input.supplierUuid }),
+            ...(input.branchUuid === undefined
+              ? {}
+              : { branchUuid: input.branchUuid }),
+            ...(input.company === undefined ? {} : { company: input.company }),
           },
         })
       ).data
@@ -140,9 +151,60 @@ export const purchasingApi = {
     )
   },
   async receive(uuid: string, body: ReceiveInput) {
-    return PurchasingModel.receivedItems.parse(
+    return PurchasingModel.receiveResult.parse(
       (await api.post<unknown>(`/order/purchase-orders/${uuid}/receive/`, body))
         .data
     )
+  },
+  async receipts(
+    orderUuid: string,
+    input: { lineUuid?: string; branchUuid?: string; page?: number } = {}
+  ) {
+    const page = input.page ?? 0
+    return PurchasingModel.receipts.parse(
+      (
+        await api.get<unknown>(
+          `/order/purchase-orders/${orderUuid}/receipts/`,
+          {
+            params: {
+              limit: RECEIPTS_PAGE_SIZE,
+              offset: page * RECEIPTS_PAGE_SIZE,
+              ...(input.lineUuid === undefined
+                ? {}
+                : { lineUuid: input.lineUuid }),
+              ...(input.branchUuid === undefined
+                ? {}
+                : { branchUuid: input.branchUuid }),
+            },
+          }
+        )
+      ).data
+    )
+  },
+  async reverse(orderUuid: string, receiptUuid: string, body: ReverseInput) {
+    return PurchasingModel.reverseResult.parse(
+      (
+        await api.post<unknown>(
+          `/order/purchase-orders/${orderUuid}/receipts/${receiptUuid}/reverse`,
+          body
+        )
+      ).data
+    )
+  },
+  /**
+   * Same-company branches offered as receipt destinations. The company branch
+   * directory is paginated, so every page is read; inactive branches stay in
+   * the list and the picker refuses them because the backend does too.
+   */
+  async receiptBranches() {
+    const limit = 100
+    const items: BranchRecord[] = []
+    for (let page = 0; ; page += 1) {
+      const result = await branchesApi.list({ page, limit })
+      items.push(...result.items)
+      if (result.items.length < result.limit || items.length >= result.total)
+        break
+    }
+    return items
   },
 }

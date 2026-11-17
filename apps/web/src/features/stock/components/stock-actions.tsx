@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { invalidateItemStockCaches } from '@/lib/item-stock-cache'
-import { organizationCacheScope } from '@/lib/tenant'
+import {
+  captureBranchScope,
+  isBranchScopeCurrent,
+  type CapturedBranchScope,
+} from '@/lib/branch-scope'
+import { t } from '@/lib/i18n'
+import { invalidateBranchStockCaches } from '@/lib/item-stock-cache'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -14,17 +19,25 @@ import {
 } from '@/components/ui/sheet'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { FieldInput } from '@/components/field-input'
-import type { Item } from '@/features/items/model'
 import { errorMessage, stockApi } from '../api'
-import { StockPageModel, type StockOperation } from '../model'
+import {
+  StockPageModel,
+  type StockBalance,
+  type StockOperation,
+} from '../model'
+import type { BranchStockContext } from './stock-panel'
 
-const operationLabels: Record<StockOperation, string> = {
-  add: 'Add stock',
-  remove: 'Remove stock',
-  count: 'Count stock',
+function operationLabel(operation: StockOperation) {
+  if (operation === 'add') return t('catalog:stock.actions.add')
+  if (operation === 'remove') return t('catalog:stock.actions.remove')
+  return t('catalog:stock.actions.count')
 }
 
-type StockDraft = { item: Item; operation: StockOperation; scope: string }
+type StockDraft = {
+  balance: StockBalance
+  operation: StockOperation
+  captured: CapturedBranchScope
+}
 
 type CountOrRemove = {
   operation: 'remove' | 'count'
@@ -33,14 +46,16 @@ type CountOrRemove = {
 }
 
 function StockAdjustSheet({
-  item,
+  balance,
+  branchName,
   operation,
   pending,
   error,
   onSubmit,
   onClose,
 }: {
-  item: Item
+  balance: StockBalance
+  branchName: string
   operation: StockOperation
   pending: boolean
   error: unknown
@@ -48,7 +63,7 @@ function StockAdjustSheet({
   onClose: () => void
 }) {
   const [validationError, setValidationError] = useState<string | null>(null)
-  const label = operationLabels[operation]
+  const label = operationLabel(operation)
   return (
     <Sheet
       open
@@ -68,7 +83,12 @@ function StockAdjustSheet({
         <SheetHeader>
           <SheetTitle>{label}</SheetTitle>
           <SheetDescription>
-            {item.name} · current stock {item.stock} · version {item.version}
+            {t('catalog:stock.actions.sheetDescription', {
+              item: balance.name,
+              branch: branchName,
+              stock: balance.stock,
+              version: balance.version,
+            })}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -98,14 +118,21 @@ function StockAdjustSheet({
             <FieldInput
               field={{
                 name: 'quantity',
-                label: operation === 'count' ? 'Counted quantity' : 'Quantity',
+                label:
+                  operation === 'count'
+                    ? t('catalog:stock.actions.countedQuantity')
+                    : t('catalog:stock.actions.quantity'),
                 required: true,
                 pattern: '\\d*[.,]\\d{1,5}|\\d+',
               }}
-              value={operation === 'count' ? item.stock : undefined}
+              value={operation === 'count' ? balance.stock : undefined}
             />
             <FieldInput
-              field={{ name: 'notes', label: 'Notes', maxLength: 512 }}
+              field={{
+                name: 'notes',
+                label: t('catalog:stock.actions.notes'),
+                maxLength: 512,
+              }}
             />
             {validationError != null && (
               <p role='alert' className='text-destructive'>
@@ -125,7 +152,7 @@ function StockAdjustSheet({
               onClick={onClose}
               disabled={pending}
             >
-              Cancel
+              {t('catalog:common.cancel')}
             </Button>
             <Button type='submit' disabled={pending}>
               {label}
@@ -137,92 +164,89 @@ function StockAdjustSheet({
   )
 }
 
-export function ItemStockActions({ item }: { item: Item }) {
+export function ItemStockActions({
+  balance,
+  branch,
+}: {
+  balance: StockBalance
+  branch: BranchStockContext
+}) {
   const client = useQueryClient()
   const [draft, setDraft] = useState<StockDraft | null>(null)
   const [confirmation, setConfirmation] = useState<CountOrRemove | null>(null)
+  const disabled = !branch.active
   const adjustment = useMutation({
     mutationFn: (input: {
       itemUuid: string
+      branchUuid: string
       version: number
       operation: StockOperation
       quantity: string
       notes?: string
-      scope: string
+      captured: CapturedBranchScope
     }) =>
-      stockApi.adjust(input.itemUuid, input.operation, {
+      stockApi.adjust(input.itemUuid, input.branchUuid, input.operation, {
         version: input.version,
         quantity: input.quantity,
         ...(input.notes === undefined ? {} : { notes: input.notes }),
       }),
     onSuccess: async (_next, input) => {
-      await invalidateItemStockCaches(client, input.scope)
+      await invalidateBranchStockCaches(client, input.captured)
+      if (!isBranchScopeCurrent(input.captured)) return
       setConfirmation(null)
       setDraft(null)
       toast.success(
         input.operation === 'count'
-          ? 'Stock counted'
+          ? t('catalog:stock.actions.countedToast')
           : input.operation === 'add'
-            ? 'Stock added'
-            : 'Stock removed'
+            ? t('catalog:stock.actions.addedToast')
+            : t('catalog:stock.actions.removedToast')
       )
     },
     onError: () => setConfirmation(null),
   })
   const captured = draft
+  const openDraft = (operation: StockOperation) => {
+    adjustment.reset()
+    setDraft({
+      balance,
+      operation,
+      captured: captureBranchScope(branch.uuid),
+    })
+  }
   return (
     <>
       <div className='flex flex-wrap gap-2'>
         <Button
           type='button'
           variant='outline'
-          disabled={adjustment.isPending}
-          onClick={() => {
-            adjustment.reset()
-            setDraft({
-              item,
-              operation: 'add',
-              scope: organizationCacheScope(),
-            })
-          }}
+          disabled={adjustment.isPending || disabled}
+          onClick={() => openDraft('add')}
         >
-          Add stock
+          {t('catalog:stock.actions.add')}
         </Button>
         <Button
           type='button'
           variant='outline'
-          disabled={adjustment.isPending}
-          onClick={() => {
-            adjustment.reset()
-            setDraft({
-              item,
-              operation: 'remove',
-              scope: organizationCacheScope(),
-            })
-          }}
+          disabled={adjustment.isPending || disabled}
+          onClick={() => openDraft('remove')}
         >
-          Remove stock
+          {t('catalog:stock.actions.remove')}
         </Button>
         <Button
           type='button'
           variant='outline'
-          disabled={adjustment.isPending}
-          onClick={() => {
-            adjustment.reset()
-            setDraft({
-              item,
-              operation: 'count',
-              scope: organizationCacheScope(),
-            })
-          }}
+          disabled={adjustment.isPending || disabled}
+          onClick={() => openDraft('count')}
         >
-          Count stock
+          {t('catalog:stock.actions.count')}
         </Button>
       </div>
       {captured != null && (
         <StockAdjustSheet
-          key={`${captured.item.uuid}:${captured.operation}`}
-          item={captured.item}
+          key={`${captured.balance.itemUuid}:${captured.operation}:${captured.captured.scope}`}
+          balance={captured.balance}
+          branchName={branch.name}
           operation={captured.operation}
           pending={adjustment.isPending}
           error={adjustment.error}
@@ -231,11 +255,12 @@ export function ItemStockActions({ item }: { item: Item }) {
             const operation = captured.operation
             if (operation === 'add') {
               adjustment.mutate({
-                itemUuid: captured.item.uuid,
-                version: captured.item.version,
+                itemUuid: captured.balance.itemUuid,
+                branchUuid: branch.uuid,
+                version: captured.balance.version,
                 operation,
                 quantity,
-                scope: captured.scope,
+                captured: captured.captured,
                 ...(notes === undefined ? {} : { notes }),
               })
               return
@@ -256,26 +281,42 @@ export function ItemStockActions({ item }: { item: Item }) {
           if (!open && !adjustment.isPending) setConfirmation(null)
         }}
         title={
-          confirmation?.operation === 'count' ? 'Count stock' : 'Remove stock'
+          confirmation?.operation === 'count'
+            ? t('catalog:stock.actions.countTitle')
+            : t('catalog:stock.actions.removeTitle')
         }
         desc={
           confirmation == null || captured == null
             ? ''
             : confirmation.operation === 'count'
-              ? `Set ${captured.item.name} stock to ${confirmation.quantity}? This records a counted balance.`
-              : `Remove ${confirmation.quantity} from ${captured.item.name} (current stock ${captured.item.stock})?`
+              ? t('catalog:stock.actions.countDescription', {
+                  item: captured.balance.name,
+                  branch: branch.name,
+                  quantity: confirmation.quantity,
+                })
+              : t('catalog:stock.actions.removeDescription', {
+                  item: captured.balance.name,
+                  branch: branch.name,
+                  quantity: confirmation.quantity,
+                  stock: captured.balance.stock,
+                })
         }
-        confirmText={confirmation?.operation === 'count' ? 'Count' : 'Remove'}
+        confirmText={
+          confirmation?.operation === 'count'
+            ? t('catalog:stock.actions.countConfirm')
+            : t('catalog:stock.actions.removeConfirm')
+        }
         destructive
         isLoading={adjustment.isPending}
         handleConfirm={() => {
           if (captured == null || confirmation == null) return
           adjustment.mutate({
-            itemUuid: captured.item.uuid,
-            version: captured.item.version,
+            itemUuid: captured.balance.itemUuid,
+            branchUuid: branch.uuid,
+            version: captured.balance.version,
             operation: confirmation.operation,
             quantity: confirmation.quantity,
-            scope: captured.scope,
+            captured: captured.captured,
             ...(confirmation.notes === undefined
               ? {}
               : { notes: confirmation.notes }),

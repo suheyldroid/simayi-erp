@@ -26,6 +26,13 @@ function isMissingMembership(error: unknown) {
   )
 }
 
+/**
+ * Organization boundary. The URL carries the canonical native slug; the branch
+ * scope is a descendant path (`/b/<uuid>`, verified by that route) and never a
+ * query parameter. This route only verifies the company membership and the
+ * live session, so a branch navigation does not re-run it and can never
+ * republish a company scope over an in-flight branch scope.
+ */
 export const Route = createFileRoute('/_authenticated/o/$organizationSlug')({
   // This route has no loader, but the option keeps any future loader in the
   // organization subtree out of Link-intent preloads, where no boundary
@@ -63,7 +70,7 @@ export const Route = createFileRoute('/_authenticated/o/$organizationSlug')({
 
     // The active session organization must match the URL membership.
     // Otherwise activate natively, then reload the exact requested canonical
-    // URL. Children never mount in a mismatched tenant.
+    // URL (branch path included). Children never mount in a mismatched tenant.
     if (session.session.activeOrganizationId !== organization.id) {
       const target = organizationBoundaryTarget(organization.slug, location)
       await organizationApi.enter(organization.id, target)

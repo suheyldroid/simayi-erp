@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -70,12 +71,10 @@ export function AccountProfileForm({
         client.invalidateQueries({ queryKey: ['user', user.id] }),
         client.invalidateQueries({ queryKey: ['session'] }),
       ])
-      toast.success('Account profile updated.')
+      toast.success(t('global:users.accountProfile.updated'))
       saved = true
     } catch {
-      setError(
-        'Could not update the account profile. Check values and platform administrator access.'
-      )
+      setError(t('global:users.accountProfile.updateFailed'))
     } finally {
       setPending(false)
       onPendingChange(false)
@@ -93,7 +92,9 @@ export function AccountProfileForm({
         className='flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4'
       >
         <div className='space-y-2'>
-          <Label htmlFor='account-profile-name'>Name</Label>
+          <Label htmlFor='account-profile-name'>
+            {t('global:users.accountProfile.nameLabel')}
+          </Label>
           <Input
             id='account-profile-name'
             required
@@ -103,7 +104,9 @@ export function AccountProfileForm({
               validate: (value) => !!value.trim(),
             })}
           />
-          {form.formState.errors.name && <p role='alert'>Enter a name.</p>}
+          {form.formState.errors.name && (
+            <p role='alert'>{t('global:users.accountProfile.nameRequired')}</p>
+          )}
         </div>
         <ImageInput
           image={image}
@@ -111,8 +114,8 @@ export function AccountProfileForm({
           disabled={pending}
           resolveImage={imageUrl}
           credentialImagePrefix={avatarReferencePrefix}
-          label='Avatar'
-          alt={`${user.name} avatar`}
+          label={t('global:users.accountProfile.avatarLabel')}
+          alt={t('global:users.accountProfile.avatarAlt', { name: user.name })}
           onChange={(next) => {
             setImage(next.image)
             setFile(next.file)
@@ -131,10 +134,12 @@ export function AccountProfileForm({
           disabled={pending}
           onClick={onCancel}
         >
-          Cancel
+          {t('global:users.accountProfile.cancel')}
         </Button>
         <Button type='submit' disabled={pending}>
-          {pending ? 'Saving…' : 'Save account profile'}
+          {pending
+            ? t('global:shared.saving')
+            : t('global:users.accountProfile.save')}
         </Button>
       </SheetFooter>
     </form>

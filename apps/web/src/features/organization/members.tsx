@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n'
 import { MembersPanel } from './members-panel'
 import { useOrganizationSettingsAccess } from './settings-access'
 import { OrganizationSettingsPage } from './settings-page'
@@ -19,7 +20,9 @@ function MembersContent() {
     useOrganizationSettingsAccess()
   return (
     <section className='space-y-4'>
-      <h3 className='text-xl font-semibold'>Members</h3>
+      <h3 className='text-xl font-semibold'>
+        {t('global:organizationMembers.heading')}
+      </h3>
       <MembersPanel
         organizationId={organizationId}
         actorRoles={actorRoles}

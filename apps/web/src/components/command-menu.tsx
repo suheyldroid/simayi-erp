@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 import { useSearch } from '@/stores/search-store'
+import { t } from '@/lib/i18n'
 import {
   CommandDialog,
   CommandEmpty,
@@ -46,10 +47,10 @@ export function CommandMenu({ groups }: { groups: NavGroup[] }) {
 
   return (
     <CommandDialog modal open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder='Type a command or search...' />
+      <CommandInput placeholder={t('common:command.placeholder')} />
       <CommandList>
         <ScrollArea type='hover' className='h-72 pe-1'>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>{t('common:command.empty')}</CommandEmpty>
           {groups.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((navItem, i) => {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { organizationSessionQueryKey } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -96,7 +97,7 @@ export function TeamsPanel({
       setSelectedId(team.id)
       setCreateOpen(false)
       await refresh()
-      toast.success('Team created.')
+      toast.success(t('global:organizationTeams.created'))
     } catch (caught) {
       setError(organizationErrorMessage(caught))
     } finally {
@@ -108,8 +109,7 @@ export function TeamsPanel({
     <div className='space-y-4'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <p className='max-w-xl text-sm text-muted-foreground'>
-          Teams group people and can own records. Team membership does not grant
-          or revoke roles.
+          {t('global:organizationTeams.intro')}
         </p>
         {canCreate ? (
           <Sheet
@@ -120,7 +120,7 @@ export function TeamsPanel({
             }}
           >
             <SheetTrigger asChild>
-              <Button>Create team</Button>
+              <Button>{t('global:organizationTeams.createTrigger')}</Button>
             </SheetTrigger>
             <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
               <form
@@ -128,15 +128,18 @@ export function TeamsPanel({
                 onSubmit={(event) => void create(event)}
               >
                 <SheetHeader>
-                  <SheetTitle>Create team</SheetTitle>
+                  <SheetTitle>
+                    {t('global:organizationTeams.createTitle')}
+                  </SheetTitle>
                   <SheetDescription>
-                    Teams group people inside this organization. Creating one
-                    does not change anyone&apos;s role.
+                    {t('global:organizationTeams.createDescription')}
                   </SheetDescription>
                 </SheetHeader>
                 <div className='min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='team-name'>Name</Label>
+                    <Label htmlFor='team-name'>
+                      {t('global:organizationTeams.nameLabel')}
+                    </Label>
                     <Input
                       id='team-name'
                       required
@@ -149,7 +152,9 @@ export function TeamsPanel({
                 <SheetFooter>
                   {error ? <p role='alert'>{error}</p> : null}
                   <Button disabled={pending || name.trim().length === 0}>
-                    {pending ? 'Creating…' : 'Create team'}
+                    {pending
+                      ? t('global:shared.creating')
+                      : t('global:organizationTeams.create')}
                   </Button>
                 </SheetFooter>
               </form>
@@ -157,19 +162,25 @@ export function TeamsPanel({
           </Sheet>
         ) : null}
       </div>
-      {teams.isPending ? <p role='status'>Loading teams…</p> : null}
+      {teams.isPending ? (
+        <p role='status'>{t('global:organizationTeams.loading')}</p>
+      ) : null}
       {teams.isError ? (
         <p role='alert'>
-          Could not load teams.{' '}
+          {t('global:organizationTeams.loadFailed')}{' '}
           <Button variant='outline' onClick={() => void teams.refetch()}>
-            Retry
+            {t('global:shared.retry')}
           </Button>
         </p>
       ) : null}
-      {teams.data && teams.data.length === 0 ? <p>No teams yet.</p> : null}
+      {teams.data && teams.data.length === 0 ? (
+        <p>{t('global:organizationTeams.empty')}</p>
+      ) : null}
       {teams.data && teams.data.length > 0 && selected ? (
         <div className='space-y-2'>
-          <Label htmlFor='team-select'>Team</Label>
+          <Label htmlFor='team-select'>
+            {t('global:organizationTeams.selectLabel')}
+          </Label>
           <Select value={selected.id} onValueChange={setSelectedId}>
             <SelectTrigger id='team-select' className='max-w-md'>
               <SelectValue />
@@ -252,7 +263,7 @@ function TeamDetail({
       await organizationApi.updateTeam(organizationId, team.id, name.trim())
       setEditOpen(false)
       await onChanged()
-      toast.success('Team renamed.')
+      toast.success(t('global:organizationTeams.renamed'))
     } catch (caught) {
       setError(organizationErrorMessage(caught))
     } finally {
@@ -268,7 +279,7 @@ function TeamDetail({
       await organizationApi.removeTeam(organizationId, team.id)
       setConfirmDelete(false)
       await onChanged()
-      toast.success('Team deleted.')
+      toast.success(t('global:organizationTeams.deleted'))
     } catch (caught) {
       setError(organizationErrorMessage(caught))
     } finally {
@@ -295,7 +306,11 @@ function TeamDetail({
           targetUserId
         )
       await onChanged()
-      toast.success(add ? 'Team member added.' : 'Team member removed.')
+      toast.success(
+        add
+          ? t('global:organizationTeams.memberAdded')
+          : t('global:organizationTeams.memberRemoved')
+      )
       succeeded = true
     } catch (caught) {
       setError(organizationErrorMessage(caught))
@@ -345,7 +360,9 @@ function TeamDetail({
             }}
           >
             <SheetTrigger asChild>
-              <Button variant='outline'>Edit team</Button>
+              <Button variant='outline'>
+                {t('global:organizationTeams.editTrigger')}
+              </Button>
             </SheetTrigger>
             <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
               <form
@@ -353,15 +370,17 @@ function TeamDetail({
                 onSubmit={(event) => void rename(event)}
               >
                 <SheetHeader>
-                  <SheetTitle>Edit team</SheetTitle>
+                  <SheetTitle>
+                    {t('global:organizationTeams.editTitle')}
+                  </SheetTitle>
                   <SheetDescription>
-                    Rename this team. Its id and member roster stay the same.
+                    {t('global:organizationTeams.editDescription')}
                   </SheetDescription>
                 </SheetHeader>
                 <div className='min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-4'>
                   <div className='space-y-2'>
                     <Label htmlFor={`team-rename-${team.id}`}>
-                      Display name
+                      {t('global:organizationTeams.displayNameLabel')}
                     </Label>
                     <Input
                       id={`team-rename-${team.id}`}
@@ -381,7 +400,9 @@ function TeamDetail({
                       name.trim() === team.name
                     }
                   >
-                    {pending ? 'Saving…' : 'Save team'}
+                    {pending
+                      ? t('global:shared.saving')
+                      : t('global:organizationTeams.save')}
                   </Button>
                 </SheetFooter>
               </form>
@@ -396,7 +417,9 @@ function TeamDetail({
           disabled={pending}
           onClick={() => void toggleActiveTeam()}
         >
-          {active ? 'Clear active team' : 'Use as active team'}
+          {active
+            ? t('global:organizationTeams.clearActive')
+            : t('global:organizationTeams.useActive')}
         </Button>
         {canDelete ? (
           <Button
@@ -405,29 +428,32 @@ function TeamDetail({
             disabled={pending}
             onClick={() => setConfirmDelete(true)}
           >
-            Delete team
+            {t('global:organizationTeams.deleteTrigger')}
           </Button>
         ) : null}
       </div>
       <ConfirmDialog
         open={confirmDelete && canDelete}
         onOpenChange={setConfirmDelete}
-        title='Delete this team?'
-        desc='The server can still refuse this delete. Team memberships end; records stay with the organization.'
+        title={t('global:organizationTeams.deleteTitle')}
+        desc={t('global:organizationTeams.deleteDescription')}
         destructive
-        confirmText='Delete team'
+        confirmText={t('global:organizationTeams.deleteConfirm')}
         isLoading={pending}
         handleConfirm={() => void removeTeam()}
       />
       <div className='space-y-2'>
-        <h3 className='font-medium'>Members</h3>
-        {roster.isPending ? <p role='status'>Loading team members…</p> : null}
+        <h3 className='font-medium'>
+          {t('global:organizationTeams.membersHeading')}
+        </h3>
+        {roster.isPending ? (
+          <p role='status'>{t('global:organizationTeams.membersLoading')}</p>
+        ) : null}
         {roster.isError ? (
           <div className='space-y-2'>
             <p role='alert'>{organizationErrorMessage(roster.error)}</p>
             <p className='text-sm text-muted-foreground'>
-              Native team member listing is available to current members of this
-              team.
+              {t('global:organizationTeams.membersLoadHint')}
             </p>
             {canAddMember ? (
               <Button
@@ -435,7 +461,7 @@ function TeamDetail({
                 disabled={pending}
                 onClick={() => void changeMembership(currentUserId, true)}
               >
-                Add me to this team
+                {t('global:organizationTeams.addMe')}
               </Button>
             ) : null}
           </div>
@@ -466,19 +492,21 @@ function TeamDetail({
                         })
                       }
                     >
-                      Remove
+                      {t('global:organizationTeams.remove')}
                     </Button>
                   ) : null}
                 </li>
               )
             })}
-            {roster.data.length === 0 ? <li>No team members.</li> : null}
+            {roster.data.length === 0 ? (
+              <li>{t('global:organizationTeams.noMembers')}</li>
+            ) : null}
           </ul>
         ) : null}
         {canAddMember && roster.data ? (
           membersError ? (
             <p role='alert'>
-              Could not load organization members for the picker.
+              {t('global:organizationTeams.memberPickerFailed')}
             </p>
           ) : (
             <Sheet
@@ -489,21 +517,24 @@ function TeamDetail({
               }}
             >
               <SheetTrigger asChild>
-                <Button type='button'>Add member</Button>
+                <Button type='button'>
+                  {t('global:organizationTeams.addMemberTrigger')}
+                </Button>
               </SheetTrigger>
               <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
                 <div className='flex min-h-0 flex-1 flex-col'>
                   <SheetHeader>
-                    <SheetTitle>Add team member</SheetTitle>
+                    <SheetTitle>
+                      {t('global:organizationTeams.addMemberTitle')}
+                    </SheetTitle>
                     <SheetDescription>
-                      Pick an existing organization member. This only changes
-                      team membership, not roles.
+                      {t('global:organizationTeams.addMemberDescription')}
                     </SheetDescription>
                   </SheetHeader>
                   <div className='min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-4'>
                     <div className='space-y-2'>
                       <Label htmlFor={`team-add-${team.id}`}>
-                        Organization member
+                        {t('global:organizationTeams.memberLabel')}
                       </Label>
                       <Select
                         value={userId || undefined}
@@ -511,7 +542,11 @@ function TeamDetail({
                         disabled={pending}
                       >
                         <SelectTrigger id={`team-add-${team.id}`}>
-                          <SelectValue placeholder='Select member' />
+                          <SelectValue
+                            placeholder={t(
+                              'global:organizationTeams.memberPlaceholder'
+                            )}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {members
@@ -540,7 +575,9 @@ function TeamDetail({
                       disabled={pending || userId.length === 0}
                       onClick={() => void addMember()}
                     >
-                      {pending ? 'Adding…' : 'Add to team'}
+                      {pending
+                        ? t('global:shared.adding')
+                        : t('global:organizationTeams.addToTeam')}
                     </Button>
                   </SheetFooter>
                 </div>
@@ -557,10 +594,13 @@ function TeamDetail({
         onOpenChange={(next) => {
           if (!next) setPendingRemoval(null)
         }}
-        title={`Remove ${pendingRemoval?.label ?? 'this member'} from the team?`}
-        desc='The server can still refuse this removal. Only the team assignment is removed.'
+        title={t('global:organizationTeams.removeTitle', {
+          name:
+            pendingRemoval?.label ?? t('global:organizationTeams.thisMember'),
+        })}
+        desc={t('global:organizationTeams.removeDescription')}
         destructive
-        confirmText='Remove member'
+        confirmText={t('global:organizationTeams.removeConfirm')}
         isLoading={pending}
         handleConfirm={() => void confirmRemoveMember()}
       >

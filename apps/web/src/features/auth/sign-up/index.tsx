@@ -1,4 +1,6 @@
 import { Link } from '@tanstack/react-router'
+import { Trans } from 'react-i18next'
+import { t } from '@/lib/i18n'
 import {
   Card,
   CardContent,
@@ -16,16 +18,16 @@ export function SignUp() {
       <Card className='max-w-sm gap-4'>
         <CardHeader>
           <CardTitle className='text-lg tracking-tight'>
-            Create an account
+            {t('global:auth.signUp.title')}
           </CardTitle>
           <CardDescription>
-            Enter your email and password to create an account. <br />
-            Already have an account?{' '}
+            {t('global:auth.signUp.description')} <br />
+            {t('global:auth.signUp.alreadyHaveAccount')}{' '}
             <Link
               to='/sign-in'
               className='underline underline-offset-4 hover:text-primary'
             >
-              Sign In
+              {t('global:auth.signUp.signInLink')}
             </Link>
           </CardDescription>
         </CardHeader>
@@ -34,21 +36,24 @@ export function SignUp() {
         </CardContent>
         <CardFooter>
           <p className='px-8 text-center text-sm text-muted-foreground'>
-            By creating an account, you agree to our{' '}
-            <a
-              href='/terms'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a
-              href='/privacy'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Privacy Policy
-            </a>
-            .
+            <Trans
+              ns='global'
+              i18nKey='auth.signUp.terms'
+              components={{
+                terms: (
+                  <a
+                    href='/terms'
+                    className='underline underline-offset-4 hover:text-primary'
+                  />
+                ),
+                privacy: (
+                  <a
+                    href='/privacy'
+                    className='underline underline-offset-4 hover:text-primary'
+                  />
+                ),
+              }}
+            />
           </p>
         </CardFooter>
       </Card>

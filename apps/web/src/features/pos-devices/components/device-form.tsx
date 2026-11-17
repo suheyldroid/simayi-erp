@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent } from 'react'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,16 +22,19 @@ import {
 /**
  * Bank POS device form. Update always submits the version the sheet was opened
  * with, so a concurrent edit fails instead of overwriting. There is no delete:
- * clearing `active` retires a device.
+ * clearing `active` retires a device. The branch is fixed by the selected
+ * branch context and can never be changed here.
  */
 export function DeviceForm({
   device,
+  branchName,
   pending,
   error,
   onClose,
   onSubmit,
 }: {
   device: PosDevice | 'new'
+  branchName: string
   pending: boolean
   error: unknown
   onClose: () => void
@@ -58,7 +62,8 @@ export function DeviceForm({
     })
     if (!parsed.success) {
       setValidationError(
-        parsed.error.issues[0]?.message ?? 'Check the device details.'
+        parsed.error.issues[0]?.message ??
+          t('operations:posDevices.form.checkDetails')
       )
       return
     }
@@ -84,19 +89,30 @@ export function DeviceForm({
       >
         <SheetHeader>
           <SheetTitle>
-            {creating ? 'Create bank POS device' : 'Edit bank POS device'}
+            {creating
+              ? t('operations:posDevices.form.createTitle')
+              : t('operations:posDevices.form.editTitle')}
           </SheetTitle>
           <SheetDescription>
-            This is the bank's POS terminal, not a fiscal cash register. Devices
-            are deactivated, never deleted, and their Z reports stay as
-            reconciliation evidence.
+            {t('operations:posDevices.form.description')}
           </SheetDescription>
         </SheetHeader>
         <form className='flex min-h-0 flex-1 flex-col' onSubmit={submit}>
           <div className='flex-1 space-y-4 overflow-y-auto px-4 pb-4'>
             <fieldset disabled={pending} className='space-y-4'>
               <div className='space-y-2'>
-                <Label htmlFor={nameId}>Name</Label>
+                <p className='text-sm font-medium'>
+                  {t('operations:posDevices.form.branch')}
+                </p>
+                <p className='text-sm'>{branchName}</p>
+                <p className='text-xs text-muted-foreground'>
+                  {t('operations:posDevices.form.branchHint')}
+                </p>
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor={nameId}>
+                  {t('operations:posDevices.form.name')}
+                </Label>
                 <Input
                   id={nameId}
                   name='name'
@@ -104,11 +120,13 @@ export function DeviceForm({
                   onChange={(event) => setName(event.target.value)}
                   maxLength={100}
                   required
-                  placeholder='e.g. Front counter terminal'
+                  placeholder={t('operations:posDevices.form.namePlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor={bankId}>Bank</Label>
+                <Label htmlFor={bankId}>
+                  {t('operations:posDevices.form.bank')}
+                </Label>
                 <Input
                   id={bankId}
                   name='bankName'
@@ -116,11 +134,13 @@ export function DeviceForm({
                   onChange={(event) => setBankName(event.target.value)}
                   maxLength={100}
                   required
-                  placeholder='e.g. Example Bank'
+                  placeholder={t('operations:posDevices.form.bankPlaceholder')}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor={terminalId}>Terminal ID</Label>
+                <Label htmlFor={terminalId}>
+                  {t('operations:posDevices.form.terminalId')}
+                </Label>
                 <Input
                   id={terminalId}
                   name='terminalId'
@@ -128,12 +148,14 @@ export function DeviceForm({
                   onChange={(event) => setTerminal(event.target.value)}
                   maxLength={100}
                   required
-                  placeholder='Terminal identifier printed by the bank'
+                  placeholder={t(
+                    'operations:posDevices.form.terminalPlaceholder'
+                  )}
                 />
               </div>
               <FlagInput
                 name='active'
-                label='Active'
+                label={t('operations:posDevices.form.active')}
                 checked={active}
                 disabled={pending}
                 onChange={setActive}
@@ -152,10 +174,14 @@ export function DeviceForm({
               disabled={pending}
               onClick={onClose}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button type='submit' disabled={pending}>
-              {pending ? 'Saving…' : creating ? 'Create device' : 'Save device'}
+              {pending
+                ? t('operations:common.saving')
+                : creating
+                  ? t('operations:posDevices.form.submitCreate')
+                  : t('operations:posDevices.form.submitSave')}
             </Button>
           </SheetFooter>
         </form>

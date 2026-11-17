@@ -2,14 +2,22 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { useOptionalBranch, type BranchContext } from '@/lib/branch-boundary'
+import {
+  branchCacheScope,
+  captureBranchScope,
+  type CapturedBranchScope,
+} from '@/lib/branch-scope'
+import { locale, t } from '@/lib/i18n'
 import { useOrganizationSlug } from '@/lib/organization-boundary'
-import { organizationCacheScope } from '@/lib/tenant'
+import { organizationLocation } from '@/lib/organization-navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   SortableDataTable,
   type SortableColumn,
 } from '@/components/data-table/sortable-data-table'
+import { BranchInactiveNotice } from '@/components/layout/branch-gate'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -18,60 +26,90 @@ import { errorMessage, posDevicesApi } from './api'
 import { DeviceForm } from './components/device-form'
 import type { PosDevice, PosDeviceInput } from './model'
 
-function deviceColumns(organizationSlug: string): SortableColumn<PosDevice>[] {
+function deviceColumns(
+  organizationSlug: string,
+  companyMode: boolean
+): SortableColumn<PosDevice>[] {
   return [
     {
       id: 'name',
-      header: 'Name',
+      header: t('operations:posDevices.list.columns.name'),
       accessorFn: (device) => device.name,
       cell: ({ getValue }) => String(getValue() ?? ''),
     },
+    ...(companyMode
+      ? [
+          {
+            id: 'branch',
+            header: t('operations:posDevices.list.columns.branch'),
+            accessorFn: (device: PosDevice) => device.branch.name,
+            cell: ({ row }: { row: { original: PosDevice } }) =>
+              row.original.branch.name,
+          } satisfies SortableColumn<PosDevice>,
+        ]
+      : []),
     {
       id: 'bank',
-      header: 'Bank',
+      header: t('operations:posDevices.list.columns.bank'),
       accessorFn: (device) => device.bankName,
       cell: ({ getValue }) => String(getValue() ?? ''),
     },
     {
       id: 'terminal',
-      header: 'Terminal ID',
+      header: t('operations:posDevices.list.columns.terminalId'),
       accessorFn: (device) => device.terminalId,
       cell: ({ getValue }) => String(getValue() ?? ''),
     },
     {
       id: 'state',
-      header: 'State',
-      accessorFn: (device) => (device.active ? 'Active' : 'Inactive'),
-      cell: ({ getValue }) => String(getValue() ?? ''),
+      header: t('operations:posDevices.list.columns.state'),
+      accessorFn: (device) =>
+        device.active
+          ? t('operations:posDevices.state.active')
+          : t('operations:posDevices.state.inactive'),
+      cell: ({ row }) =>
+        row.original.active
+          ? t('operations:posDevices.state.active')
+          : t('operations:posDevices.state.inactive'),
     },
     {
       id: 'updated',
-      header: 'Updated',
+      header: t('operations:posDevices.list.columns.updated'),
       accessorFn: (device) => new Date(device.updatedAt).getTime(),
-      cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString(),
+      cell: ({ row }) =>
+        new Date(row.original.updatedAt).toLocaleString(locale),
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: t('operations:posDevices.list.columns.actions'),
       enableSorting: false,
       cell: ({ row }) => (
         <Link
-          to='/o/$organizationSlug/pos-devices/$deviceId'
-          params={{
+          {...organizationLocation(
             organizationSlug,
-            deviceId: row.original.uuid,
-          }}
-          aria-label={`Details for POS device ${row.original.name}`}
+            row.original.branch.uuid,
+            '/pos-devices/$deviceId',
+            { deviceId: row.original.uuid }
+          )}
+          aria-label={t('operations:posDevices.list.detailsLabel', {
+            name: row.original.name,
+          })}
           className='rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
         >
-          Details
+          {t('operations:posDevices.list.details')}
         </Link>
       ),
     },
   ]
 }
 
+/**
+ * Company context lists every branch's devices; a branch path lists exactly
+ * its own. Devices are branch-owned, so creating one stays a branch-only
+ * operation and every row link opens the owning branch path.
+ */
 export function PosDevicesPage() {
+  const branch = useOptionalBranch()
   return (
     <>
       <Header fixed>
@@ -80,62 +118,93 @@ export function PosDevicesPage() {
       </Header>
       <Main className='space-y-6'>
         <div>
-          <h1 className='text-2xl font-bold'>Bank POS devices</h1>
+          <h1 className='text-2xl font-bold'>
+            {t('operations:posDevices.index.title')}
+          </h1>
           <p className='text-muted-foreground'>
-            Bank POS terminals, not fiscal cash registers. Each device keeps its
-            own Z reports as reconciliation evidence; a report never creates a
-            sale and writes no finance entry. Devices are deactivated, never
-            deleted.
+            {branch === null
+              ? t('operations:posDevices.index.companyDescription')
+              : t('operations:posDevices.index.description')}
           </p>
         </div>
-        <PosDeviceDirectory />
+        <PosDeviceDirectory branch={branch} />
       </Main>
     </>
   )
 }
 
-function PosDeviceDirectory() {
+function PosDeviceDirectory({ branch }: { branch: BranchContext | null }) {
   const organizationSlug = useOrganizationSlug()
   const client = useQueryClient()
-  const scope = organizationCacheScope()
+  const branchUuid = branch?.branchUuid ?? null
+  const companyMode = branchUuid === null
+  const scope = branchCacheScope(branchUuid)
+  const branchActive = branch?.branch.active ?? false
   const [page, setPage] = useState(0)
   const [draft, setDraft] = useState('')
   const [search, setSearch] = useState('')
   const [creating, setCreating] = useState(false)
   const columns = useMemo(
-    () => deviceColumns(organizationSlug),
-    [organizationSlug]
+    () => deviceColumns(organizationSlug, companyMode),
+    [organizationSlug, companyMode]
   )
   const devices = useQuery({
-    queryKey: ['pos-devices', scope, 'list', page, search],
-    queryFn: () => posDevicesApi.list({ page, search }),
+    queryKey: ['pos-devices', scope, branchUuid, 'list', page, search],
+    queryFn: () => posDevicesApi.list({ branchUuid, page, search }),
   })
   const create = useMutation({
-    mutationFn: (input: { body: PosDeviceInput; scope: string }) =>
-      posDevicesApi.create(input.body),
+    mutationFn: (input: {
+      body: PosDeviceInput
+      captured: CapturedBranchScope
+    }) => {
+      if (input.captured.branchUuid === null)
+        throw new Error(t('operations:common.errors.branchRequired'))
+      return posDevicesApi.create(input.captured.branchUuid, input.body)
+    },
     onSuccess: async (_device, input) => {
       setCreating(false)
-      await client.invalidateQueries({
-        queryKey: ['pos-devices', input.scope],
-      })
-      toast.success('Bank POS device created')
+      const companyScope = `${input.captured.organizationScope}::company`
+      await Promise.all([
+        client.invalidateQueries({
+          queryKey: ['pos-devices', input.captured.scope],
+        }),
+        client.invalidateQueries({
+          queryKey: ['pos-devices', companyScope],
+        }),
+      ])
+      toast.success(t('operations:posDevices.list.created'))
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   })
   const data = devices.data
   return (
     <div className='space-y-4'>
-      <div className='flex justify-end'>
+      <div className='flex flex-wrap items-center justify-between gap-2'>
+        {branch !== null && (
+          <p className='text-sm text-muted-foreground'>
+            {t('operations:posDevices.list.branch')}{' '}
+            <span className='font-medium'>{branch.branch.name}</span>
+          </p>
+        )}
         <Button
           type='button'
+          disabled={!branchActive}
+          title={
+            companyMode
+              ? t('operations:posDevices.list.selectBranchForCreate')
+              : undefined
+          }
           onClick={() => {
             create.reset()
             setCreating(true)
           }}
         >
-          New device
+          {t('operations:posDevices.list.create')}
         </Button>
       </div>
+      {branch !== null && !branch.branch.active && (
+        <BranchInactiveNotice branchName={branch.branch.name} />
+      )}
       <form
         className='flex flex-wrap gap-2'
         onSubmit={(event) => {
@@ -145,40 +214,52 @@ function PosDeviceDirectory() {
         }}
       >
         <Input
-          aria-label='Search bank POS devices'
+          aria-label={t('operations:posDevices.list.searchLabel')}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder='Search devices'
+          placeholder={t('operations:posDevices.list.searchPlaceholder')}
           maxLength={100}
           className='max-w-sm'
         />
-        <Button variant='outline'>Find</Button>
+        <Button variant='outline'>{t('operations:common.find')}</Button>
       </form>
-      {devices.isPending && <p role='status'>Loading bank POS devices…</p>}
+      {devices.isPending && (
+        <p role='status'>{t('operations:posDevices.list.loading')}</p>
+      )}
       {devices.isError && (
         <p role='alert'>
           {errorMessage(devices.error)}{' '}
           <Button variant='outline' onClick={() => void devices.refetch()}>
-            Retry
+            {t('operations:common.retry')}
           </Button>
         </p>
       )}
       {data && (
         <>
           <p className='text-sm text-muted-foreground'>
-            {data.total} bank POS devices. Sorting applies to this page only.
+            {t('operations:posDevices.list.total', {
+              count: data.total.toLocaleString(locale),
+            })}
           </p>
           <SortableDataTable
             data={data.items}
             columns={columns}
             getRowId={(device) => device.uuid}
-            caption='Bank POS devices'
+            caption={
+              companyMode
+                ? t('operations:posDevices.list.captionCompany')
+                : t('operations:posDevices.list.caption', {
+                    branch: branch?.branch.name ?? '',
+                  })
+            }
             emptyMessage={
               search
-                ? 'No bank POS devices match this search.'
+                ? t('operations:posDevices.list.emptySearch')
                 : data.total > 0
-                  ? 'No bank POS devices on this page.'
-                  : 'No bank POS devices have been added yet.'
+                  ? t('operations:posDevices.list.emptyPage')
+                  : companyMode
+                    ? t('operations:posDevices.list.emptyCompany')
+                    : t('operations:posDevices.list.empty')
             }
           />
         </>
@@ -189,13 +270,17 @@ function PosDeviceDirectory() {
         hasNext={!!data && (page + 1) * data.limit < data.total}
         onChange={setPage}
       />
-      {creating && (
+      {creating && branch !== null && branchActive && (
         <DeviceForm
+          key={branchUuid}
           device='new'
+          branchName={branch.branch.name}
           pending={create.isPending}
           error={create.error}
           onClose={() => setCreating(false)}
-          onSubmit={(body) => create.mutate({ body, scope })}
+          onSubmit={(body) =>
+            create.mutate({ body, captured: captureBranchScope(branchUuid) })
+          }
         />
       )}
     </div>

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { branchCacheScope } from '@/lib/branch-scope'
+import { locale, t } from '@/lib/i18n'
 import { useOrganizationSlug } from '@/lib/organization-boundary'
-import { organizationCacheScope } from '@/lib/tenant'
+import { organizationLocation } from '@/lib/organization-navigation'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -17,33 +19,55 @@ import { errorMessage, zReportsApi } from '../api'
 
 /**
  * Z reports linked to one sales batch, read from the real paginated report
- * list. It is evidence only: several reports may cover a batch, coverage may be
- * partial, and nothing here settles, collects or moves money.
+ * list of the batch's own branch. It is evidence only: several reports may
+ * cover a batch, coverage may be partial, and nothing here settles, collects or
+ * moves money.
  */
-export function BatchZReports({ batchUuid }: { batchUuid: string }) {
+export function BatchZReports({
+  batchUuid,
+  branchUuid,
+}: {
+  batchUuid: string
+  branchUuid: string
+}) {
   const organizationSlug = useOrganizationSlug()
-  const scope = organizationCacheScope()
+  const scope = branchCacheScope(branchUuid)
   const [page, setPage] = useState(0)
   const reports = useQuery({
-    queryKey: ['pos-devices', scope, 'reports', 'by-batch', batchUuid, page],
+    queryKey: [
+      'pos-devices',
+      scope,
+      branchUuid,
+      'reports',
+      'by-batch',
+      batchUuid,
+      page,
+    ],
     queryFn: () =>
-      zReportsApi.list({ page, salesBatchUuid: batchUuid, limit: 10 }),
+      zReportsApi.list({
+        branchUuid,
+        page,
+        salesBatchUuid: batchUuid,
+        limit: 10,
+      }),
   })
   const data = reports.data
   return (
     <section className='space-y-2'>
-      <h2 className='text-xl font-semibold'>Linked POS Z reports</h2>
+      <h2 className='text-xl font-semibold'>
+        {t('operations:zReports.batchReports.title')}
+      </h2>
       <p className='text-sm text-muted-foreground'>
-        A batch can have several bank POS Z reports or none. A report may cover
-        only part of this batch. Linking is reconciliation evidence: it never
-        settles, collects or moves money.
+        {t('operations:zReports.batchReports.description')}
       </p>
-      {reports.isPending && <p role='status'>Loading linked Z reports…</p>}
+      {reports.isPending && (
+        <p role='status'>{t('operations:zReports.batchReports.loading')}</p>
+      )}
       {reports.isError && (
         <p role='alert'>
           {errorMessage(reports.error)}{' '}
           <Button variant='outline' onClick={() => void reports.refetch()}>
-            Retry
+            {t('operations:common.retry')}
           </Button>
         </p>
       )}
@@ -51,22 +75,34 @@ export function BatchZReports({ batchUuid }: { batchUuid: string }) {
         (data.items.length === 0 ? (
           <p className='text-sm text-muted-foreground'>
             {data.total > 0
-              ? 'No linked Z reports on this page.'
-              : 'No bank POS Z report is linked to this batch.'}
+              ? t('operations:zReports.batchReports.emptyPage')
+              : t('operations:zReports.batchReports.empty')}
           </p>
         ) : (
           <Table>
             <caption className='sr-only'>
-              Bank POS Z reports linked to this sales batch
+              {t('operations:zReports.batchReports.caption')}
             </caption>
             <TableHeader>
               <TableRow>
-                <TableHead>Report</TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead>Business date</TableHead>
-                <TableHead>Closed</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>
+                  {t('operations:zReports.batchReports.columns.report')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:zReports.batchReports.columns.device')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:zReports.batchReports.columns.businessDate')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:zReports.batchReports.columns.closed')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:zReports.batchReports.columns.total')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:zReports.batchReports.columns.actions')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -75,12 +111,16 @@ export function BatchZReports({ batchUuid }: { batchUuid: string }) {
                   <TableCell>{report.reportNumber}</TableCell>
                   <TableCell>
                     <Link
-                      to='/o/$organizationSlug/pos-devices/$deviceId'
-                      params={{
+                      {...organizationLocation(
                         organizationSlug,
-                        deviceId: report.posDevice.uuid,
-                      }}
-                      aria-label={`Details for POS device ${report.posDevice.name}`}
+                        report.branch.uuid,
+                        '/pos-devices/$deviceId',
+                        { deviceId: report.posDevice.uuid }
+                      )}
+                      aria-label={t(
+                        'operations:zReports.batchReports.deviceLabel',
+                        { name: report.posDevice.name }
+                      )}
                       className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                     >
                       {report.posDevice.name}
@@ -88,23 +128,29 @@ export function BatchZReports({ batchUuid }: { batchUuid: string }) {
                   </TableCell>
                   <TableCell>{report.businessDate}</TableCell>
                   <TableCell>
-                    {new Date(report.closedAt).toLocaleString()}
+                    {new Date(report.closedAt).toLocaleString(locale)}
                   </TableCell>
                   <TableCell>
                     {report.totalAmount} {report.currencyCode}
                   </TableCell>
                   <TableCell>
                     <Link
-                      to='/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId'
-                      params={{
+                      {...organizationLocation(
                         organizationSlug,
-                        deviceId: report.posDevice.uuid,
-                        reportId: report.uuid,
-                      }}
-                      aria-label={`Details for Z report ${report.reportNumber}`}
+                        report.branch.uuid,
+                        '/pos-devices/$deviceId/z-reports/$reportId',
+                        {
+                          deviceId: report.posDevice.uuid,
+                          reportId: report.uuid,
+                        }
+                      )}
+                      aria-label={t(
+                        'operations:zReports.batchReports.detailsLabel',
+                        { report: report.reportNumber }
+                      )}
                       className='rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                     >
-                      Details
+                      {t('operations:zReports.batchReports.details')}
                     </Link>
                   </TableCell>
                 </TableRow>

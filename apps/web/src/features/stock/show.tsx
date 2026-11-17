@@ -1,45 +1,26 @@
 import axios from 'axios'
 import { useQuery } from '@tanstack/react-query'
-import { getRouteApi, Link } from '@tanstack/react-router'
-import { useOrganizationSlug } from '@/lib/organization-boundary'
+import { Link } from '@tanstack/react-router'
+import { useOptionalBranch } from '@/lib/branch-boundary'
+import { t } from '@/lib/i18n'
+import {
+  organizationLocation,
+  useOrganizationResourceParams,
+} from '@/lib/organization-navigation'
 import { parseResourceUuid } from '@/lib/resource-uuid'
-import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
+import { BranchRequired } from '@/components/layout/branch-gate'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
-import { errorMessage, itemApi } from '@/features/items/api'
-import type { Item } from '@/features/items/model'
+import { errorMessage, stockApi } from './api'
+import { branchStockBalanceKey } from './cache'
 import { ItemStockPanel } from './components/stock-panel'
 
-const stockRoute = getRouteApi(
-  '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId'
-)
-
-const itemLabel = (item: Item) => item.name || item.ipn || 'Item'
-
 export function StockShow() {
-  const { itemId } = stockRoute.useParams()
-  const organizationSlug = useOrganizationSlug()
-  const uuid = parseResourceUuid(itemId)
-  const details = useQuery({
-    queryKey: ['item', 'items', organizationCacheScope(), 'detail', uuid],
-    queryFn: () => itemApi.item(uuid as string),
-    enabled: uuid !== null,
-    refetchOnWindowFocus: false,
-  })
-  const detailStatus =
-    details.error && axios.isAxiosError(details.error)
-      ? details.error.response?.status
-      : undefined
-  const item =
-    uuid !== null &&
-    details.isSuccess &&
-    !details.isError &&
-    details.data != null &&
-    details.data.uuid === uuid
-      ? details.data
-      : null
+  const { itemId, organizationSlug } = useOrganizationResourceParams()
+  const context = useOptionalBranch()
+  const uuid = parseResourceUuid(itemId ?? '')
   return (
     <>
       <Header fixed>
@@ -49,92 +30,144 @@ export function StockShow() {
       <Main className='space-y-6'>
         <div>
           <Link
-            to='/o/$organizationSlug/stock'
-            params={{ organizationSlug }}
+            {...organizationLocation(
+              organizationSlug,
+              context?.branchUuid ?? null,
+              '/stock'
+            )}
             className='rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
           >
-            Back to stock
+            {t('catalog:stock.show.back')}
           </Link>
           <h1 className='mt-2 text-2xl font-bold'>
-            {item ? itemLabel(item) : 'Stock'}
+            {context
+              ? t('catalog:stock.show.title', { branch: context.branch.name })
+              : t('catalog:stock.show.titlePlain')}
           </h1>
         </div>
-        {uuid === null && <p role='alert'>Item not found.</p>}
-        {uuid !== null && details.isPending && (
-          <p role='status'>Loading stock…</p>
-        )}
-        {details.isError && detailStatus === 404 && (
-          <p role='alert'>Item not found.</p>
-        )}
-        {details.isError && detailStatus !== 404 && (
-          <p role='alert'>
-            {errorMessage(details.error)}{' '}
-            <Button variant='outline' onClick={() => void details.refetch()}>
-              Retry
-            </Button>
-          </p>
-        )}
-        {item && (
-          <>
-            <section className='space-y-4 rounded-md border border-border p-4'>
-              <div className='flex flex-wrap items-start justify-between gap-3'>
-                <div>
-                  <h2 className='text-xl font-semibold'>Item</h2>
-                  <p className='text-sm text-muted-foreground'>
-                    UUID {item.uuid}
-                    {item.ipn ? ` · IPN ${item.ipn}` : ''}
-                    {` · version ${item.version}`}
-                  </p>
-                </div>
-                <Link
-                  to='/o/$organizationSlug/settings/items/$itemId'
-                  params={{
-                    organizationSlug,
-                    itemId: item.uuid,
-                  }}
-                  className='rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
-                >
-                  Open item record
-                </Link>
-              </div>
-              <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
-                <dt>Category</dt>
-                <dd>
-                  {item.category ? (
-                    <Link
-                      to='/o/$organizationSlug/settings/item-categories/$categoryId'
-                      params={{
-                        organizationSlug,
-                        categoryId: item.category.uuid,
-                      }}
-                      className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
-                    >
-                      {item.category.pathstring}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-                <dt>Unit</dt>
-                <dd>
-                  {item.unit
-                    ? `${item.unit.name} · ${item.unit.code}`
-                    : item.units || 'Unresolved (legacy)'}
-                  {item.unit && !item.unit.active ? ' · inactive' : null}
-                </dd>
-                <dt>Minimum stock</dt>
-                <dd>{item.minimumStock}</dd>
-                <dt>Status</dt>
-                <dd>{item.active ? 'Active' : 'Inactive'}</dd>
-              </dl>
-            </section>
-            <section className='space-y-4'>
-              <h2 className='text-xl font-semibold'>Stock</h2>
-              <ItemStockPanel key={item.uuid} item={item} />
-            </section>
-          </>
+        {uuid === null ? (
+          <p role='alert'>{t('catalog:stock.show.notFound')}</p>
+        ) : context == null ? (
+          <BranchRequired
+            description={t('catalog:stock.panel.noBranchDescription')}
+          />
+        ) : (
+          <StockDetail
+            key={`${context.branch.uuid}:${uuid}`}
+            itemUuid={uuid}
+            branch={context.branch}
+            organizationSlug={organizationSlug}
+          />
         )}
       </Main>
+    </>
+  )
+}
+
+function StockDetail({
+  itemUuid,
+  branch,
+  organizationSlug,
+}: {
+  itemUuid: string
+  branch: { uuid: string; name: string; active: boolean }
+  organizationSlug: string
+}) {
+  const balance = useQuery({
+    queryKey: branchStockBalanceKey(branch.uuid, itemUuid),
+    queryFn: () => stockApi.balance(itemUuid, branch.uuid),
+    refetchOnWindowFocus: false,
+  })
+  const detailStatus =
+    balance.error && axios.isAxiosError(balance.error)
+      ? balance.error.response?.status
+      : undefined
+  const record = balance.data
+  return (
+    <>
+      {balance.isPending && (
+        <p role='status'>{t('catalog:stock.show.loading')}</p>
+      )}
+      {balance.isError && detailStatus === 404 && (
+        <p role='alert'>{t('catalog:stock.show.notFound')}</p>
+      )}
+      {balance.isError && detailStatus !== 404 && (
+        <p role='alert'>
+          {errorMessage(balance.error)}{' '}
+          <Button variant='outline' onClick={() => void balance.refetch()}>
+            {t('catalog:common.retry')}
+          </Button>
+        </p>
+      )}
+      {record && (
+        <>
+          <section className='space-y-4 rounded-md border border-border p-4'>
+            <div className='flex flex-wrap items-start justify-between gap-3'>
+              <div>
+                <h2 className='text-xl font-semibold'>{record.name}</h2>
+                <p className='text-sm text-muted-foreground'>
+                  {[
+                    t('catalog:stock.show.idLine', { uuid: record.itemUuid }),
+                    record.ipn
+                      ? t('catalog:stock.show.ipn', { ipn: record.ipn })
+                      : null,
+                    record.category ? record.category.pathstring : null,
+                  ]
+                    .filter((part) => part !== null)
+                    .join(' · ')}
+                </p>
+              </div>
+              <Link
+                {...organizationLocation(
+                  organizationSlug,
+                  branch.uuid,
+                  '/settings/items/$itemId',
+                  { itemId: record.itemUuid }
+                )}
+                className='rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
+              >
+                {t('catalog:stock.show.openItem')}
+              </Link>
+            </div>
+            <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
+              <dt>{t('catalog:stock.columns.category')}</dt>
+              <dd>
+                {record.category ? (
+                  <Link
+                    {...organizationLocation(
+                      organizationSlug,
+                      branch.uuid,
+                      '/settings/item-categories/$categoryId',
+                      { categoryId: record.category.uuid }
+                    )}
+                    className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
+                  >
+                    {record.category.pathstring}
+                  </Link>
+                ) : (
+                  '—'
+                )}
+              </dd>
+              <dt>{t('catalog:stock.columns.unit')}</dt>
+              <dd>
+                {record.unit
+                  ? `${record.unit.name} · ${record.unit.code}`
+                  : record.units || t('catalog:stock.show.unresolvedLegacy')}
+                {record.unit && !record.unit.active
+                  ? t('catalog:stock.show.inactiveSuffix')
+                  : null}
+              </dd>
+              <dt>{t('catalog:stock.show.catalogStatus')}</dt>
+              <dd>
+                {record.active
+                  ? t('catalog:common.active')
+                  : t('catalog:common.inactive')}
+              </dd>
+            </dl>
+          </section>
+          <ItemStockPanel itemUuid={record.itemUuid} branch={branch} />
+        </>
+      )}
     </>
   )
 }

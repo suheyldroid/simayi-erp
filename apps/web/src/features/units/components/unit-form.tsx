@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -51,7 +52,11 @@ export function UnitForm({
           }),
     onSuccess: async (saved) => {
       await invalidateUnitCatalog(client)
-      toast.success(editing ? 'Unit updated' : 'Unit created')
+      toast.success(
+        editing
+          ? t('catalog:units.form.updatedToast')
+          : t('catalog:units.form.createdToast')
+      )
       onSaved?.(saved)
       onOpenChange(false)
     },
@@ -61,11 +66,13 @@ export function UnitForm({
     <Sheet open={draft != null} onOpenChange={onOpenChange}>
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
         <SheetHeader>
-          <SheetTitle>{editing ? 'Edit unit' : 'New unit'}</SheetTitle>
+          <SheetTitle>
+            {editing
+              ? t('catalog:units.form.editTitle')
+              : t('catalog:units.form.createTitle')}
+          </SheetTitle>
           <SheetDescription>
-            Units are system-wide measurement codes such as kg, pcs, or litre.
-            Every item records its stock in one unit; changing a code that any
-            organization already uses is refused.
+            {t('catalog:units.form.description')}
           </SheetDescription>
         </SheetHeader>
         {draft && (
@@ -111,6 +118,7 @@ function UnitFormBody({
             name: String(form.get('name') ?? ''),
             code: String(form.get('code') ?? ''),
             active: form.has('active'),
+            divisible: form.has('divisible'),
           })
           onSave(
             unit === null
@@ -131,7 +139,7 @@ function UnitFormBody({
         <FieldInput
           field={{
             name: 'name',
-            label: 'Name',
+            label: t('catalog:units.form.nameLabel'),
             required: true,
             maxLength: 100,
           }}
@@ -141,7 +149,7 @@ function UnitFormBody({
         <FieldInput
           field={{
             name: 'code',
-            label: 'Code',
+            label: t('catalog:units.form.codeLabel'),
             required: true,
             maxLength: 20,
           }}
@@ -150,15 +158,26 @@ function UnitFormBody({
         />
         <p className='text-xs text-muted-foreground'>
           {unit
-            ? 'The code cannot change while any organization uses this unit in items or history. A new inactive unit cannot be selected for items.'
-            : 'The code is the short value shown wherever quantities are displayed, and it is unique across all organizations.'}
+            ? t('catalog:units.form.editHint')
+            : t('catalog:units.form.createHint')}
         </p>
         <FlagInput
           name='active'
-          label='Active'
+          label={t('catalog:units.form.activeLabel')}
           defaultChecked={unit ? unit.active : true}
           disabled={pending}
         />
+        <div className='space-y-1'>
+          <FlagInput
+            name='divisible'
+            label={t('catalog:units.form.divisibleLabel')}
+            defaultChecked={unit ? unit.divisible : true}
+            disabled={pending}
+          />
+          <p className='text-xs text-muted-foreground'>
+            {t('catalog:units.form.divisibleHint')}
+          </p>
+        </div>
       </div>
       <SheetFooter className='border-t border-border'>
         <Button
@@ -167,10 +186,10 @@ function UnitFormBody({
           disabled={pending}
           onClick={onCancel}
         >
-          Cancel
+          {t('catalog:common.cancel')}
         </Button>
         <Button type='submit' disabled={!canSubmit || pending}>
-          Save
+          {t('catalog:common.save')}
         </Button>
       </SheetFooter>
     </form>

@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -79,7 +80,8 @@ export function MoneyForm({
             })
             if (!parsed.success) {
               setValidationError(
-                parsed.error.issues[0]?.message ?? 'Check the money entry.'
+                parsed.error.issues[0]?.message ??
+                  t('operations:finance.form.checkEntry')
               )
               return
             }
@@ -91,7 +93,11 @@ export function MoneyForm({
             <fieldset disabled={pending} className='space-y-4'>
               <div className='space-y-2'>
                 <Label htmlFor={amountId}>
-                  Amount{currencyCode ? ` (${currencyCode})` : ''}
+                  {currencyCode
+                    ? t('operations:finance.form.amountWithCurrency', {
+                        currency: currencyCode,
+                      })
+                    : t('operations:finance.form.amount')}
                 </Label>
                 <Input
                   id={amountId}
@@ -104,18 +110,20 @@ export function MoneyForm({
                   inputMode='decimal'
                   maxLength={20}
                   required
-                  placeholder='e.g. 125.50'
+                  placeholder={t('operations:finance.form.amountPlaceholder')}
                   aria-describedby={hint ? `${amountId}-hint` : undefined}
                 />
                 <p
                   id={`${amountId}-hint`}
                   className='text-xs text-muted-foreground'
                 >
-                  {hint ?? 'Use a comma or a dot for decimals, up to 6 places.'}
+                  {hint ?? t('operations:finance.form.amountHint')}
                 </p>
               </div>
               <div className='space-y-2'>
-                <Label htmlFor={dateId}>Date</Label>
+                <Label htmlFor={dateId}>
+                  {t('operations:finance.form.date')}
+                </Label>
                 <Input
                   id={dateId}
                   name='date'
@@ -129,14 +137,16 @@ export function MoneyForm({
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor={noteId}>Note</Label>
+                <Label htmlFor={noteId}>
+                  {t('operations:finance.form.note')}
+                </Label>
                 <Input
                   id={noteId}
                   name='note'
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
                   maxLength={500}
-                  placeholder='Optional note'
+                  placeholder={t('operations:finance.form.notePlaceholder')}
                 />
               </div>
             </fieldset>
@@ -153,10 +163,10 @@ export function MoneyForm({
               onClick={onClose}
               disabled={pending}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button type='submit' disabled={pending}>
-              {pending ? 'Saving…' : submitLabel}
+              {pending ? t('operations:common.saving') : submitLabel}
             </Button>
           </SheetFooter>
         </form>

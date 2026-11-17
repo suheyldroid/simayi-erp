@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { formatCount } from '../format'
 
 /**
  * Compact count card. The value is always a real API aggregate; the caller
@@ -26,7 +27,7 @@ export function StatCard({
           {label}
         </CardDescription>
         <CardTitle className='text-2xl font-semibold tabular-nums'>
-          {value.toLocaleString()}
+          {formatCount(value)}
         </CardTitle>
       </CardHeader>
       <CardContent className='px-4 pt-1 pb-4'>

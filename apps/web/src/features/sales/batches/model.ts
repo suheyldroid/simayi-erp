@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 import { resourceUuid } from '@/lib/resource-uuid'
 
 const id = z.number().int().positive()
@@ -16,10 +17,17 @@ const channel = z.object({
   name: z.string(),
 })
 
+const branch = z.object({
+  uuid: resourceUuid,
+  name: z.string(),
+})
+
 const summary = z.object({
   uuid: resourceUuid,
   reference: z.string(),
   referenceInt: z.string(),
+  /** Branch the batch was uploaded to; immutable for the batch lifetime. */
+  branch,
   businessDate: day,
   status: z.number().int(),
   sourceFileName: z.string(),
@@ -108,8 +116,21 @@ const previewGridRow = z.object({
   cells: z.array(z.string()),
 })
 
+/** Verified Modpos Ürün Raporu header and the notes that limit its import. */
+const modposReport = z.object({
+  sheetName: z.string(),
+  headerRow: z.number().int().positive(),
+  productCodeColumn: column,
+  productColumn: column,
+  quantityColumn: column,
+  dateFrom: day.nullable(),
+  dateTo: day.nullable(),
+  notes: z.array(issue),
+})
+
 const preview = z.object({
   configured: z.boolean(),
+  branch,
   sheetNames: z.array(z.string()),
   sheetName: z.string().nullable(),
   headerRow: z.number().int().positive().nullable(),
@@ -118,6 +139,7 @@ const preview = z.object({
   quantityColumn: column.nullable(),
   productCodeColumn: column.nullable(),
   excludedRows: z.array(z.number().int().positive()),
+  modpos: modposReport.nullable(),
   currencyCode: z
     .string()
     .regex(/^[A-Z]{3}$/)
@@ -144,12 +166,24 @@ export type BatchPreviewRow = z.infer<typeof previewRow>
 export type BatchPreviewProduct = z.infer<typeof previewProduct>
 export type BatchRequirement = z.infer<typeof requirement>
 
+/** Display label per stored batch state; the numeric value never changes. */
+const statusKeys: Readonly<Record<number, string>> = {
+  10: 'status.10',
+  20: 'status.20',
+}
+
+export function batchStatusLabel(status: number): string {
+  const key = statusKeys[status]
+  return key === undefined ? String(status) : t(`operations:batches.${key}`)
+}
+
 export type BatchPatch = {
   businessDate?: string
   sheet?: {
     sheetName: string
     headerRow: number
-    channelColumn: string
+    /** Null only for a recognized channel-less Modpos Ürün Raporu. */
+    channelColumn: string | null
     productColumn: string
     quantityColumn: string
     productCodeColumn?: string | null

@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { useQuery } from '@tanstack/react-query'
+import { locale, t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -40,7 +41,7 @@ export function UnitSelect({
   value,
   fallbackUuid = null,
   disabled = false,
-  label = 'Unit',
+  label = t('catalog:units.select.label'),
   onChange,
 }: {
   value: UnitOption | null
@@ -63,7 +64,7 @@ export function UnitSelect({
   const fallback = useQuery({
     queryKey: ['unit', 'detail', fallbackUuid],
     queryFn: () => {
-      if (fallbackUuid == null) throw new Error('Unit uuid is required')
+      if (fallbackUuid == null) throw new Error(t('catalog:units.uuidRequired'))
       return unitApi.unit(fallbackUuid)
     },
     enabled: fallbackUuid != null && value == null,
@@ -111,11 +112,13 @@ export function UnitSelect({
                   selected == null && 'text-muted-foreground'
                 )}
               >
-                {selected == null ? 'Select unit' : unitText(selected)}
+                {selected == null
+                  ? t('catalog:units.select.select')
+                  : unitText(selected)}
               </span>
               {selected != null && !selected.active && (
                 <span className='shrink-0 text-xs text-muted-foreground'>
-                  inactive
+                  {t('catalog:units.select.inactive')}
                 </span>
               )}
               <span
@@ -132,8 +135,8 @@ export function UnitSelect({
           >
             <Command shouldFilter={false} loop>
               <CommandInput
-                aria-label='Search units'
-                placeholder='Search name or code…'
+                aria-label={t('catalog:units.select.searchLabel')}
+                placeholder={t('catalog:units.select.searchPlaceholder')}
                 value={search}
                 onValueChange={(next) => {
                   setSearch(next)
@@ -148,7 +151,7 @@ export function UnitSelect({
                     role='status'
                     className='p-3 text-sm text-muted-foreground'
                   >
-                    Loading units…
+                    {t('catalog:units.select.loading')}
                   </p>
                 ) : options.isError ? (
                   <div
@@ -163,12 +166,14 @@ export function UnitSelect({
                       disabled={disabled}
                       onClick={() => void options.refetch()}
                     >
-                      Retry
+                      {t('catalog:common.retry')}
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <CommandEmpty>No active units found.</CommandEmpty>
+                    <CommandEmpty>
+                      {t('catalog:units.select.empty')}
+                    </CommandEmpty>
                     <CommandGroup>
                       {units.map((unit) => (
                         <CommandItem
@@ -213,15 +218,19 @@ export function UnitSelect({
                   disabled={page === 0 || options.isFetching || disabled}
                   onClick={() => setPage((current) => Math.max(0, current - 1))}
                 >
-                  Previous
+                  {t('catalog:common.previous')}
                 </Button>
                 <span className='text-xs text-muted-foreground'>
                   {total === 0
-                    ? 'No units'
-                    : `${page * PAGE_SIZE + 1}–${Math.min(
-                        (page + 1) * PAGE_SIZE,
-                        total
-                      )} of ${total}`}
+                    ? t('catalog:units.select.none')
+                    : t('catalog:common.range', {
+                        from: (page * PAGE_SIZE + 1).toLocaleString(locale),
+                        to: Math.min(
+                          (page + 1) * PAGE_SIZE,
+                          total
+                        ).toLocaleString(locale),
+                        total: total.toLocaleString(locale),
+                      })}
                 </span>
                 <Button
                   type='button'
@@ -230,7 +239,7 @@ export function UnitSelect({
                   disabled={!hasNext || options.isFetching || disabled}
                   onClick={() => setPage((current) => current + 1)}
                 >
-                  Next
+                  {t('catalog:common.next')}
                 </Button>
               </div>
             </Command>
@@ -242,7 +251,7 @@ export function UnitSelect({
           role='alert'
           className='flex items-center gap-2 text-xs text-destructive'
         >
-          Could not load the current unit.
+          {t('catalog:units.select.loadError')}
           <Button
             type='button'
             size='sm'
@@ -250,7 +259,7 @@ export function UnitSelect({
             disabled={disabled}
             onClick={() => void fallback.refetch()}
           >
-            Retry
+            {t('catalog:common.retry')}
           </Button>
         </p>
       )}

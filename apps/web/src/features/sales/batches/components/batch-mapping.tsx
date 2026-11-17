@@ -1,5 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { branchCacheScope } from '@/lib/branch-scope'
+import { t } from '@/lib/i18n'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +27,7 @@ import {
 } from '@/features/recipes/components/recipe-select'
 import { salesChannelApi } from '../../api'
 import { errorMessage, salesBatchesApi } from '../api'
+import { batchIssueLabel } from '../issue-labels'
 import type {
   BatchDetail,
   BatchPatch,
@@ -46,6 +49,7 @@ function columnLetter(index: number) {
 export function BatchMapping({
   detail,
   preview,
+  branchUuid,
   pending,
   error,
   onClose,
@@ -53,6 +57,8 @@ export function BatchMapping({
 }: {
   detail: BatchDetail
   preview: BatchPreview
+  /** Branch the batch is fixed to; the product mapping picker reads it. */
+  branchUuid: string
   pending: boolean
   error: unknown
   onClose: () => void
@@ -110,8 +116,16 @@ export function BatchMapping({
   })
   const exploring = sheet !== '' && sheet !== detail.sheetName
   const sheetPreview = useQuery({
-    queryKey: ['sales', scope, 'batches', 'grid', detail.uuid, sheet],
-    queryFn: () => salesBatchesApi.preview(detail.uuid, sheet),
+    queryKey: [
+      'sales',
+      branchCacheScope(branchUuid),
+      'batches',
+      'grid',
+      detail.uuid,
+      sheet,
+      branchUuid,
+    ],
+    queryFn: () => salesBatchesApi.preview(branchUuid, detail.uuid, sheet),
     enabled: exploring,
   })
   const grid = exploring ? sheetPreview.data : preview
@@ -138,26 +152,32 @@ export function BatchMapping({
   function submit() {
     if (pending) return
     if (sheet === '') {
-      setValidationError('Choose a worksheet')
+      setValidationError(t('operations:batches.mapping.chooseSheet'))
       return
     }
-    if (channelColumn === '' || productColumn === '' || quantityColumn === '') {
-      setValidationError('Choose the channel, product and quantity columns')
+    // An empty channel column is the recognized Modpos report: every row uses
+    // the single explicit source value the backend derives from the header.
+    const channelLess = channelColumn === ''
+    if (channelLess && grid?.modpos == null) {
+      setValidationError(t('operations:batches.mapping.channelColumnRequired'))
       return
     }
-    if (
-      channelColumn === productColumn ||
-      channelColumn === quantityColumn ||
-      productColumn === quantityColumn
-    ) {
-      setValidationError(
-        'Channel, product and quantity must use different columns'
-      )
+    if (productColumn === '' || quantityColumn === '') {
+      setValidationError(t('operations:batches.mapping.chooseColumns'))
+      return
+    }
+    const selectedColumns = [
+      channelColumn,
+      productColumn,
+      quantityColumn,
+    ].filter((column) => column !== '')
+    if (new Set(selectedColumns).size !== selectedColumns.length) {
+      setValidationError(t('operations:batches.mapping.duplicateColumns'))
       return
     }
     const header = Number(headerRow)
     if (!Number.isInteger(header) || header < 1) {
-      setValidationError('Header row must be a positive whole number')
+      setValidationError(t('operations:batches.mapping.headerRow'))
       return
     }
     setValidationError(null)
@@ -167,9 +187,14 @@ export function BatchMapping({
         channelUuid: value === '__unmapped__' ? null : value,
       })
     )
+    const codedProductKeys = new Set(
+      preview.products
+        .filter((product) => product.sourceCode !== null)
+        .map((product) => product.productKey)
+    )
     const productMappings = Object.entries(productSelections).flatMap(
       ([productKey, selection]) =>
-        selection === undefined
+        selection === undefined || codedProductKeys.has(productKey)
           ? []
           : [
               {
@@ -183,7 +208,7 @@ export function BatchMapping({
       sheet: {
         sheetName: sheet,
         headerRow: header,
-        channelColumn,
+        channelColumn: channelLess ? null : channelColumn,
         productColumn,
         quantityColumn,
         productCodeColumn: productCodeColumn === '' ? null : productCodeColumn,
@@ -201,12 +226,13 @@ export function BatchMapping({
     >
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-2xl'>
         <SheetHeader>
-          <SheetTitle>Configure sales batch</SheetTitle>
+          <SheetTitle>
+            {t('operations:batches.mapping.title', {
+              branch: detail.branch.name,
+            })}
+          </SheetTitle>
           <SheetDescription>
-            Select the worksheet, header row and the actual source columns for
-            channel, product and quantity. Nothing is guessed: totals and other
-            non-sale rows are excluded explicitly from the preview table, and
-            every channel and product must be mapped here before processing.
+            {t('operations:batches.mapping.description')}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -219,7 +245,9 @@ export function BatchMapping({
           <div className='flex-1 space-y-6 overflow-y-auto px-4 pb-4'>
             <fieldset disabled={pending} className='grid gap-4 sm:grid-cols-2'>
               <div className='space-y-2'>
-                <Label htmlFor={dateId}>Sale date</Label>
+                <Label htmlFor={dateId}>
+                  {t('operations:batches.mapping.businessDate')}
+                </Label>
                 <Input
                   id={dateId}
                   type='date'
@@ -228,11 +256,13 @@ export function BatchMapping({
                   onChange={(event) => setBusinessDate(event.target.value)}
                 />
                 <p className='text-xs text-muted-foreground'>
-                  Calendar business date, independent of the upload time.
+                  {t('operations:batches.mapping.businessDateHint')}
                 </p>
               </div>
               <div className='space-y-2'>
-                <Label htmlFor={headerId}>Header row</Label>
+                <Label htmlFor={headerId}>
+                  {t('operations:batches.mapping.headerRow')}
+                </Label>
                 <Input
                   id={headerId}
                   type='number'
@@ -244,7 +274,7 @@ export function BatchMapping({
                 />
               </div>
               <div className='space-y-2'>
-                <Label>Worksheet</Label>
+                <Label>{t('operations:batches.mapping.worksheet')}</Label>
                 <Select
                   value={sheet || undefined}
                   onValueChange={(value) => {
@@ -253,7 +283,9 @@ export function BatchMapping({
                   }}
                 >
                   <SelectTrigger className='w-full'>
-                    <SelectValue placeholder='Choose a worksheet' />
+                    <SelectValue
+                      placeholder={t('operations:batches.mapping.chooseSheet')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {detail.sheetNames.map((name) => (
@@ -265,25 +297,27 @@ export function BatchMapping({
                 </Select>
               </div>
               <ColumnSelect
-                label='Channel column'
+                label={t('operations:batches.mapping.channelColumn')}
                 value={channelColumn}
                 options={columnOptions}
+                allowNone={grid?.modpos != null}
+                noneLabel={t('operations:batches.mapping.noChannelColumn')}
                 onChange={setChannelColumn}
               />
               <ColumnSelect
-                label='Product column'
+                label={t('operations:batches.mapping.productColumn')}
                 value={productColumn}
                 options={columnOptions}
                 onChange={setProductColumn}
               />
               <ColumnSelect
-                label='Quantity column'
+                label={t('operations:batches.mapping.quantityColumn')}
                 value={quantityColumn}
                 options={columnOptions}
                 onChange={setQuantityColumn}
               />
               <ColumnSelect
-                label='Product code column (optional)'
+                label={t('operations:batches.mapping.productCodeColumn')}
                 value={productCodeColumn}
                 options={columnOptions}
                 allowNone
@@ -291,8 +325,29 @@ export function BatchMapping({
               />
             </fieldset>
 
+            {channelColumn === '' && grid?.modpos != null && (
+              <section className='space-y-2 rounded-md border border-border p-3'>
+                <h3 className='font-medium'>
+                  {t('operations:batches.mapping.modposTitle')}
+                </h3>
+                <p className='text-xs text-muted-foreground'>
+                  {t('operations:batches.mapping.modposDescription', {
+                    sheet: grid.modpos.sheetName,
+                    headerRow: grid.modpos.headerRow,
+                  })}
+                </p>
+                <ul className='list-disc space-y-1 ps-5 text-xs text-muted-foreground'>
+                  {grid.modpos.notes.map((note) => (
+                    <li key={note.code}>{batchIssueLabel(note)}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {exploring && sheetPreview.isPending && (
-              <p role='status'>Loading worksheet preview…</p>
+              <p role='status'>
+                {t('operations:batches.mapping.loadingPreview')}
+              </p>
             )}
             {exploring && sheetPreview.isError && (
               <p role='alert'>
@@ -302,21 +357,25 @@ export function BatchMapping({
                   variant='outline'
                   onClick={() => void sheetPreview.refetch()}
                 >
-                  Retry
+                  {t('operations:common.retry')}
                 </Button>
               </p>
             )}
             {grid && grid.grid.length > 0 && (
               <div className='space-y-2'>
-                <h3 className='font-medium'>Worksheet preview</h3>
+                <h3 className='font-medium'>
+                  {t('operations:batches.mapping.worksheetPreview')}
+                </h3>
                 <p className='text-xs text-muted-foreground'>
                   {grid.gridTruncated
-                    ? 'Showing the first rows only; use the preview table for the full row analysis.'
-                    : 'Choose a column by its letter and visible header text.'}
+                    ? t('operations:batches.mapping.gridTruncated')
+                    : t('operations:batches.mapping.gridHint')}
                 </p>
                 <div className='max-h-52 overflow-auto rounded-md border border-border'>
                   <table className='w-full text-left text-xs'>
-                    <caption className='sr-only'>Raw worksheet cells</caption>
+                    <caption className='sr-only'>
+                      {t('operations:batches.mapping.gridCaption')}
+                    </caption>
                     <tbody>
                       {grid.grid.slice(gridStart, gridStart + 25).map((row) => (
                         <tr key={row.row} className='border-b border-border'>
@@ -346,13 +405,17 @@ export function BatchMapping({
                       setGridStart((start) => Math.max(0, start - 25))
                     }
                   >
-                    Previous rows
+                    {t('operations:batches.mapping.previousRows')}
                   </Button>
                   <span>
-                    Rows {gridStart + 1}–
-                    {Math.min(gridStart + 25, grid.grid.length)} of{' '}
-                    {grid.grid.length}
-                    {grid.gridTruncated ? ' (more rows exist)' : ''}
+                    {t('operations:batches.mapping.rowRange', {
+                      from: gridStart + 1,
+                      to: Math.min(gridStart + 25, grid.grid.length),
+                      total: grid.grid.length,
+                      more: grid.gridTruncated
+                        ? t('operations:batches.mapping.moreRows')
+                        : '',
+                    })}
                   </span>
                   <Button
                     type='button'
@@ -361,7 +424,7 @@ export function BatchMapping({
                     disabled={gridStart + 25 >= grid.grid.length}
                     onClick={() => setGridStart((start) => start + 25)}
                   >
-                    Next rows
+                    {t('operations:batches.mapping.nextRows')}
                   </Button>
                 </div>
               </div>
@@ -370,11 +433,12 @@ export function BatchMapping({
             {showMappings && (
               <>
                 <section className='space-y-3'>
-                  <h3 className='font-medium'>Channel mapping</h3>
+                  <h3 className='font-medium'>
+                    {t('operations:batches.mapping.channelMapping')}
+                  </h3>
                   {preview.channels.length === 0 ? (
                     <p className='text-sm text-muted-foreground'>
-                      Save the worksheet and columns once to list the channels
-                      found in the report.
+                      {t('operations:batches.mapping.channelMappingEmpty')}
                     </p>
                   ) : (
                     <div className='space-y-2'>
@@ -387,7 +451,10 @@ export function BatchMapping({
                             {source.sourceValue}
                             <span className='text-muted-foreground'>
                               {' '}
-                              · {source.rows} rows · {source.quantity} qty
+                              {t('operations:batches.mapping.channelStats', {
+                                rows: source.rows,
+                                quantity: source.quantity,
+                              })}
                             </span>
                           </span>
                           <Select
@@ -402,11 +469,15 @@ export function BatchMapping({
                             }
                           >
                             <SelectTrigger className='w-56'>
-                              <SelectValue placeholder='Choose channel' />
+                              <SelectValue
+                                placeholder={t(
+                                  'operations:batches.mapping.chooseChannel'
+                                )}
+                              />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value='__unmapped__'>
-                                Unmapped
+                                {t('operations:batches.mapping.unmapped')}
                               </SelectItem>
                               {(channels.data?.items ?? [])
                                 .filter((channel) => channel.active)
@@ -427,7 +498,7 @@ export function BatchMapping({
                   <div className='flex items-end gap-2'>
                     <div className='min-w-0 flex-1 space-y-1'>
                       <Label htmlFor={newChannelId} className='text-xs'>
-                        New channel
+                        {t('operations:batches.mapping.newChannel')}
                       </Label>
                       <Input
                         id={newChannelId}
@@ -447,7 +518,7 @@ export function BatchMapping({
                       }
                       onClick={() => creation.mutate(newChannel.trim())}
                     >
-                      Add channel
+                      {t('operations:batches.mapping.addChannel')}
                     </Button>
                   </div>
                   {creation.isError && (
@@ -458,10 +529,12 @@ export function BatchMapping({
                 </section>
 
                 <section className='space-y-2'>
-                  <h3 className='font-medium'>Product mapping</h3>
+                  <h3 className='font-medium'>
+                    {t('operations:batches.mapping.productMapping')}
+                  </h3>
                   {preview.products.length === 0 ? (
                     <p className='text-sm text-muted-foreground'>
-                      No product values were found with the saved columns.
+                      {t('operations:batches.mapping.productMappingEmpty')}
                     </p>
                   ) : (
                     <div className='space-y-3'>
@@ -469,6 +542,7 @@ export function BatchMapping({
                         <ProductMappingRow
                           key={product.productKey}
                           product={product}
+                          branchUuid={branchUuid}
                           value={productSelections[product.productKey]}
                           disabled={pending}
                           onChange={(next) =>
@@ -498,13 +572,13 @@ export function BatchMapping({
               onClick={onClose}
               disabled={pending}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button
               type='submit'
               disabled={pending || (exploring && sheetPreview.isPending)}
             >
-              Save configuration
+              {t('operations:batches.mapping.save')}
             </Button>
           </SheetFooter>
         </form>
@@ -518,12 +592,14 @@ function ColumnSelect({
   value,
   options,
   allowNone = false,
+  noneLabel,
   onChange,
 }: {
   label: string
   value: string
   options: { letter: string; label: string }[]
   allowNone?: boolean
+  noneLabel?: string
   onChange: (value: string) => void
 }) {
   return (
@@ -534,10 +610,16 @@ function ColumnSelect({
         onValueChange={(next) => onChange(next === '__none__' ? '' : next)}
       >
         <SelectTrigger className='w-full'>
-          <SelectValue placeholder='Choose a column' />
+          <SelectValue
+            placeholder={t('operations:batches.mapping.chooseColumn')}
+          />
         </SelectTrigger>
         <SelectContent>
-          {allowNone && <SelectItem value='__none__'>None</SelectItem>}
+          {allowNone && (
+            <SelectItem value='__none__'>
+              {noneLabel ?? t('operations:batches.mapping.none')}
+            </SelectItem>
+          )}
           {options.map((option) => (
             <SelectItem key={option.letter} value={option.letter}>
               {option.label}
@@ -551,15 +633,19 @@ function ColumnSelect({
 
 function ProductMappingRow({
   product,
+  branchUuid,
   value,
   disabled,
   onChange,
 }: {
   product: BatchPreviewProduct
+  /** Batch branch: the backend only accepts its effective active recipes. */
+  branchUuid: string
   value: RecipeOption | null | undefined
   disabled: boolean
   onChange: (next: RecipeOption | null) => void
 }) {
+  const coded = product.sourceCode !== null
   return (
     <div className='space-y-2 rounded-md border border-border p-3'>
       <div className='flex flex-wrap items-baseline justify-between gap-2'>
@@ -567,26 +653,61 @@ function ProductMappingRow({
           {product.label || product.productKey}
         </p>
         <p className='text-xs text-muted-foreground'>
-          {product.rows} rows · {product.quantity} qty
-          {product.recipeName ? ` · current: ${product.recipeName}` : ''}
+          {t('operations:batches.mapping.productStats', {
+            rows: product.rows,
+            quantity: product.quantity,
+            current:
+              !coded && product.recipeName
+                ? t('operations:batches.mapping.productCurrent', {
+                    recipe: product.recipeName,
+                  })
+                : '',
+          })}
         </p>
       </div>
-      <RecipeSelect
-        label={`Recipe for ${product.label || product.productKey}`}
-        value={value === undefined ? null : value}
-        disabled={disabled}
-        onChange={onChange}
-      />
-      {value !== undefined && (
-        <Button
-          type='button'
-          size='sm'
-          variant='outline'
-          disabled={disabled}
-          onClick={() => onChange(null)}
-        >
-          Clear mapping
-        </Button>
+      {coded ? (
+        <div className='space-y-1'>
+          <p className='text-sm'>
+            <span className='text-muted-foreground'>
+              {t('operations:batches.mapping.sourceCode')}
+            </span>{' '}
+            {product.sourceCode}
+          </p>
+          <p className='text-sm'>
+            {product.recipeName === null
+              ? t('operations:batches.mapping.codedUnmatched')
+              : t('operations:batches.mapping.codedMatched', {
+                  recipe: product.recipeName,
+                })}
+          </p>
+          <p className='text-xs text-muted-foreground'>
+            {t('operations:batches.mapping.codedInstruction')}
+          </p>
+        </div>
+      ) : (
+        <>
+          <RecipeSelect
+            label={t('operations:batches.mapping.recipeFor', {
+              product: product.label || product.productKey,
+            })}
+            branchUuid={branchUuid}
+            value={value === undefined ? null : value}
+            disabled={disabled}
+            sellableOnly
+            onChange={onChange}
+          />
+          {value !== undefined && (
+            <Button
+              type='button'
+              size='sm'
+              variant='outline'
+              disabled={disabled}
+              onClick={() => onChange(null)}
+            >
+              {t('operations:batches.mapping.clearMapping')}
+            </Button>
+          )}
+        </>
       )}
     </div>
   )

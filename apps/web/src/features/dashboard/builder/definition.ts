@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n'
+import { measureLabel } from '../labels'
 import {
   dashboardGridColumns,
   type CatalogGroupBy,
@@ -164,7 +166,7 @@ export function createDashboardWidget(
   const source =
     catalog.sources.find((entry) => supportsType(entry, type)) ??
     catalog.sources[0]
-  if (!source) throw new Error('Dashboard catalog has no sources')
+  if (!source) throw new Error(t('dashboard:validation.noSources'))
   const measure = source.measures[0]
   const groups = groupByOptionsFor(source, type)
   const group =
@@ -184,7 +186,9 @@ export function createDashboardWidget(
     {
       id: crypto.randomUUID(),
       type,
-      title: measure?.label ?? 'New card',
+      title: measure
+        ? measureLabel(source.id, measure.id, measure.label)
+        : t('dashboard:validation.newCardTitle'),
       // Sensible starting size only; the sheet edits the native columns and rows.
       x: 0,
       y: 0,
@@ -206,69 +210,72 @@ export function widgetValidationError(
   widget: DashboardWidget,
   catalog: DashboardCatalog
 ): string | null {
-  if (widget.title.trim().length === 0) return 'Enter a card title.'
-  if (widget.title.length > 80) return 'Titles are limited to 80 characters.'
+  if (widget.title.trim().length === 0)
+    return t('dashboard:validation.titleRequired')
+  if (widget.title.length > 80) return t('dashboard:validation.titleTooLong')
   const source = findSource(catalog, widget.source)
-  if (!source) return 'Choose a data source.'
+  if (!source) return t('dashboard:validation.chooseSource')
   if (!source.types.includes(widget.type))
-    return 'This visual type is not available for that source.'
+    return t('dashboard:validation.typeUnavailable')
   if (!source.measures.some((entry) => entry.id === widget.measure))
-    return 'Choose a measure.'
+    return t('dashboard:validation.chooseMeasure')
   const group = findGroupBy(source, widget.groupBy)
   if (widget.type === 'kpi') {
-    if (widget.groupBy !== null) return 'A KPI cannot have a grouping axis.'
+    if (widget.groupBy !== null) return t('dashboard:validation.kpiGrouping')
   } else {
-    if (!group) return 'Choose a grouping.'
+    if (!group) return t('dashboard:validation.chooseGrouping')
     if (!group.allowedTypes.includes(widget.type))
-      return 'This grouping does not support that visual type.'
+      return t('dashboard:validation.groupingType')
     if (widget.type === 'line' && !group.temporal)
-      return 'A line chart requires a time grouping.'
+      return t('dashboard:validation.lineTemporal')
     if (widget.type === 'donut' && group.temporal)
-      return 'A donut chart requires a categorical grouping.'
+      return t('dashboard:validation.donutCategorical')
   }
   if (source.dateBasis === null) {
     if (widget.dateRange !== null)
-      return 'Current stock is a snapshot with no date range.'
+      return t('dashboard:validation.snapshotNoRange')
   } else {
-    if (widget.dateRange === null) return 'Choose a date range.'
+    if (widget.dateRange === null) return t('dashboard:validation.chooseRange')
     const options = group?.temporal ? group.allowedRanges : source.dateRanges
     if (!options.includes(widget.dateRange))
-      return 'That date range is not available for the selected grouping.'
+      return t('dashboard:validation.rangeUnavailable')
   }
   if (widget.seriesBy === 'status' && !canSplitByStatus(source, widget, group))
-    return 'Status series are only available on temporal line or column charts.'
+    return t('dashboard:validation.statusSeries')
   const filter = statusFilter(source)
   if (!filter) {
     if (widget.filters.statuses.length > 0)
-      return 'Status filters are not available for this source.'
+      return t('dashboard:validation.statusUnavailable')
   } else {
     if (
       new Set(widget.filters.statuses).size !== widget.filters.statuses.length
     )
-      return 'Choose each status once.'
+      return t('dashboard:validation.duplicateStatus')
     if (
       widget.filters.statuses.some(
         (status) => !filter.options.some((option) => option.value === status)
       )
     )
-      return 'Choose only supported purchase order statuses.'
+      return t('dashboard:validation.unsupportedStatus')
   }
   if (
     !Number.isInteger(widget.x) ||
     widget.x < 0 ||
     widget.x >= dashboardGridColumns
   )
-    return 'Choose a starting column.'
+    return t('dashboard:validation.startColumn')
   if (!Number.isSafeInteger(widget.y) || widget.y < 0)
-    return 'Choose a starting row.'
+    return t('dashboard:validation.startRow')
   if (!Number.isInteger(widget.w) || widget.w < 1)
-    return 'A card needs at least one column.'
+    return t('dashboard:validation.minColumns')
   if (!Number.isSafeInteger(widget.h) || widget.h < 1)
-    return 'A card needs a positive whole number of rows.'
+    return t('dashboard:validation.positiveRows')
   if (!Number.isSafeInteger(widget.y + widget.h))
-    return 'That card size is too large to place.'
+    return t('dashboard:validation.tooLarge')
   if (widget.x + widget.w > dashboardGridColumns)
-    return `A card must fit inside the ${dashboardGridColumns} columns.`
+    return t('dashboard:validation.fitColumns', {
+      columns: dashboardGridColumns,
+    })
   return null
 }
 

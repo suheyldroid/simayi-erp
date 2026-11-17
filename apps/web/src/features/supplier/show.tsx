@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
-import { useOrganizationSlug } from '@/lib/organization-boundary'
+import {
+  organizationLocation,
+  useOrganizationResourceParams,
+  useOrganizationScope,
+} from '@/lib/organization-navigation'
 import { parseResourceUuid } from '@/lib/resource-uuid'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
@@ -20,14 +25,10 @@ import { formatSupplierAddress } from './format'
 import { supplierImagePrefix } from './image-api'
 import type { Supplier, SupplierInput } from './model'
 
-const supplierRoute = getRouteApi(
-  '/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId'
-)
-
 export function SupplierDetail() {
-  const { supplierId } = supplierRoute.useParams()
-  const organizationSlug = useOrganizationSlug()
-  const uuid = parseResourceUuid(supplierId)
+  const { supplierId } = useOrganizationResourceParams()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
+  const uuid = supplierId === undefined ? null : parseResourceUuid(supplierId)
   const client = useQueryClient()
   const navigate = useNavigate()
   const [editing, setEditing] = useState<Supplier | null>(null)
@@ -65,7 +66,7 @@ export function SupplierDetail() {
       await client.invalidateQueries({
         queryKey: ['supplier', input.scope],
       })
-      toast.success('Supplier saved.')
+      toast.success(t('operations:supplier.detail.saved'))
     },
     onError: (error) => toast.error(errorMessage(error)),
   })
@@ -74,11 +75,10 @@ export function SupplierDetail() {
     onSuccess: async () => {
       setDeleting(null)
       await client.invalidateQueries({ queryKey: ['supplier'] })
-      toast.success('Supplier deleted.')
-      await navigate({
-        to: '/o/$organizationSlug/supplier',
-        params: { organizationSlug },
-      })
+      toast.success(t('operations:supplier.detail.deleted'))
+      await navigate(
+        organizationLocation(organizationSlug, branchUuid, '/supplier')
+      )
     },
     onError: (error) => toast.error(errorMessage(error)),
   })
@@ -91,26 +91,29 @@ export function SupplierDetail() {
       <Main className='space-y-6'>
         <div>
           <Link
-            to='/o/$organizationSlug/supplier'
-            params={{ organizationSlug }}
+            {...organizationLocation(organizationSlug, branchUuid, '/supplier')}
             className='rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
           >
-            Back to suppliers
+            {t('operations:supplier.detail.back')}
           </Link>
-          <h1 className='mt-2 text-2xl font-bold'>Supplier details</h1>
+          <h1 className='mt-2 text-2xl font-bold'>
+            {t('operations:supplier.detail.title')}
+          </h1>
         </div>
-        {uuid === null && <p role='alert'>Supplier not found.</p>}
+        {uuid === null && (
+          <p role='alert'>{t('operations:supplier.detail.notFound')}</p>
+        )}
         {uuid !== null && details.isPending && (
-          <p role='status'>Loading supplier…</p>
+          <p role='status'>{t('operations:supplier.detail.loading')}</p>
         )}
         {details.isError && detailStatus === 404 && (
-          <p role='alert'>Supplier not found.</p>
+          <p role='alert'>{t('operations:supplier.detail.notFound')}</p>
         )}
         {details.isError && detailStatus !== 404 && (
           <p role='alert'>
-            Could not load this supplier.{' '}
+            {t('operations:supplier.detail.loadError')}{' '}
             <Button variant='outline' onClick={() => void details.refetch()}>
-              Retry
+              {t('operations:common.retry')}
             </Button>
           </p>
         )}
@@ -121,12 +124,14 @@ export function SupplierDetail() {
                 {supplier.image ? (
                   failedImage === supplier.image ? (
                     <span className='flex size-24 shrink-0 items-center justify-center rounded-md border border-border bg-muted px-2 text-center text-xs text-muted-foreground'>
-                      Image unavailable
+                      {t('operations:supplier.detail.imageUnavailable')}
                     </span>
                   ) : (
                     <img
                       src={imageUrl(supplier.image)}
-                      alt={`${supplier.name} image`}
+                      alt={t('operations:supplier.detail.imageAlt', {
+                        name: supplier.name,
+                      })}
                       className='size-24 shrink-0 rounded-md border border-border bg-muted object-contain'
                       crossOrigin={
                         supplier.image.startsWith(supplierImagePrefix)
@@ -143,41 +148,64 @@ export function SupplierDetail() {
                     {supplier.description}
                   </p>
                   <p className='text-sm text-muted-foreground'>
-                    {supplier.active ? 'Active' : 'Inactive'}
-                    {supplier.taxId ? ` · Tax ID ${supplier.taxId}` : ''}
+                    {supplier.active
+                      ? t('operations:supplier.detail.active')
+                      : t('operations:supplier.detail.inactive')}
+                    {supplier.taxId
+                      ? t('operations:supplier.detail.taxIdSuffix', {
+                          taxId: supplier.taxId,
+                        })
+                      : ''}
                   </p>
                 </div>
               </div>
               <div className='flex flex-wrap gap-2'>
                 <Button variant='outline' onClick={() => setEditing(supplier)}>
-                  Edit
+                  {t('operations:supplier.detail.edit')}
                 </Button>
                 <Button variant='outline' onClick={() => setDeleting(supplier)}>
-                  Delete
+                  {t('operations:supplier.detail.delete')}
                 </Button>
               </div>
             </div>
             <dl className='grid gap-4 text-sm sm:grid-cols-2'>
               <div className='space-y-1'>
-                <dt className='font-medium'>Contact</dt>
+                <dt className='font-medium'>
+                  {t('operations:supplier.detail.contact')}
+                </dt>
                 <dd>{supplier.contact || '—'}</dd>
                 <dd>{supplier.contactPhone || '—'}</dd>
                 <dd>{supplier.contactRole || '—'}</dd>
               </div>
               <div className='space-y-1'>
-                <dt className='font-medium'>Address</dt>
+                <dt className='font-medium'>
+                  {t('operations:supplier.detail.address')}
+                </dt>
                 <dd>{formatSupplierAddress(supplier) || '—'}</dd>
-                <dd>Shipping notes: {supplier.shippingNotes || '—'}</dd>
                 <dd>
-                  Internal shipping notes:{' '}
-                  {supplier.internalShippingNotes || '—'}
+                  {t('operations:supplier.detail.shippingNotes', {
+                    notes: supplier.shippingNotes || '—',
+                  })}
                 </dd>
-                <dd>Address link: {supplier.addressLink || '—'}</dd>
+                <dd>
+                  {t('operations:supplier.detail.internalShippingNotes', {
+                    notes: supplier.internalShippingNotes || '—',
+                  })}
+                </dd>
+                <dd>
+                  {t('operations:supplier.detail.addressLink', {
+                    link: supplier.addressLink || '—',
+                  })}
+                </dd>
               </div>
               <div className='space-y-1'>
-                <dt className='font-medium'>Phone</dt>
+                <dt className='font-medium'>
+                  {t('operations:supplier.detail.phone')}
+                </dt>
                 <dd>{supplier.phone || '—'}</dd>
-                <dt className='font-medium'>Tax ID</dt>
+                <dt className='font-medium'>
+                  {t('operations:supplier.detail.taxId')}
+                </dt>
                 <dd>{supplier.taxId || '—'}</dd>
               </div>
             </dl>
@@ -193,11 +221,10 @@ export function SupplierDetail() {
                 id='supplier-purchase-orders'
                 className='text-xl font-semibold'
               >
-                Purchase orders
+                {t('operations:supplier.detail.ordersTitle')}
               </h2>
               <p className='text-sm text-muted-foreground'>
-                Purchase orders recorded for this supplier. Open an order to
-                manage its lines, extras, status, and receipts.
+                {t('operations:supplier.detail.ordersDescription')}
               </p>
             </div>
             <OrdersDirectory
@@ -207,7 +234,7 @@ export function SupplierDetail() {
                 name: supplier.name,
                 contact: supplier.contact,
               }}
-              emptyMessage='No purchase orders for this supplier yet.'
+              emptyMessage={t('operations:supplier.detail.ordersEmpty')}
             />
           </section>
         ) : null}
@@ -238,10 +265,12 @@ export function SupplierDetail() {
             onOpenChange={(open) => {
               if (!open && !remove.isPending) setDeleting(null)
             }}
-            title='Delete supplier'
-            desc={`Delete ${deleting.name}? Purchase orders keep their supplier reference as empty. A supplier with ledger entries or posted payments cannot be deleted.`}
+            title={t('operations:supplier.detail.deleteTitle')}
+            desc={t('operations:supplier.detail.deleteDescription', {
+              name: deleting.name,
+            })}
             destructive
-            confirmText='Delete'
+            confirmText={t('operations:common.delete')}
             isLoading={remove.isPending}
             handleConfirm={() => {
               if (!eligibleRead || deleting.uuid !== uuid) return

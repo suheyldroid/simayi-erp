@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { useQuery } from '@tanstack/react-query'
 import { XIcon } from 'lucide-react'
+import { locale, t } from '@/lib/i18n'
 import { organizationCacheScope } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -33,7 +34,7 @@ export function ItemCategorySelect({
   value,
   fallbackUuid = null,
   disabled = false,
-  label = 'Category',
+  label = t('catalog:items.categorySelect.label'),
   structural = false,
   excludeUuid = null,
   onChange,
@@ -142,7 +143,7 @@ export function ItemCategorySelect({
                 )}
               >
                 {selected == null
-                  ? `Select ${label.toLowerCase()}`
+                  ? t('catalog:items.categorySelect.select', { label })
                   : selected.pathstring || selected.name}
               </span>
               <span
@@ -162,8 +163,10 @@ export function ItemCategorySelect({
           >
             <Command shouldFilter={false} loop>
               <CommandInput
-                aria-label='Search categories'
-                placeholder='Search categories…'
+                aria-label={t('catalog:items.categorySelect.searchLabel')}
+                placeholder={t(
+                  'catalog:items.categorySelect.searchPlaceholder'
+                )}
                 value={search}
                 onValueChange={(next) => {
                   setSearch(next)
@@ -177,7 +180,7 @@ export function ItemCategorySelect({
                     role='status'
                     className='p-3 text-sm text-muted-foreground'
                   >
-                    Loading categories…
+                    {t('catalog:items.categorySelect.loading')}
                   </p>
                 ) : options.isError ? (
                   <div
@@ -192,12 +195,14 @@ export function ItemCategorySelect({
                       disabled={disabled}
                       onClick={() => void options.refetch()}
                     >
-                      Retry
+                      {t('catalog:common.retry')}
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <CommandEmpty>No categories found.</CommandEmpty>
+                    <CommandEmpty>
+                      {t('catalog:items.categorySelect.empty')}
+                    </CommandEmpty>
                     <CommandGroup>
                       {items.map((category) => (
                         <CommandItem
@@ -239,15 +244,19 @@ export function ItemCategorySelect({
                   disabled={page === 0 || options.isFetching || disabled}
                   onClick={() => setPage((current) => Math.max(0, current - 1))}
                 >
-                  Previous
+                  {t('catalog:common.previous')}
                 </Button>
                 <span className='text-xs text-muted-foreground'>
                   {total === 0
-                    ? 'No categories'
-                    : `${page * PAGE_SIZE + 1}–${Math.min(
-                        (page + 1) * PAGE_SIZE,
-                        total
-                      )} of ${total}`}
+                    ? t('catalog:items.categorySelect.none')
+                    : t('catalog:common.range', {
+                        from: (page * PAGE_SIZE + 1).toLocaleString(locale),
+                        to: Math.min(
+                          (page + 1) * PAGE_SIZE,
+                          total
+                        ).toLocaleString(locale),
+                        total: total.toLocaleString(locale),
+                      })}
                 </span>
                 <Button
                   type='button'
@@ -256,7 +265,7 @@ export function ItemCategorySelect({
                   disabled={!hasNext || options.isFetching || disabled}
                   onClick={() => setPage((current) => current + 1)}
                 >
-                  Next
+                  {t('catalog:common.next')}
                 </Button>
               </div>
             </Command>
@@ -267,7 +276,7 @@ export function ItemCategorySelect({
             type='button'
             variant='ghost'
             size='icon'
-            aria-label={`Clear ${label.toLowerCase()}`}
+            aria-label={t('catalog:common.clearSelection', { label })}
             disabled={disabled}
             className='absolute end-1 top-1/2 size-7 -translate-y-1/2 rounded-sm text-muted-foreground'
             onClick={(event) => {
@@ -286,7 +295,7 @@ export function ItemCategorySelect({
           role='alert'
           className='flex items-center gap-2 text-xs text-destructive'
         >
-          Could not load the current category name.
+          {t('catalog:items.categorySelect.loadNameError')}
           <Button
             type='button'
             size='sm'
@@ -294,7 +303,7 @@ export function ItemCategorySelect({
             disabled={disabled}
             onClick={() => void fallback.refetch()}
           >
-            Retry
+            {t('catalog:common.retry')}
           </Button>
         </p>
       )}

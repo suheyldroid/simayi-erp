@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 import { resourceUuid } from '@/lib/resource-uuid'
 
 const paging = {
@@ -11,12 +12,12 @@ const currency = z.string().regex(/^[A-Z]{3}$/)
 
 const day = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a business date like 2026-11-14.')
+  .regex(/^\d{4}-\d{2}-\d{2}$/, t('operations:posDevices.model.businessDate'))
   .refine(
     (value) =>
       !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) &&
       new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value,
-    'Use a real calendar date.'
+    t('operations:posDevices.model.calendarDate')
   )
 
 function normalizeAmount(value: string) {
@@ -34,9 +35,16 @@ const amount = z
       .string()
       .regex(
         /^\d{1,13}(?:\.\d{1,6})?$/,
-        'Use an amount with at most 13 integer and 6 decimal places, like 1250 or 1250,75.'
+        t('operations:posDevices.model.amount')
       )
   )
+
+/** Branch ownership is immutable; the device never moves between branches. */
+const branchRef = z.object({
+  uuid: resourceUuid,
+  name: z.string(),
+  active: z.boolean(),
+})
 
 const device = z.object({
   uuid: resourceUuid,
@@ -44,6 +52,7 @@ const device = z.object({
   bankName: z.string(),
   terminalId: z.string(),
   active: z.boolean(),
+  branch: branchRef,
   version: z.number().int().nonnegative(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -82,6 +91,7 @@ const report = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   posDevice: z.object({ uuid: resourceUuid, name: z.string() }),
+  branch: branchRef,
   salesBatch: reportBatch.nullable(),
 })
 

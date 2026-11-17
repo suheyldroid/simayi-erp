@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
+import { t } from '@/lib/i18n'
 import { sleep, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,16 +23,20 @@ const formSchema = z
   .object({
     email: z.email({
       error: (iss) =>
-        iss.input === '' ? 'Please enter your email.' : undefined,
+        iss.input === ''
+          ? t('global:auth.validation.emailRequired')
+          : undefined,
     }),
     password: z
       .string()
-      .min(1, 'Please enter your password.')
-      .min(7, 'Password must be at least 7 characters long.'),
-    confirmPassword: z.string().min(1, 'Please confirm your password.'),
+      .min(1, t('global:auth.validation.passwordRequired'))
+      .min(7, t('global:auth.validation.passwordMin7')),
+    confirmPassword: z
+      .string()
+      .min(1, t('global:auth.validation.confirmPasswordRequired')),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
+    message: t('global:auth.validation.passwordMismatch'),
     path: ['confirmPassword'],
   })
 
@@ -54,12 +59,12 @@ export function SignUpForm({
     setIsLoading(true)
 
     toast.promise(sleep(2000), {
-      loading: 'Creating account...',
+      loading: t('global:auth.signUp.loading'),
       success: () => {
         setIsLoading(false)
-        return `Account created for ${data.email}.`
+        return t('global:auth.signUp.created', { email: data.email })
       },
-      error: 'Error',
+      error: t('global:auth.signUp.error'),
     })
   }
 
@@ -75,9 +80,12 @@ export function SignUpForm({
           name='email'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('global:auth.emailLabel')}</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input
+                  placeholder={t('global:auth.emailPlaceholder')}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -88,7 +96,7 @@ export function SignUpForm({
           name='password'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t('global:auth.passwordLabel')}</FormLabel>
               <FormControl>
                 <PasswordInput placeholder='********' {...field} />
               </FormControl>
@@ -101,7 +109,9 @@ export function SignUpForm({
           name='confirmPassword'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel>
+                {t('global:auth.signUp.confirmPasswordLabel')}
+              </FormLabel>
               <FormControl>
                 <PasswordInput placeholder='********' {...field} />
               </FormControl>
@@ -111,7 +121,7 @@ export function SignUpForm({
         />
         <Button className='mt-2' disabled={isLoading}>
           {isLoading ? <Loader2 className='animate-spin' /> : <UserPlus />}
-          Create Account
+          {t('global:auth.signUp.submit')}
         </Button>
 
         <div className='relative my-2'>
@@ -120,7 +130,7 @@ export function SignUpForm({
           </div>
           <div className='relative flex justify-center text-xs uppercase'>
             <span className='bg-background px-2 text-muted-foreground'>
-              Or continue with
+              {t('global:auth.signUp.orContinueWith')}
             </span>
           </div>
         </div>

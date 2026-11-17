@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { sessionQuery, type SessionUser } from '@/lib/auth'
+import { locale, t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -25,25 +26,27 @@ export function SettingsProfile() {
 
   return (
     <ContentSection
-      title='Profile'
-      desc='Your native account identity. Name and avatar are shown across the app.'
+      title={t('global:settings.profile.title')}
+      desc={t('global:settings.profile.description')}
     >
       <div className='space-y-4'>
-        {session.isPending ? <p role='status'>Loading your account…</p> : null}
+        {session.isPending ? (
+          <p role='status'>{t('global:settings.profile.loading')}</p>
+        ) : null}
         {session.isError ? (
           <div role='alert' className='space-y-2'>
-            <p>Could not load your account.</p>
+            <p>{t('global:settings.profile.loadFailed')}</p>
             <Button
               variant='outline'
               size='sm'
               onClick={() => void session.refetch()}
             >
-              Retry
+              {t('global:shared.retry')}
             </Button>
           </div>
         ) : null}
         {session.isSuccess && user == null ? (
-          <p role='alert'>Your account session is not available.</p>
+          <p role='alert'>{t('global:settings.profile.sessionUnavailable')}</p>
         ) : null}
         {session.isSuccess && user ? (
           // Remount on the account identity boundary so a pending edit can
@@ -59,7 +62,7 @@ function ProfileSummary({ user }: { user: SessionUser }) {
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState(false)
   const image = user.image ?? null
-  const initials = user.name.trim().slice(0, 2).toUpperCase() || 'U'
+  const initials = user.name.trim().slice(0, 2).toLocaleUpperCase(locale) || 'U'
 
   function changeOpen(next: boolean) {
     // A native update cannot be cancelled once sent; keep the Sheet mounted
@@ -94,13 +97,11 @@ function ProfileSummary({ user }: { user: SessionUser }) {
           className='w-full sm:ms-auto sm:w-auto'
           onClick={() => setOpen(true)}
         >
-          Edit profile
+          {t('global:settings.profile.editTrigger')}
         </Button>
       </div>
       <p className='text-sm text-muted-foreground'>
-        Email is read-only. Email changes are not enabled in this deployment:
-        Better Auth&apos;s change-email flow is off and no verification email
-        sender is configured.
+        {t('global:settings.profile.emailReadOnly')}
       </p>
 
       <Sheet open={open} onOpenChange={changeOpen}>
@@ -114,9 +115,11 @@ function ProfileSummary({ user }: { user: SessionUser }) {
           }}
         >
           <SheetHeader>
-            <SheetTitle>Edit profile</SheetTitle>
+            <SheetTitle>{t('global:settings.profile.sheetTitle')}</SheetTitle>
             <SheetDescription>
-              Update the name or upload an avatar for {user.email}.
+              {t('global:settings.profile.sheetDescription', {
+                email: user.email,
+              })}
             </SheetDescription>
           </SheetHeader>
           {open ? (

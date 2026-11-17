@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Outlet } from '@tanstack/react-router'
 import { isAdministrator, sessionQuery } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -12,14 +13,15 @@ import { Button } from '@/components/ui/button'
 export function SystemSettingsGate() {
   const session = useQuery(sessionQuery)
 
-  if (session.isPending) return <p role='status'>Loading account…</p>
+  if (session.isPending)
+    return <p role='status'>{t('global:shared.accountLoading')}</p>
 
   if (session.isError)
     return (
       <div role='alert' className='space-y-2'>
-        <p>Could not load your account.</p>
+        <p>{t('global:shared.accountLoadFailed')}</p>
         <Button variant='outline' onClick={() => void session.refetch()}>
-          Retry
+          {t('global:shared.retry')}
         </Button>
       </div>
     )
@@ -27,7 +29,7 @@ export function SystemSettingsGate() {
   if (!isAdministrator(session.data?.user))
     return (
       <p className='text-muted-foreground'>
-        System settings require platform administrator access.
+        {t('global:settings.gate.adminRequired')}
       </p>
     )
 

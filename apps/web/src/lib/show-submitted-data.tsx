@@ -1,8 +1,9 @@
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 
 export function showSubmittedData(
   data: unknown,
-  title: string = 'You submitted the following values:'
+  title: string = t('common:submitted.title')
 ) {
   toast.message(title, {
     description: (

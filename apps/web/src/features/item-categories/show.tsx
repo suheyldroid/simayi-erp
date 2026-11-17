@@ -1,9 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import axios from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { useOrganizationSlug } from '@/lib/organization-boundary'
+import {
+  captureBranchScope,
+  isBranchScopeCurrent,
+  type CapturedBranchScope,
+} from '@/lib/branch-scope'
+import { locale, t } from '@/lib/i18n'
+import {
+  organizationLocation,
+  useOrganizationResourceParams,
+  useOrganizationScope,
+} from '@/lib/organization-navigation'
 import { parseResourceUuid } from '@/lib/resource-uuid'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
@@ -19,24 +29,16 @@ import { errorMessage, itemCategoryApi } from './api'
 import { CategoryForm } from './components/category-form'
 import type { Category } from './model'
 
-const categoryRoute = getRouteApi(
-  '/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId'
-)
-
 const categoryLabel = (pathstring: string, name: string) =>
-  pathstring || name || 'Category'
+  pathstring || name || t('catalog:itemCategories.fallbackName')
 
 const PAGE_SIZE = 20
 
-const itemLabel = (item: Item) => item.name || item.ipn || 'Item'
+const itemLabel = (item: Item) =>
+  item.name || item.ipn || t('catalog:items.fallbackName')
 
-function CategoryItems({
-  uuid,
-  organizationSlug,
-}: {
-  uuid: string
-  organizationSlug: string
-}) {
+function CategoryItems({ uuid }: { uuid: string }) {
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const [page, setPage] = useState(0)
   const categoryItems = useQuery({
     queryKey: [
@@ -55,7 +57,7 @@ function CategoryItems({
     () => [
       {
         id: 'name',
-        header: 'Name',
+        header: t('catalog:itemCategories.columns.name'),
         accessorFn: (item) => itemLabel(item),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
@@ -66,41 +68,47 @@ function CategoryItems({
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
-        id: 'stock',
-        header: 'Stock',
-        accessorFn: (item) => item.stock,
-        enableSorting: false,
-        cell: ({ getValue }) => String(getValue() ?? ''),
-      },
-      {
         id: 'status',
-        header: 'Status',
-        accessorFn: (item) => (item.active ? 'Active' : 'Inactive'),
+        header: t('catalog:common.status'),
+        accessorFn: (item) =>
+          item.active
+            ? t('catalog:common.active')
+            : t('catalog:common.inactive'),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: t('catalog:common.actions'),
         enableSorting: false,
-        meta: { label: 'Actions', width: 110 },
+        meta: { label: t('catalog:common.actions'), width: 110 },
         cell: ({ row }) => (
           <Link
-            to='/o/$organizationSlug/settings/items/$itemId'
-            params={{ organizationSlug, itemId: row.original.uuid }}
-            aria-label={`View details for ${itemLabel(row.original)}`}
+            {...organizationLocation(
+              organizationSlug,
+              branchUuid,
+              '/settings/items/$itemId',
+              { itemId: row.original.uuid }
+            )}
+            aria-label={t('catalog:items.viewDetails', {
+              name: itemLabel(row.original),
+            })}
             className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
           >
-            Details
+            {t('catalog:common.details')}
           </Link>
         ),
       },
     ],
-    [organizationSlug]
+    [organizationSlug, branchUuid]
   )
   return (
     <section className='space-y-2'>
-      <h3 className='text-xl font-semibold'>Items</h3>
-      {categoryItems.isPending && <p role='status'>Loading items…</p>}
+      <h3 className='text-xl font-semibold'>
+        {t('catalog:itemCategories.itemsHeading')}
+      </h3>
+      {categoryItems.isPending && (
+        <p role='status'>{t('catalog:items.loading')}</p>
+      )}
       {categoryItems.isError && (
         <p role='alert'>
           {errorMessage(categoryItems.error)}{' '}
@@ -108,21 +116,24 @@ function CategoryItems({
             variant='outline'
             onClick={() => void categoryItems.refetch()}
           >
-            Retry
+            {t('catalog:common.retry')}
           </Button>
         </p>
       )}
       {categoryItems.data && (
         <>
           <p className='text-sm text-muted-foreground'>
-            {categoryItems.data.total} items. Sorting applies to this page only.
+            {t('catalog:itemCategories.itemsSummary', {
+              total: categoryItems.data.total.toLocaleString(locale),
+              sortingNote: t('catalog:common.sortingNote'),
+            })}
           </p>
           <SortableDataTable
             data={categoryItems.data.items}
             columns={columns}
             getRowId={(item) => item.uuid}
-            caption='Items in this category'
-            emptyMessage='No items in this category.'
+            caption={t('catalog:itemCategories.itemsCaption')}
+            emptyMessage={t('catalog:itemCategories.itemsEmpty')}
           />
           <PageControls
             page={page}
@@ -143,7 +154,7 @@ function EditCategoryAction({ category }: { category: Category }) {
   return (
     <>
       <Button type='button' variant='outline' onClick={() => setOpen(true)}>
-        Edit
+        {t('catalog:common.edit')}
       </Button>
       <CategoryForm
         draft={open ? { mode: 'edit', category } : null}
@@ -154,19 +165,24 @@ function EditCategoryAction({ category }: { category: Category }) {
   )
 }
 
-function AddChildCategoryAction({
-  category,
-  organizationSlug,
-}: {
-  category: Category
-  organizationSlug: string
-}) {
+function AddChildCategoryAction({ category }: { category: Category }) {
   const navigate = useNavigate()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const [open, setOpen] = useState(false)
+  // The catalog write is a company request that survives a scope switch; the
+  // destination scope is captured when the child form opens.
+  const captured = useRef<CapturedBranchScope | null>(null)
   return (
     <>
-      <Button type='button' variant='outline' onClick={() => setOpen(true)}>
-        Add child
+      <Button
+        type='button'
+        variant='outline'
+        onClick={() => {
+          captured.current = captureBranchScope(branchUuid)
+          setOpen(true)
+        }}
+      >
+        {t('catalog:itemCategories.addChild')}
       </Button>
       <CategoryForm
         draft={
@@ -175,25 +191,26 @@ function AddChildCategoryAction({
         canSubmit={open}
         onOpenChange={setOpen}
         onSaved={(saved) => {
-          void navigate({
-            to: '/o/$organizationSlug/settings/item-categories/$categoryId',
-            params: { organizationSlug, categoryId: saved.uuid },
-          })
+          const scope = captured.current
+          if (scope === null || !isBranchScopeCurrent(scope)) return
+          void navigate(
+            organizationLocation(
+              organizationSlug,
+              scope.branchUuid,
+              '/settings/item-categories/$categoryId',
+              { categoryId: saved.uuid }
+            )
+          )
         }}
       />
     </>
   )
 }
 
-function DeleteCategoryAction({
-  category,
-  organizationSlug,
-}: {
-  category: Category
-  organizationSlug: string
-}) {
+function DeleteCategoryAction({ category }: { category: Category }) {
   const navigate = useNavigate()
   const client = useQueryClient()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const [open, setOpen] = useState(false)
   const deletion = useMutation({
     mutationFn: itemCategoryApi.removeCategory,
@@ -201,11 +218,7 @@ function DeleteCategoryAction({
       await client.invalidateQueries({ queryKey: ['item-category'] })
       await client.invalidateQueries({ queryKey: ['item'] })
       setOpen(false)
-      toast.success('Category deleted')
-      await navigate({
-        to: '/o/$organizationSlug/settings/item-categories',
-        params: { organizationSlug },
-      })
+      toast.success(t('catalog:itemCategories.deletedToast'))
     },
     onError: (error) => toast.error(errorMessage(error)),
   })
@@ -217,26 +230,42 @@ function DeleteCategoryAction({
         disabled={deletion.isPending}
         onClick={() => setOpen(true)}
       >
-        Delete
+        {t('catalog:common.delete')}
       </Button>
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title='Delete category'
-        desc='Delete is refused while the category still has child categories or items.'
-        confirmText='Delete'
+        title={t('catalog:itemCategories.deleteTitle')}
+        desc={t('catalog:itemCategories.deleteDescription')}
+        confirmText={t('catalog:common.delete')}
         destructive
         isLoading={deletion.isPending}
-        handleConfirm={() => deletion.mutate(category.uuid)}
+        handleConfirm={() => {
+          const ui = captureBranchScope(branchUuid)
+          deletion.mutate(category.uuid, {
+            onSuccess: () => {
+              // Only the scope that confirmed the deletion is redirected back
+              // to its own category list.
+              if (!isBranchScopeCurrent(ui)) return
+              void navigate(
+                organizationLocation(
+                  organizationSlug,
+                  ui.branchUuid,
+                  '/settings/item-categories'
+                )
+              )
+            },
+          })
+        }}
       />
     </>
   )
 }
 
 export function CategoryDetail() {
-  const { categoryId } = categoryRoute.useParams()
-  const organizationSlug = useOrganizationSlug()
-  const uuid = parseResourceUuid(categoryId)
+  const { categoryId, organizationSlug, branchUuid } =
+    useOrganizationResourceParams()
+  const uuid = parseResourceUuid(categoryId ?? '')
   const details = useQuery({
     queryKey: [
       'item-category',
@@ -276,30 +305,35 @@ export function CategoryDetail() {
     <section className='space-y-6'>
       <div>
         <Link
-          to='/o/$organizationSlug/settings/item-categories'
-          params={{ organizationSlug }}
+          {...organizationLocation(
+            organizationSlug,
+            branchUuid,
+            '/settings/item-categories'
+          )}
           className='rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
         >
-          Back to item categories
+          {t('catalog:itemCategories.back')}
         </Link>
         <h2 className='mt-2 text-2xl font-bold'>
           {liveCategory
             ? categoryLabel(liveCategory.pathstring, liveCategory.name)
-            : 'Category details'}
+            : t('catalog:itemCategories.detailTitle')}
         </h2>
       </div>
-      {uuid === null && <p role='alert'>Category not found.</p>}
+      {uuid === null && (
+        <p role='alert'>{t('catalog:itemCategories.notFound')}</p>
+      )}
       {uuid !== null && details.isPending && (
-        <p role='status'>Loading category…</p>
+        <p role='status'>{t('catalog:itemCategories.loadingOne')}</p>
       )}
       {details.isError && detailStatus === 404 && (
-        <p role='alert'>Category not found.</p>
+        <p role='alert'>{t('catalog:itemCategories.notFound')}</p>
       )}
       {details.isError && detailStatus !== 404 && (
         <p role='alert'>
-          Could not load this category.{' '}
+          {t('catalog:itemCategories.loadError')}{' '}
           <Button variant='outline' onClick={() => void details.refetch()}>
-            Retry
+            {t('catalog:common.retry')}
           </Button>
         </p>
       )}
@@ -308,11 +342,20 @@ export function CategoryDetail() {
           <section className='space-y-4 rounded-md border border-border p-4'>
             <div className='flex flex-wrap items-start justify-between gap-3'>
               <div>
-                <h3 className='text-xl font-semibold'>Category details</h3>
+                <h3 className='text-xl font-semibold'>
+                  {t('catalog:itemCategories.detailTitle')}
+                </h3>
                 <p className='text-sm text-muted-foreground'>
-                  ID {category.uuid}
-                  {category.structural ? ' · structural' : ' · items'}
-                  {` · ${category.itemCount} items · ${category.childCount} children`}
+                  {[
+                    t('catalog:items.meta.id', { uuid: category.uuid }),
+                    category.structural
+                      ? t('catalog:itemCategories.metaStructural')
+                      : t('catalog:itemCategories.metaItems'),
+                    t('catalog:itemCategories.metaCounts', {
+                      items: category.itemCount.toLocaleString(locale),
+                      children: category.childCount.toLocaleString(locale),
+                    }),
+                  ].join(' · ')}
                 </p>
               </div>
               <div className='flex flex-wrap gap-2'>
@@ -323,12 +366,10 @@ export function CategoryDetail() {
                 <AddChildCategoryAction
                   key={`child-${category.uuid}`}
                   category={category}
-                  organizationSlug={organizationSlug}
                 />
                 <DeleteCategoryAction
                   key={`delete-${category.uuid}`}
                   category={category}
-                  organizationSlug={organizationSlug}
                 />
               </div>
             </div>
@@ -337,14 +378,15 @@ export function CategoryDetail() {
             )}
             {category.parentUuid != null && (
               <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
-                <dt>Parent</dt>
+                <dt>{t('catalog:itemCategories.parent')}</dt>
                 <dd>
                   <Link
-                    to='/o/$organizationSlug/settings/item-categories/$categoryId'
-                    params={{
+                    {...organizationLocation(
                       organizationSlug,
-                      categoryId: category.parentUuid,
-                    }}
+                      branchUuid,
+                      '/settings/item-categories/$categoryId',
+                      { categoryId: category.parentUuid }
+                    )}
                     className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                   >
                     {category.parentUuid}
@@ -354,8 +396,12 @@ export function CategoryDetail() {
             )}
           </section>
           <section className='space-y-2'>
-            <h3 className='text-xl font-semibold'>Child categories</h3>
-            {children.isPending && <p role='status'>Loading children…</p>}
+            <h3 className='text-xl font-semibold'>
+              {t('catalog:itemCategories.childrenHeading')}
+            </h3>
+            {children.isPending && (
+              <p role='status'>{t('catalog:itemCategories.childrenLoading')}</p>
+            )}
             {children.isError && (
               <p role='alert'>
                 {errorMessage(children.error)}{' '}
@@ -363,7 +409,7 @@ export function CategoryDetail() {
                   variant='outline'
                   onClick={() => void children.refetch()}
                 >
-                  Retry
+                  {t('catalog:common.retry')}
                 </Button>
               </p>
             )}
@@ -372,37 +418,40 @@ export function CategoryDetail() {
                 {children.data.items.map((child) => (
                   <li key={child.uuid}>
                     <Link
-                      to='/o/$organizationSlug/settings/item-categories/$categoryId'
-                      params={{
+                      {...organizationLocation(
                         organizationSlug,
-                        categoryId: child.uuid,
-                      }}
+                        branchUuid,
+                        '/settings/item-categories/$categoryId',
+                        { categoryId: child.uuid }
+                      )}
                       className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                     >
                       {categoryLabel(child.pathstring, child.name)}
                     </Link>
                     <span className='text-muted-foreground'>
-                      {` · ${child.itemCount} items · ${child.childCount} children`}
+                      {' · '}
+                      {t('catalog:itemCategories.metaCounts', {
+                        items: child.itemCount.toLocaleString(locale),
+                        children: child.childCount.toLocaleString(locale),
+                      })}
                     </span>
                   </li>
                 ))}
                 {children.data.items.length === 0 && (
-                  <li>No child categories.</li>
+                  <li>{t('catalog:itemCategories.childrenEmpty')}</li>
                 )}
                 {children.data.total > children.data.items.length && (
                   <li className='text-muted-foreground'>
-                    Showing the first {children.data.items.length} of{' '}
-                    {children.data.total}.
+                    {t('catalog:itemCategories.childrenTruncated', {
+                      shown: children.data.items.length.toLocaleString(locale),
+                      total: children.data.total.toLocaleString(locale),
+                    })}
                   </li>
                 )}
               </ul>
             )}
           </section>
-          <CategoryItems
-            key={`items-${category.uuid}`}
-            uuid={category.uuid}
-            organizationSlug={organizationSlug}
-          />
+          <CategoryItems key={`items-${category.uuid}`} uuid={category.uuid} />
         </>
       )}
     </section>

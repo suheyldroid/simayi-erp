@@ -31,6 +31,7 @@ import { Route as AuthenticatedOOrganizationSlugWorkspaceRouteRouteImport } from
 import { Route as AuthenticatedOOrganizationSlugSettingsRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/route'
 import { Route as AuthenticatedSystemSettingsSystemCurrencyRouteImport } from './routes/_authenticated/_system/settings/system/currency'
 import { Route as AuthenticatedOOrganizationSlugWorkspaceIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/route'
 import { Route as AuthenticatedOOrganizationSlugSettingsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/index'
 import { Route as AuthenticatedOOrganizationSlugSettingsManageRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/manage'
 import { Route as AuthenticatedOOrganizationSlugSettingsMembersRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/members'
@@ -51,6 +52,10 @@ import { Route as AuthenticatedOOrganizationSlugWorkspaceStockIndexRouteImport }
 import { Route as AuthenticatedOOrganizationSlugWorkspaceStockItemIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/stock/$itemId'
 import { Route as AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/supplier/index'
 import { Route as AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/route'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/route'
+import { Route as AuthenticatedOOrganizationSlugSettingsBranchesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/branches/index'
+import { Route as AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/branches/$branchId'
 import { Route as AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/item-categories/index'
 import { Route as AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId'
 import { Route as AuthenticatedOOrganizationSlugSettingsItemsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/settings/items/index'
@@ -60,8 +65,38 @@ import { Route as AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRouteImpo
 import { Route as AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/index'
 import { Route as AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/sales/batches/index'
 import { Route as AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/sales/batches/$batchId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/manage'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/members'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/teams'
 import { Route as AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/index'
 import { Route as AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRouteImport } from './routes/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/$reportId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/$movementId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/route'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/$orderId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/$saleId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/$itemId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/$supplierId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/$itemId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/$batchId'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/index'
+import { Route as AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRouteImport } from './routes/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/$reportId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -181,6 +216,12 @@ const AuthenticatedOOrganizationSlugWorkspaceIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugBBranchUuidRouteRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidRouteRouteImport.update({
+    id: '/b/$branchUuid',
+    path: '/b/$branchUuid',
+    getParentRoute: () => AuthenticatedOOrganizationSlugRouteRoute,
   } as any)
 const AuthenticatedOOrganizationSlugSettingsIndexRoute =
   AuthenticatedOOrganizationSlugSettingsIndexRouteImport.update({
@@ -304,6 +345,29 @@ const AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute =
     path: '/supplier/$supplierId',
     getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
   } as any)
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteImport.update({
+    id: '/_workspace',
+    getParentRoute: () => AuthenticatedOOrganizationSlugBBranchUuidRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedOOrganizationSlugBBranchUuidRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsBranchesIndexRoute =
+  AuthenticatedOOrganizationSlugSettingsBranchesIndexRouteImport.update({
+    id: '/branches/',
+    path: '/branches/',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRoute =
+  AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRouteImport.update({
+    id: '/branches/$branchId',
+    path: '/branches/$branchId',
+    getParentRoute: () => AuthenticatedOOrganizationSlugSettingsRouteRoute,
+  } as any)
 const AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute =
   AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRouteImport.update({
     id: '/item-categories/',
@@ -363,6 +427,41 @@ const AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRoute =
     path: '/sales/batches/$batchId',
     getParentRoute: () => AuthenticatedOOrganizationSlugWorkspaceRouteRoute,
   } as any)
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () =>
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRouteImport.update({
+    id: '/manage',
+    path: '/manage',
+    getParentRoute: () =>
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () =>
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+  } as any)
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRouteImport.update({
+    id: '/teams',
+    path: '/teams',
+    getParentRoute: () =>
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+  } as any)
 const AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute =
   AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRouteImport.update(
     {
@@ -379,6 +478,231 @@ const AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdR
       path: '/z-reports/$reportId',
       getParentRoute: () =>
         AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRouteImport.update(
+    {
+      id: '/finance/',
+      path: '/finance/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRouteImport.update(
+    {
+      id: '/finance/$movementId',
+      path: '/finance/$movementId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRouteImport.update(
+    {
+      id: '/pos-devices/',
+      path: '/pos-devices/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteImport.update(
+    {
+      id: '/pos-devices/$deviceId',
+      path: '/pos-devices/$deviceId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRouteImport.update(
+    {
+      id: '/purchasing/',
+      path: '/purchasing/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRouteImport.update(
+    {
+      id: '/purchasing/$orderId',
+      path: '/purchasing/$orderId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRouteImport.update(
+    {
+      id: '/sales/',
+      path: '/sales/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRouteImport.update(
+    {
+      id: '/sales/$saleId',
+      path: '/sales/$saleId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRouteImport.update(
+    {
+      id: '/stock/',
+      path: '/stock/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRouteImport.update(
+    {
+      id: '/stock/$itemId',
+      path: '/stock/$itemId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRouteImport.update(
+    {
+      id: '/supplier/',
+      path: '/supplier/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRouteImport.update(
+    {
+      id: '/supplier/$supplierId',
+      path: '/supplier/$supplierId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRouteImport.update(
+    {
+      id: '/branches/',
+      path: '/branches/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRouteImport.update(
+    {
+      id: '/branches/$branchId',
+      path: '/branches/$branchId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRouteImport.update(
+    {
+      id: '/item-categories/',
+      path: '/item-categories/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRouteImport.update(
+    {
+      id: '/item-categories/$categoryId',
+      path: '/item-categories/$categoryId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRouteImport.update(
+    {
+      id: '/items/',
+      path: '/items/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRouteImport.update(
+    {
+      id: '/items/$itemId',
+      path: '/items/$itemId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRouteImport.update(
+    {
+      id: '/recipes/',
+      path: '/recipes/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRouteImport.update(
+    {
+      id: '/recipes/$recipeId',
+      path: '/recipes/$recipeId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRouteImport.update(
+    {
+      id: '/',
+      path: '/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRouteImport.update(
+    {
+      id: '/sales/batches/',
+      path: '/sales/batches/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRouteImport.update(
+    {
+      id: '/sales/batches/$batchId',
+      path: '/sales/batches/$batchId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRouteImport.update(
+    {
+      id: '/z-reports/',
+      path: '/z-reports/',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute,
+    } as any,
+  )
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRoute =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRouteImport.update(
+    {
+      id: '/z-reports/$reportId',
+      path: '/z-reports/$reportId',
+      getParentRoute: () =>
+        AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute,
     } as any,
   )
 
@@ -400,6 +724,7 @@ export interface FileRoutesByFullPath {
   '/errors/$error': typeof AuthenticatedSystemErrorsErrorRoute
   '/organization/': typeof AuthenticatedSystemOrganizationIndexRoute
   '/settings/': typeof AuthenticatedSystemSettingsIndexRoute
+  '/o/$organizationSlug/b/$branchUuid': typeof AuthenticatedOOrganizationSlugBBranchUuidRouteRouteWithChildren
   '/settings/system/currency': typeof AuthenticatedSystemSettingsSystemCurrencyRoute
   '/o/$organizationSlug/settings/manage': typeof AuthenticatedOOrganizationSlugSettingsManageRoute
   '/o/$organizationSlug/settings/members': typeof AuthenticatedOOrganizationSlugSettingsMembersRoute
@@ -407,6 +732,7 @@ export interface FileRoutesByFullPath {
   '/o/$organizationSlug/': typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
   '/o/$organizationSlug/settings/': typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
   '/o/$organizationSlug/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteWithChildren
+  '/o/$organizationSlug/b/$branchUuid/settings': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteWithChildren
   '/settings/system/units/$unitId': typeof AuthenticatedSystemSettingsSystemUnitsUnitIdRoute
   '/settings/system/users/$userId': typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
   '/o/$organizationSlug/finance/$movementId': typeof AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute
@@ -414,6 +740,7 @@ export interface FileRoutesByFullPath {
   '/o/$organizationSlug/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
   '/o/$organizationSlug/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
   '/o/$organizationSlug/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute
+  '/o/$organizationSlug/settings/branches/$branchId': typeof AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRoute
   '/o/$organizationSlug/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute
   '/o/$organizationSlug/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute
   '/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
@@ -425,14 +752,45 @@ export interface FileRoutesByFullPath {
   '/o/$organizationSlug/sales/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
   '/o/$organizationSlug/stock/': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
   '/o/$organizationSlug/supplier/': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute
+  '/o/$organizationSlug/settings/branches/': typeof AuthenticatedOOrganizationSlugSettingsBranchesIndexRoute
   '/o/$organizationSlug/settings/item-categories/': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute
   '/o/$organizationSlug/settings/items/': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
   '/o/$organizationSlug/settings/recipes/': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
   '/o/$organizationSlug/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/manage': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/members': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/teams': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRoute
   '/o/$organizationSlug/pos-devices/$deviceId/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute
   '/o/$organizationSlug/sales/batches/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteWithChildren
   '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/o/$organizationSlug/b/$branchUuid/finance/$movementId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRoute
+  '/o/$organizationSlug/b/$branchUuid/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRoute
+  '/o/$organizationSlug/b/$branchUuid/sales/$saleId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRoute
+  '/o/$organizationSlug/b/$branchUuid/stock/$itemId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRoute
+  '/o/$organizationSlug/b/$branchUuid/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRoute
   '/o/$organizationSlug/pos-devices/$deviceId/z-reports/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/finance/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/purchasing/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/sales/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/stock/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/supplier/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/branches/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/item-categories/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/items/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/recipes/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/sales/batches/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedSystemIndexRoute
@@ -450,6 +808,7 @@ export interface FileRoutesByTo {
   '/errors/$error': typeof AuthenticatedSystemErrorsErrorRoute
   '/organization': typeof AuthenticatedSystemOrganizationIndexRoute
   '/settings': typeof AuthenticatedSystemSettingsIndexRoute
+  '/o/$organizationSlug/b/$branchUuid': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRoute
   '/settings/system/currency': typeof AuthenticatedSystemSettingsSystemCurrencyRoute
   '/o/$organizationSlug/settings/manage': typeof AuthenticatedOOrganizationSlugSettingsManageRoute
   '/o/$organizationSlug/settings/members': typeof AuthenticatedOOrganizationSlugSettingsMembersRoute
@@ -462,6 +821,7 @@ export interface FileRoutesByTo {
   '/o/$organizationSlug/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
   '/o/$organizationSlug/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
   '/o/$organizationSlug/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute
+  '/o/$organizationSlug/settings/branches/$branchId': typeof AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRoute
   '/o/$organizationSlug/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute
   '/o/$organizationSlug/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute
   '/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
@@ -473,14 +833,43 @@ export interface FileRoutesByTo {
   '/o/$organizationSlug/sales': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
   '/o/$organizationSlug/stock': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
   '/o/$organizationSlug/supplier': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute
+  '/o/$organizationSlug/settings/branches': typeof AuthenticatedOOrganizationSlugSettingsBranchesIndexRoute
   '/o/$organizationSlug/settings/item-categories': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute
   '/o/$organizationSlug/settings/items': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
   '/o/$organizationSlug/settings/recipes': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
   '/o/$organizationSlug/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/manage': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/members': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/teams': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRoute
   '/o/$organizationSlug/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute
   '/o/$organizationSlug/sales/batches': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRoute
   '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/o/$organizationSlug/b/$branchUuid/finance/$movementId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRoute
+  '/o/$organizationSlug/b/$branchUuid/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRoute
+  '/o/$organizationSlug/b/$branchUuid/sales/$saleId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRoute
+  '/o/$organizationSlug/b/$branchUuid/stock/$itemId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRoute
+  '/o/$organizationSlug/b/$branchUuid/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRoute
   '/o/$organizationSlug/pos-devices/$deviceId/z-reports': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/finance': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/purchasing': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/sales': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/stock': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/supplier': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/branches': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/item-categories': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/items': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/settings/recipes': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/sales/batches': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -504,6 +893,7 @@ export interface FileRoutesById {
   '/_authenticated/_system/errors/$error': typeof AuthenticatedSystemErrorsErrorRoute
   '/_authenticated/_system/organization/': typeof AuthenticatedSystemOrganizationIndexRoute
   '/_authenticated/_system/settings/': typeof AuthenticatedSystemSettingsIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid': typeof AuthenticatedOOrganizationSlugBBranchUuidRouteRouteWithChildren
   '/_authenticated/_system/settings/system/currency': typeof AuthenticatedSystemSettingsSystemCurrencyRoute
   '/_authenticated/o/$organizationSlug/settings/manage': typeof AuthenticatedOOrganizationSlugSettingsManageRoute
   '/_authenticated/o/$organizationSlug/settings/members': typeof AuthenticatedOOrganizationSlugSettingsMembersRoute
@@ -511,6 +901,8 @@ export interface FileRoutesById {
   '/_authenticated/o/$organizationSlug/_workspace/': typeof AuthenticatedOOrganizationSlugWorkspaceIndexRoute
   '/_authenticated/o/$organizationSlug/settings/': typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRouteWithChildren
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteWithChildren
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteWithChildren
   '/_authenticated/_system/settings/system/units/$unitId': typeof AuthenticatedSystemSettingsSystemUnitsUnitIdRoute
   '/_authenticated/_system/settings/system/users/$userId': typeof AuthenticatedSystemSettingsSystemUsersUserIdRoute
   '/_authenticated/o/$organizationSlug/_workspace/finance/$movementId': typeof AuthenticatedOOrganizationSlugWorkspaceFinanceMovementIdRoute
@@ -518,6 +910,7 @@ export interface FileRoutesById {
   '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesSaleIdRoute
   '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId': typeof AuthenticatedOOrganizationSlugWorkspaceStockItemIdRoute
   '/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRoute
+  '/_authenticated/o/$organizationSlug/settings/branches/$branchId': typeof AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRoute
   '/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute
   '/_authenticated/o/$organizationSlug/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute
   '/_authenticated/o/$organizationSlug/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
@@ -529,14 +922,45 @@ export interface FileRoutesById {
   '/_authenticated/o/$organizationSlug/_workspace/sales/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/stock/': typeof AuthenticatedOOrganizationSlugWorkspaceStockIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/supplier/': typeof AuthenticatedOOrganizationSlugWorkspaceSupplierIndexRoute
+  '/_authenticated/o/$organizationSlug/settings/branches/': typeof AuthenticatedOOrganizationSlugSettingsBranchesIndexRoute
   '/_authenticated/o/$organizationSlug/settings/item-categories/': typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute
   '/_authenticated/o/$organizationSlug/settings/items/': typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
   '/_authenticated/o/$organizationSlug/settings/recipes/': typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/manage': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/members': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/teams': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRoute
   '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdIndexRoute
   '/_authenticated/o/$organizationSlug/_workspace/sales/batches/': typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteWithChildren
   '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/$movementId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/$orderId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/$saleId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/$itemId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/$supplierId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/$itemId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRoute
   '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/': typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/': typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/$batchId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/$reportId': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/': typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -558,6 +982,7 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/organization/'
     | '/settings/'
+    | '/o/$organizationSlug/b/$branchUuid'
     | '/settings/system/currency'
     | '/o/$organizationSlug/settings/manage'
     | '/o/$organizationSlug/settings/members'
@@ -565,6 +990,7 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/'
     | '/o/$organizationSlug/settings/'
     | '/o/$organizationSlug/pos-devices/$deviceId'
+    | '/o/$organizationSlug/b/$branchUuid/settings'
     | '/settings/system/units/$unitId'
     | '/settings/system/users/$userId'
     | '/o/$organizationSlug/finance/$movementId'
@@ -572,6 +998,7 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/sales/$saleId'
     | '/o/$organizationSlug/stock/$itemId'
     | '/o/$organizationSlug/supplier/$supplierId'
+    | '/o/$organizationSlug/settings/branches/$branchId'
     | '/o/$organizationSlug/settings/item-categories/$categoryId'
     | '/o/$organizationSlug/settings/items/$itemId'
     | '/o/$organizationSlug/settings/recipes/$recipeId'
@@ -583,14 +1010,45 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/sales/'
     | '/o/$organizationSlug/stock/'
     | '/o/$organizationSlug/supplier/'
+    | '/o/$organizationSlug/settings/branches/'
     | '/o/$organizationSlug/settings/item-categories/'
     | '/o/$organizationSlug/settings/items/'
     | '/o/$organizationSlug/settings/recipes/'
     | '/o/$organizationSlug/sales/batches/$batchId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/manage'
+    | '/o/$organizationSlug/b/$branchUuid/settings/members'
+    | '/o/$organizationSlug/b/$branchUuid/settings/teams'
     | '/o/$organizationSlug/pos-devices/$deviceId/'
     | '/o/$organizationSlug/sales/batches/'
+    | '/o/$organizationSlug/b/$branchUuid/'
+    | '/o/$organizationSlug/b/$branchUuid/settings/'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId'
     | '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId'
+    | '/o/$organizationSlug/b/$branchUuid/finance/$movementId'
+    | '/o/$organizationSlug/b/$branchUuid/purchasing/$orderId'
+    | '/o/$organizationSlug/b/$branchUuid/sales/$saleId'
+    | '/o/$organizationSlug/b/$branchUuid/stock/$itemId'
+    | '/o/$organizationSlug/b/$branchUuid/supplier/$supplierId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/items/$itemId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId'
     | '/o/$organizationSlug/pos-devices/$deviceId/z-reports/'
+    | '/o/$organizationSlug/b/$branchUuid/finance/'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices/'
+    | '/o/$organizationSlug/b/$branchUuid/purchasing/'
+    | '/o/$organizationSlug/b/$branchUuid/sales/'
+    | '/o/$organizationSlug/b/$branchUuid/stock/'
+    | '/o/$organizationSlug/b/$branchUuid/supplier/'
+    | '/o/$organizationSlug/b/$branchUuid/settings/branches/'
+    | '/o/$organizationSlug/b/$branchUuid/settings/item-categories/'
+    | '/o/$organizationSlug/b/$branchUuid/settings/items/'
+    | '/o/$organizationSlug/b/$branchUuid/settings/recipes/'
+    | '/o/$organizationSlug/b/$branchUuid/sales/batches/$batchId'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/'
+    | '/o/$organizationSlug/b/$branchUuid/sales/batches/'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports/$reportId'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -608,6 +1066,7 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/organization'
     | '/settings'
+    | '/o/$organizationSlug/b/$branchUuid'
     | '/settings/system/currency'
     | '/o/$organizationSlug/settings/manage'
     | '/o/$organizationSlug/settings/members'
@@ -620,6 +1079,7 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/sales/$saleId'
     | '/o/$organizationSlug/stock/$itemId'
     | '/o/$organizationSlug/supplier/$supplierId'
+    | '/o/$organizationSlug/settings/branches/$branchId'
     | '/o/$organizationSlug/settings/item-categories/$categoryId'
     | '/o/$organizationSlug/settings/items/$itemId'
     | '/o/$organizationSlug/settings/recipes/$recipeId'
@@ -631,14 +1091,43 @@ export interface FileRouteTypes {
     | '/o/$organizationSlug/sales'
     | '/o/$organizationSlug/stock'
     | '/o/$organizationSlug/supplier'
+    | '/o/$organizationSlug/settings/branches'
     | '/o/$organizationSlug/settings/item-categories'
     | '/o/$organizationSlug/settings/items'
     | '/o/$organizationSlug/settings/recipes'
     | '/o/$organizationSlug/sales/batches/$batchId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/manage'
+    | '/o/$organizationSlug/b/$branchUuid/settings/members'
+    | '/o/$organizationSlug/b/$branchUuid/settings/teams'
     | '/o/$organizationSlug/pos-devices/$deviceId'
     | '/o/$organizationSlug/sales/batches'
+    | '/o/$organizationSlug/b/$branchUuid/settings'
     | '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId'
+    | '/o/$organizationSlug/b/$branchUuid/finance/$movementId'
+    | '/o/$organizationSlug/b/$branchUuid/purchasing/$orderId'
+    | '/o/$organizationSlug/b/$branchUuid/sales/$saleId'
+    | '/o/$organizationSlug/b/$branchUuid/stock/$itemId'
+    | '/o/$organizationSlug/b/$branchUuid/supplier/$supplierId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/items/$itemId'
+    | '/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId'
     | '/o/$organizationSlug/pos-devices/$deviceId/z-reports'
+    | '/o/$organizationSlug/b/$branchUuid/finance'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices'
+    | '/o/$organizationSlug/b/$branchUuid/purchasing'
+    | '/o/$organizationSlug/b/$branchUuid/sales'
+    | '/o/$organizationSlug/b/$branchUuid/stock'
+    | '/o/$organizationSlug/b/$branchUuid/supplier'
+    | '/o/$organizationSlug/b/$branchUuid/settings/branches'
+    | '/o/$organizationSlug/b/$branchUuid/settings/item-categories'
+    | '/o/$organizationSlug/b/$branchUuid/settings/items'
+    | '/o/$organizationSlug/b/$branchUuid/settings/recipes'
+    | '/o/$organizationSlug/b/$branchUuid/sales/batches/$batchId'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId'
+    | '/o/$organizationSlug/b/$branchUuid/sales/batches'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports/$reportId'
+    | '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports'
   id:
     | '__root__'
     | '/_authenticated'
@@ -661,6 +1150,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_system/errors/$error'
     | '/_authenticated/_system/organization/'
     | '/_authenticated/_system/settings/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid'
     | '/_authenticated/_system/settings/system/currency'
     | '/_authenticated/o/$organizationSlug/settings/manage'
     | '/_authenticated/o/$organizationSlug/settings/members'
@@ -668,6 +1158,8 @@ export interface FileRouteTypes {
     | '/_authenticated/o/$organizationSlug/_workspace/'
     | '/_authenticated/o/$organizationSlug/settings/'
     | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings'
     | '/_authenticated/_system/settings/system/units/$unitId'
     | '/_authenticated/_system/settings/system/users/$userId'
     | '/_authenticated/o/$organizationSlug/_workspace/finance/$movementId'
@@ -675,6 +1167,7 @@ export interface FileRouteTypes {
     | '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId'
     | '/_authenticated/o/$organizationSlug/_workspace/stock/$itemId'
     | '/_authenticated/o/$organizationSlug/_workspace/supplier/$supplierId'
+    | '/_authenticated/o/$organizationSlug/settings/branches/$branchId'
     | '/_authenticated/o/$organizationSlug/settings/item-categories/$categoryId'
     | '/_authenticated/o/$organizationSlug/settings/items/$itemId'
     | '/_authenticated/o/$organizationSlug/settings/recipes/$recipeId'
@@ -686,14 +1179,45 @@ export interface FileRouteTypes {
     | '/_authenticated/o/$organizationSlug/_workspace/sales/'
     | '/_authenticated/o/$organizationSlug/_workspace/stock/'
     | '/_authenticated/o/$organizationSlug/_workspace/supplier/'
+    | '/_authenticated/o/$organizationSlug/settings/branches/'
     | '/_authenticated/o/$organizationSlug/settings/item-categories/'
     | '/_authenticated/o/$organizationSlug/settings/items/'
     | '/_authenticated/o/$organizationSlug/settings/recipes/'
     | '/_authenticated/o/$organizationSlug/_workspace/sales/batches/$batchId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/manage'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/members'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/teams'
     | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/'
     | '/_authenticated/o/$organizationSlug/_workspace/sales/batches/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId'
     | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/$reportId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/$movementId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/$orderId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/$saleId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/$itemId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/$supplierId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/$itemId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId'
     | '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/$batchId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/$reportId'
+    | '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -865,6 +1389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceIndexRouteImport
       parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
     }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid'
+      path: '/b/$branchUuid'
+      fullPath: '/o/$organizationSlug/b/$branchUuid'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidRouteRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugRouteRoute
+    }
     '/_authenticated/o/$organizationSlug/settings/': {
       id: '/_authenticated/o/$organizationSlug/settings/'
       path: '/'
@@ -1005,6 +1536,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSupplierSupplierIdRouteImport
       parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
     }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace'
+      path: ''
+      fullPath: '/o/$organizationSlug/b/$branchUuid'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings'
+      path: '/settings'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/branches/': {
+      id: '/_authenticated/o/$organizationSlug/settings/branches/'
+      path: '/branches'
+      fullPath: '/o/$organizationSlug/settings/branches/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsBranchesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/settings/branches/$branchId': {
+      id: '/_authenticated/o/$organizationSlug/settings/branches/$branchId'
+      path: '/branches/$branchId'
+      fullPath: '/o/$organizationSlug/settings/branches/$branchId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRoute
+    }
     '/_authenticated/o/$organizationSlug/settings/item-categories/': {
       id: '/_authenticated/o/$organizationSlug/settings/item-categories/'
       path: '/item-categories'
@@ -1068,6 +1627,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspaceSalesBatchesBatchIdRouteImport
       parentRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRoute
     }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/'
+      path: '/'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/'
+      path: '/'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/manage': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/manage'
+      path: '/manage'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/manage'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/members': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/members'
+      path: '/members'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/members'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/teams': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/teams'
+      path: '/teams'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/teams'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
     '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/': {
       id: '/_authenticated/o/$organizationSlug/_workspace/pos-devices/$deviceId/z-reports/'
       path: '/z-reports'
@@ -1081,6 +1675,181 @@ declare module '@tanstack/react-router' {
       fullPath: '/o/$organizationSlug/pos-devices/$deviceId/z-reports/$reportId'
       preLoaderRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdZReportsReportIdRouteImport
       parentRoute: typeof AuthenticatedOOrganizationSlugWorkspacePosDevicesDeviceIdRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/'
+      path: '/finance'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/finance/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/$movementId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/finance/$movementId'
+      path: '/finance/$movementId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/finance/$movementId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/'
+      path: '/pos-devices'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/pos-devices/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId'
+      path: '/pos-devices/$deviceId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/'
+      path: '/purchasing'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/purchasing/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/$orderId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/purchasing/$orderId'
+      path: '/purchasing/$orderId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/purchasing/$orderId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/'
+      path: '/sales'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/sales/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/$saleId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/$saleId'
+      path: '/sales/$saleId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/sales/$saleId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/'
+      path: '/stock'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/stock/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/$itemId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/stock/$itemId'
+      path: '/stock/$itemId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/stock/$itemId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/'
+      path: '/supplier'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/supplier/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/$supplierId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/supplier/$supplierId'
+      path: '/supplier/$supplierId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/supplier/$supplierId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/'
+      path: '/branches'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/branches/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId'
+      path: '/branches/$branchId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/branches/$branchId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/'
+      path: '/item-categories'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/item-categories/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId'
+      path: '/item-categories/$categoryId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/item-categories/$categoryId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/'
+      path: '/items'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/items/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/$itemId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/items/$itemId'
+      path: '/items/$itemId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/items/$itemId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/'
+      path: '/recipes'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/recipes/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId'
+      path: '/recipes/$recipeId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/settings/recipes/$recipeId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/'
+      path: '/'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/'
+      path: '/sales/batches'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/sales/batches/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/$batchId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/sales/batches/$batchId'
+      path: '/sales/batches/$batchId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/sales/batches/$batchId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/'
+      path: '/z-reports'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports/'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute
+    }
+    '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/$reportId': {
+      id: '/_authenticated/o/$organizationSlug/b/$branchUuid/_workspace/pos-devices/$deviceId/z-reports/$reportId'
+      path: '/z-reports/$reportId'
+      fullPath: '/o/$organizationSlug/b/$branchUuid/pos-devices/$deviceId/z-reports/$reportId'
+      preLoaderRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRouteImport
+      parentRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute
     }
   }
 }
@@ -1235,9 +2004,11 @@ interface AuthenticatedOOrganizationSlugSettingsRouteRouteChildren {
   AuthenticatedOOrganizationSlugSettingsMembersRoute: typeof AuthenticatedOOrganizationSlugSettingsMembersRoute
   AuthenticatedOOrganizationSlugSettingsTeamsRoute: typeof AuthenticatedOOrganizationSlugSettingsTeamsRoute
   AuthenticatedOOrganizationSlugSettingsIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsIndexRoute
+  AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRoute: typeof AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRoute
   AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute: typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute
   AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute: typeof AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute
   AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute: typeof AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute
+  AuthenticatedOOrganizationSlugSettingsBranchesIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsBranchesIndexRoute
   AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute
   AuthenticatedOOrganizationSlugSettingsItemsIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsItemsIndexRoute
   AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute: typeof AuthenticatedOOrganizationSlugSettingsRecipesIndexRoute
@@ -1253,12 +2024,16 @@ const AuthenticatedOOrganizationSlugSettingsRouteRouteChildren: AuthenticatedOOr
       AuthenticatedOOrganizationSlugSettingsTeamsRoute,
     AuthenticatedOOrganizationSlugSettingsIndexRoute:
       AuthenticatedOOrganizationSlugSettingsIndexRoute,
+    AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRoute:
+      AuthenticatedOOrganizationSlugSettingsBranchesBranchIdRoute,
     AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute:
       AuthenticatedOOrganizationSlugSettingsItemCategoriesCategoryIdRoute,
     AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute:
       AuthenticatedOOrganizationSlugSettingsItemsItemIdRoute,
     AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute:
       AuthenticatedOOrganizationSlugSettingsRecipesRecipeIdRoute,
+    AuthenticatedOOrganizationSlugSettingsBranchesIndexRoute:
+      AuthenticatedOOrganizationSlugSettingsBranchesIndexRoute,
     AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute:
       AuthenticatedOOrganizationSlugSettingsItemCategoriesIndexRoute,
     AuthenticatedOOrganizationSlugSettingsItemsIndexRoute:
@@ -1272,9 +2047,154 @@ const AuthenticatedOOrganizationSlugSettingsRouteRouteWithChildren =
     AuthenticatedOOrganizationSlugSettingsRouteRouteChildren,
   )
 
+interface AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteChildren {
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRoute
+}
+
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteChildren: AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteChildren =
+  {
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsReportIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdZReportsIndexRoute,
+  }
+
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteWithChildren =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute._addFileChildren(
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteChildren,
+  )
+
+interface AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteChildren {
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteWithChildren
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRoute
+}
+
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteChildren: AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteChildren =
+  {
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesDeviceIdRouteRouteWithChildren,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceMovementIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingOrderIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesSaleIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockItemIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierSupplierIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceFinanceIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspacePosDevicesIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspacePurchasingIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceStockIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSupplierIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesBatchIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceSalesBatchesIndexRoute,
+  }
+
+const AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteWithChildren =
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute._addFileChildren(
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteChildren,
+  )
+
+interface AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteChildren {
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRoute
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRoute
+}
+
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteChildren: AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteChildren =
+  {
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsManageRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsMembersRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsTeamsRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesBranchIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesCategoryIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsItemIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesRecipeIdRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsBranchesIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsItemCategoriesIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsItemsIndexRoute,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsRecipesIndexRoute,
+  }
+
+const AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteWithChildren =
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute._addFileChildren(
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteChildren,
+  )
+
+interface AuthenticatedOOrganizationSlugBBranchUuidRouteRouteChildren {
+  AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteWithChildren
+  AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteWithChildren
+}
+
+const AuthenticatedOOrganizationSlugBBranchUuidRouteRouteChildren: AuthenticatedOOrganizationSlugBBranchUuidRouteRouteChildren =
+  {
+    AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidWorkspaceRouteRouteWithChildren,
+    AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidSettingsRouteRouteWithChildren,
+  }
+
+const AuthenticatedOOrganizationSlugBBranchUuidRouteRouteWithChildren =
+  AuthenticatedOOrganizationSlugBBranchUuidRouteRoute._addFileChildren(
+    AuthenticatedOOrganizationSlugBBranchUuidRouteRouteChildren,
+  )
+
 interface AuthenticatedOOrganizationSlugRouteRouteChildren {
   AuthenticatedOOrganizationSlugWorkspaceRouteRoute: typeof AuthenticatedOOrganizationSlugWorkspaceRouteRouteWithChildren
   AuthenticatedOOrganizationSlugSettingsRouteRoute: typeof AuthenticatedOOrganizationSlugSettingsRouteRouteWithChildren
+  AuthenticatedOOrganizationSlugBBranchUuidRouteRoute: typeof AuthenticatedOOrganizationSlugBBranchUuidRouteRouteWithChildren
 }
 
 const AuthenticatedOOrganizationSlugRouteRouteChildren: AuthenticatedOOrganizationSlugRouteRouteChildren =
@@ -1283,6 +2203,8 @@ const AuthenticatedOOrganizationSlugRouteRouteChildren: AuthenticatedOOrganizati
       AuthenticatedOOrganizationSlugWorkspaceRouteRouteWithChildren,
     AuthenticatedOOrganizationSlugSettingsRouteRoute:
       AuthenticatedOOrganizationSlugSettingsRouteRouteWithChildren,
+    AuthenticatedOOrganizationSlugBBranchUuidRouteRoute:
+      AuthenticatedOOrganizationSlugBBranchUuidRouteRouteWithChildren,
   }
 
 const AuthenticatedOOrganizationSlugRouteRouteWithChildren =

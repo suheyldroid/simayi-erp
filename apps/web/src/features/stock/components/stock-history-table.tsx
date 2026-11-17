@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n'
 import {
   Table,
   TableBody,
@@ -9,30 +10,33 @@ import {
 import type { StockTrackingEntry } from '../model'
 
 const stockHistoryLabels: Record<number, string> = {
-  1: 'Created',
-  5: 'Edited',
-  6: 'Serial assigned',
-  10: 'Counted',
-  11: 'Added',
-  12: 'Removed',
-  20: 'Moved',
-  70: 'Purchase receipt',
-  90: 'Migration baseline',
+  1: t('catalog:stock.history.events.created'),
+  5: t('catalog:stock.history.events.edited'),
+  6: t('catalog:stock.history.events.serialAssigned'),
+  10: t('catalog:stock.history.events.counted'),
+  11: t('catalog:stock.history.events.added'),
+  12: t('catalog:stock.history.events.removed'),
+  20: t('catalog:stock.history.events.moved'),
+  70: t('catalog:stock.history.events.purchaseReceipt'),
+  71: t('catalog:stock.history.events.purchaseReversal'),
+  90: t('catalog:stock.history.events.migrationBaseline'),
 }
 
 export function StockHistoryTable({ rows }: { rows: StockTrackingEntry[] }) {
   return (
     <Table>
-      <caption className='sr-only'>Stock balance history</caption>
+      <caption className='sr-only'>
+        {t('catalog:stock.history.caption')}
+      </caption>
       <TableHeader>
         <TableRow>
-          <TableHead>When</TableHead>
-          <TableHead>Event</TableHead>
-          <TableHead>Before</TableHead>
-          <TableHead>After</TableHead>
-          <TableHead>Unit</TableHead>
-          <TableHead>Notes</TableHead>
-          <TableHead>Context</TableHead>
+          <TableHead>{t('catalog:stock.history.when')}</TableHead>
+          <TableHead>{t('catalog:stock.history.event')}</TableHead>
+          <TableHead>{t('catalog:stock.history.before')}</TableHead>
+          <TableHead>{t('catalog:stock.history.after')}</TableHead>
+          <TableHead>{t('catalog:stock.history.unit')}</TableHead>
+          <TableHead>{t('catalog:stock.history.notes')}</TableHead>
+          <TableHead>{t('catalog:stock.history.context')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -44,12 +48,16 @@ export function StockHistoryTable({ rows }: { rows: StockTrackingEntry[] }) {
             </TableCell>
             <TableCell>{row.quantityBefore ?? '—'}</TableCell>
             <TableCell>{row.quantityAfter ?? '—'}</TableCell>
-            <TableCell>{row.unitCode ?? 'Unknown unit'}</TableCell>
+            <TableCell>
+              {row.unitCode ?? t('catalog:stock.history.unknownUnit')}
+            </TableCell>
             <TableCell>{row.notes ?? '—'}</TableCell>
             <TableCell>
               {row.deltas != null && Object.keys(row.deltas).length > 0 ? (
                 <details>
-                  <summary className='cursor-pointer text-sm'>Details</summary>
+                  <summary className='cursor-pointer text-sm'>
+                    {t('catalog:stock.history.details')}
+                  </summary>
                   <pre className='mt-1 max-w-xs overflow-x-auto text-xs whitespace-pre-wrap'>
                     {JSON.stringify(row.deltas, null, 2)}
                   </pre>
@@ -62,7 +70,9 @@ export function StockHistoryTable({ rows }: { rows: StockTrackingEntry[] }) {
         ))}
         {rows.length === 0 && (
           <TableRow>
-            <TableCell colSpan={7}>No history yet.</TableCell>
+            <TableCell colSpan={7}>
+              {t('catalog:stock.history.empty')}
+            </TableCell>
           </TableRow>
         )}
       </TableBody>

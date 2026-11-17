@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { errorMessage } from '@/lib/api-error'
-import { api } from '@/lib/auth'
+import { api, branchApi } from '@/lib/auth'
 import { SalesPageModel, type SaleInput, type SaleReceiptInput } from './model'
 
 export { errorMessage }
@@ -29,6 +29,10 @@ function isShortage(value: unknown): value is SaleShortage {
   )
 }
 
+/**
+ * Shortage details of a rejected sale. `available` is the selected branch
+ * balance, so the same message never mixes another branch's stock.
+ */
 export function saleShortages(error: unknown): SaleShortage[] {
   if (!axios.isAxiosError(error)) return []
   const details: unknown = error.response?.data?.error?.details
@@ -39,37 +43,61 @@ export function saleShortages(error: unknown): SaleShortage[] {
   return shortages.filter(isShortage)
 }
 
+/** Page size shared by the branch and company sales lists. */
+const PAGE_SIZE = 20
+
+/**
+ * Sales lists use the company client in Company context, so the backend
+ * aggregates every branch of the verified organization without inventing a
+ * default branch. A branch path filters exactly its own captured branch.
+ */
 export const salesApi = {
-  async list(input: { page: number; search: string }) {
+  async list(
+    branchUuid: string | null,
+    input: { page: number; search: string }
+  ) {
+    const params = {
+      limit: PAGE_SIZE,
+      offset: input.page * PAGE_SIZE,
+      search: input.search || undefined,
+    }
     return SalesPageModel.list.parse(
       (
-        await api.get<unknown>('/sales/', {
-          params: {
-            limit: 20,
-            offset: input.page * 20,
-            search: input.search || undefined,
-          },
+        await (branchUuid === null
+          ? api.get<unknown>('/sales/', { params })
+          : branchApi.get<unknown>('/sales/', { branchUuid, params }))
+      ).data
+    )
+  },
+  async get(branchUuid: string | null, uuid: string) {
+    return SalesPageModel.sale.parse(
+      (
+        await (branchUuid === null
+          ? api.get<unknown>(`/sales/${uuid}`)
+          : branchApi.get<unknown>(`/sales/${uuid}`, { branchUuid }))
+      ).data
+    )
+  },
+  async record(branchUuid: string, body: SaleInput) {
+    return SalesPageModel.sale.parse(
+      (await branchApi.post<unknown>('/sales/', body, { branchUuid })).data
+    )
+  },
+  async receipt(branchUuid: string, uuid: string, body: SaleReceiptInput) {
+    return SalesPageModel.sale.parse(
+      (
+        await branchApi.post<unknown>(`/sales/${uuid}/receipts/`, body, {
+          branchUuid,
         })
       ).data
     )
   },
-  async get(uuid: string) {
-    return SalesPageModel.sale.parse(
-      (await api.get<unknown>(`/sales/${uuid}`)).data
-    )
-  },
-  async record(body: SaleInput) {
-    return SalesPageModel.sale.parse(
-      (await api.post<unknown>('/sales/', body)).data
-    )
-  },
-  async receipt(uuid: string, body: SaleReceiptInput) {
-    return SalesPageModel.sale.parse(
-      (await api.post<unknown>(`/sales/${uuid}/receipts/`, body)).data
-    )
-  },
 }
 
+/**
+ * Sales channels stay company-shared metadata, so they use the company client
+ * and never send a branch header.
+ */
 export const salesChannelApi = {
   async list(input?: { search?: string }) {
     return SalesPageModel.channelList.parse(

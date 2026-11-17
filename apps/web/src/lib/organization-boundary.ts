@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { getRouteApi, useParams } from '@tanstack/react-router'
+import { t } from '@/lib/i18n'
 import {
   membershipListQueryKey,
   organizationApi,
@@ -50,8 +51,7 @@ export function useOrganizationBoundary(): OrganizationBoundary {
  */
 export function useOrganizationSlug(): string {
   const { organizationSlug } = useParams({ strict: false })
-  if (!organizationSlug)
-    throw new Error('Organization routes require an organization slug.')
+  if (!organizationSlug) throw new Error(t('common:errors.slugRequired'))
   return organizationSlug
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { currencyApi, errorMessage } from './api'
 import { CurrencySelect } from './components/currency-select'
@@ -22,7 +23,7 @@ export function CurrencySettings() {
     mutationFn: (code: string) => currencyApi.savePreference(code),
     onSuccess: async (next) => {
       client.setQueryData(['system-preference'], next)
-      toast.success('System currency saved')
+      toast.success(t('catalog:currency.savedToast'))
       await client.invalidateQueries({ queryKey: ['system-preference'] })
     },
     onError: (error) => {
@@ -35,40 +36,41 @@ export function CurrencySettings() {
   return (
     <section className='space-y-6'>
       <div>
-        <h2 className='text-2xl font-bold'>Currency</h2>
+        <h2 className='text-2xl font-bold'>{t('catalog:currency.title')}</h2>
         <p className='text-muted-foreground'>
-          One system currency for every organization. It is chosen once and then
-          fixed: new purchase line prices, recipe prices, and financial amounts
-          are recorded in it.
+          {t('catalog:currency.description')}
         </p>
       </div>
       <div className='space-y-4 rounded-md border border-border p-4'>
-        {preference.isPending && <p role='status'>Loading currency…</p>}
+        {preference.isPending && (
+          <p role='status'>{t('catalog:currency.loading')}</p>
+        )}
         {preference.isError && (
           <p role='alert'>
             {errorMessage(preference.error)}{' '}
             <Button variant='outline' onClick={() => void preference.refetch()}>
-              Retry
+              {t('catalog:common.retry')}
             </Button>
           </p>
         )}
         {preference.isSuccess && saved !== null && (
           <>
             <p className='text-sm'>
-              System currency: <span className='font-medium'>{saved}</span>
+              {t('catalog:currency.savedLabel')}{' '}
+              <span className='font-medium'>{saved}</span>
             </p>
             <p className='text-sm text-muted-foreground'>
-              This is a permanent choice. It cannot be cleared, switched, or
-              replaced here, and existing amounts are never converted or
-              relabelled.
+              {t('catalog:currency.permanentNote')}
             </p>
           </>
         )}
         {preference.isSuccess && saved === null && (
           <>
             <p className='text-sm'>
-              System currency:{' '}
-              <span className='font-medium'>Not configured</span>
+              {t('catalog:currency.savedLabel')}{' '}
+              <span className='font-medium'>
+                {t('catalog:currency.notConfigured')}
+              </span>
             </p>
             <CurrencySelect
               value={choice}
@@ -90,13 +92,11 @@ export function CurrencySettings() {
                   save.mutate(choice)
                 }}
               >
-                Save system currency
+                {t('catalog:currency.saveButton')}
               </Button>
             </div>
             <p className='text-sm text-muted-foreground'>
-              After it is saved the system currency is read-only. Amounts are
-              stored as exact decimal strings and are never converted, rounded,
-              or summed across currencies.
+              {t('catalog:currency.savedReadOnly')}
             </p>
           </>
         )}

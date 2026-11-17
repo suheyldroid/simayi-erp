@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 
 const instant = z
   .union([z.iso.datetime(), z.date()])
@@ -49,3 +50,21 @@ export const UsersModel = {
 
 export type User = z.infer<typeof UsersModel.adminUser>
 export type UserProfileInput = z.infer<typeof UsersModel.profileBody>
+
+/**
+ * Display label for the native platform role value. The stored value is never
+ * changed; an unknown role token is shown verbatim.
+ */
+export function userRoleLabel(role: string | null | undefined) {
+  if (!role) return '—'
+  return role
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+    .map((item) => {
+      if (item === 'admin') return t('global:users.roleKind.administrator')
+      if (item === 'user') return t('global:users.roleKind.user')
+      return item
+    })
+    .join(', ')
+}

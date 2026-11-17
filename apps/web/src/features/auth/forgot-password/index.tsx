@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { t } from '@/lib/i18n'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AuthLayout } from '../auth-layout'
 
@@ -7,15 +8,12 @@ export function ForgotPassword() {
     <AuthLayout>
       <Card className='max-w-sm'>
         <CardHeader>
-          <CardTitle>Password assistance</CardTitle>
+          <CardTitle>{t('global:auth.forgotPassword.title')}</CardTitle>
         </CardHeader>
         <CardContent className='space-y-4'>
-          <p>
-            Contact your ERP administrator to create your account or reset your
-            password. Email recovery and public registration are not available.
-          </p>
+          <p>{t('global:auth.forgotPassword.description')}</p>
           <Link to='/sign-in' className='underline'>
-            Back to sign in
+            {t('global:auth.forgotPassword.backToSignIn')}
           </Link>
         </CardContent>
       </Card>

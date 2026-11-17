@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
+import { t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
+import { organizationLocation } from '@/lib/organization-navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   SortableDataTable,
@@ -11,7 +13,10 @@ import { organizationInitials, type OrganizationRecord } from './model'
 
 function organizationName(organization: OrganizationRecord) {
   return (
-    organization.name || organization.slug || organization.id || 'Organization'
+    organization.name ||
+    organization.slug ||
+    organization.id ||
+    t('global:organizations.unnamed')
   )
 }
 
@@ -30,9 +35,9 @@ export function MembershipOrganizationsTable({
     () => [
       {
         id: 'logo',
-        header: 'Logo',
+        header: t('global:organizations.columns.logo'),
         enableSorting: false,
-        meta: { label: 'Logo', width: 56 },
+        meta: { label: t('global:organizations.columns.logo'), width: 56 },
         cell: ({ row }) => {
           const organization = row.original
           return (
@@ -59,7 +64,7 @@ export function MembershipOrganizationsTable({
       },
       {
         id: 'name',
-        header: 'Name',
+        header: t('global:organizations.columns.name'),
         accessorFn: (organization) => organizationName(organization),
         cell: ({ row }) => (
           <span className='font-medium'>{organizationName(row.original)}</span>
@@ -67,24 +72,24 @@ export function MembershipOrganizationsTable({
       },
       {
         id: 'slug',
-        header: 'Slug',
+        header: t('global:organizations.columns.slug'),
         accessorFn: (organization) => organization.slug,
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'status',
-        header: 'Status',
+        header: t('global:organizations.columns.status'),
         accessorFn: (organization) =>
           organization.id === activeOrganizationId
-            ? 'Active organization'
-            : 'Member',
+            ? t('global:organizations.statusActive')
+            : t('global:organizations.statusMember'),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: t('global:organizations.columns.actions'),
         enableSorting: false,
-        meta: { label: 'Actions' },
+        meta: { label: t('global:organizations.columns.actions') },
         cell: ({ row }) => {
           const organization = row.original
           const name = organizationName(organization)
@@ -92,12 +97,18 @@ export function MembershipOrganizationsTable({
           return (
             <div className='flex flex-wrap items-center gap-3'>
               <Link
-                to='/o/$organizationSlug'
-                params={{ organizationSlug: organization.slug }}
-                aria-label={`Open the organization page for ${name}`}
+                {...organizationLocation(organization.slug, null, '')}
+                aria-label={t('global:organizations.detailsLabel', { name })}
                 className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
               >
-                Details
+                {t('global:organizations.details')}
+              </Link>
+              <Link
+                {...organizationLocation(organization.slug, null, '/settings')}
+                aria-label={t('global:organizations.settingsLabel', { name })}
+                className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
+              >
+                {t('global:organizations.settings')}
               </Link>
             </div>
           )

@@ -1,5 +1,6 @@
 import { type CSSProperties } from 'react'
 import { Toaster as Sonner, ToasterProps } from 'sonner'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 /**
@@ -21,6 +22,7 @@ export function Toaster({
       theme='dark'
       className={cn('toaster group [&_div[data-content]]:w-full', className)}
       toastOptions={{
+        closeButtonAriaLabel: t('common:a11y.closeToast'),
         ...toastOptions,
         actionButtonStyle: {
           borderRadius: 'var(--radius)',

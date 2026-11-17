@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router'
+import { t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
+import { organizationLocation } from '@/lib/organization-navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { organizationLogoPrefix } from '@/features/organization/logo-api'
@@ -24,9 +26,8 @@ function OrganizationCard({
   return (
     <li>
       <Link
-        to='/o/$organizationSlug'
-        params={{ organizationSlug: organization.slug }}
-        aria-label={`Open the organization workspace for ${name}`}
+        {...organizationLocation(organization.slug, null, '')}
+        aria-label={t('dashboard:organizations.openAria', { name })}
         className='flex h-full items-start gap-3 rounded-md border bg-card p-4 text-card-foreground transition-colors outline-none hover:border-ring/60 hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring/50'
       >
         <Avatar className='size-9 shrink-0 rounded-md border border-border'>
@@ -68,41 +69,42 @@ export function OrganizationCards() {
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <div>
           <h2 id='organizations-heading' className='text-xl font-semibold'>
-            Your organizations
+            {t('dashboard:organizations.heading')}
           </h2>
           <p className='text-sm text-muted-foreground'>
-            Native memberships on this account. Open an organization workspace
-            from its card; activation is handled by the organization boundary.
+            {t('dashboard:organizations.description')}
           </p>
         </div>
         <div className='flex flex-wrap items-center gap-2'>
           <Button variant='outline' asChild>
-            <Link to='/organization'>Organization directory</Link>
+            <Link to='/organization'>
+              {t('dashboard:organizations.directory')}
+            </Link>
           </Button>
           <CreateOrganizationSheet />
         </div>
       </div>
       {organizations.isPending ? (
-        <p role='status'>Loading organizations…</p>
+        <p role='status'>{t('dashboard:organizations.loading')}</p>
       ) : null}
       {organizations.isError ? (
         <div role='alert' className='space-y-2'>
           <p>
-            Could not load organizations. {errorMessage(organizations.error)}
+            {t('dashboard:organizations.error')}{' '}
+            {errorMessage(organizations.error)}
           </p>
           <Button
             variant='outline'
             onClick={() => void organizations.refetch()}
           >
-            Retry
+            {t('dashboard:common.retry')}
           </Button>
         </div>
       ) : null}
       {organizations.isSuccess ? (
         organizations.data.length === 0 ? (
           <p className='rounded-md border border-border p-4 text-sm text-muted-foreground'>
-            You do not belong to an organization yet. Create one with the button
-            above to get started.
+            {t('dashboard:organizations.empty')}
           </p>
         ) : (
           <ul className='grid gap-3 sm:grid-cols-2 xl:grid-cols-3'>

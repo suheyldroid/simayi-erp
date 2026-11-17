@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -19,6 +20,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import {
+  catalogFilterLabel,
+  catalogSeriesLabel,
+  dateRangeLabel,
+  groupByLabel,
+  measureLabel,
+  sourceLabel,
+  statusLabel,
+  widgetTypeLabel,
+} from '../labels'
 import {
   canSplitByStatus,
   dateRangeOptionsFor,
@@ -121,16 +132,16 @@ export function WidgetFormSheet({
     >
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-2xl'>
         <SheetHeader>
-          <SheetTitle>{mode === 'new' ? 'Add card' : 'Edit card'}</SheetTitle>
-          <SheetDescription>
-            Choose a supported source, measure and visual type, then set the
-            card&apos;s grid columns and rows. The preview uses the real
-            aggregates before you save the card.
-          </SheetDescription>
+          <SheetTitle>
+            {mode === 'new'
+              ? t('dashboard:form.addTitle')
+              : t('dashboard:form.editTitle')}
+          </SheetTitle>
+          <SheetDescription>{t('dashboard:form.description')}</SheetDescription>
         </SheetHeader>
         <div className='flex-1 space-y-5 overflow-y-auto px-4 pb-4'>
           <div className='space-y-2'>
-            <Label htmlFor={titleId}>Title</Label>
+            <Label htmlFor={titleId}>{t('dashboard:form.title')}</Label>
             <Input
               id={titleId}
               value={draft.title}
@@ -146,14 +157,17 @@ export function WidgetFormSheet({
 
           <div className='grid gap-3 sm:grid-cols-2'>
             <div className='space-y-2'>
-              <Label>Visual type</Label>
+              <Label>{t('dashboard:form.visualType')}</Label>
               <Select
                 value={draft.type}
                 onValueChange={(value) =>
                   update({ type: value as WidgetType }, true)
                 }
               >
-                <SelectTrigger className='w-full' aria-label='Visual type'>
+                <SelectTrigger
+                  className='w-full'
+                  aria-label={t('dashboard:form.visualType')}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,45 +175,51 @@ export function WidgetFormSheet({
                     .filter((option) => source?.types.includes(option.id))
                     .map((option) => (
                       <SelectItem key={option.id} value={option.id}>
-                        {option.label}
+                        {widgetTypeLabel(option.id, option.label)}
                       </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label>Data source</Label>
+              <Label>{t('dashboard:form.dataSource')}</Label>
               <Select
                 value={draft.source}
                 onValueChange={(value) =>
                   update({ source: value as DashboardWidget['source'] })
                 }
               >
-                <SelectTrigger className='w-full' aria-label='Data source'>
+                <SelectTrigger
+                  className='w-full'
+                  aria-label={t('dashboard:form.dataSource')}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {catalog.sources.map((option) => (
                     <SelectItem key={option.id} value={option.id}>
-                      {option.label}
+                      {sourceLabel(option.id, option.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label>Measure</Label>
+              <Label>{t('dashboard:form.measure')}</Label>
               <Select
                 value={draft.measure}
                 onValueChange={(value) => update({ measure: value })}
               >
-                <SelectTrigger className='w-full' aria-label='Measure'>
+                <SelectTrigger
+                  className='w-full'
+                  aria-label={t('dashboard:form.measure')}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {source?.measures.map((option) => (
                     <SelectItem key={option.id} value={option.id}>
-                      {option.label}
+                      {measureLabel(draft.source, option.id, option.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -207,19 +227,24 @@ export function WidgetFormSheet({
             </div>
             {draft.type !== 'kpi' ? (
               <div className='space-y-2'>
-                <Label>Grouping</Label>
+                <Label>{t('dashboard:form.grouping')}</Label>
                 <Select
                   value={draft.groupBy ?? undefined}
                   onValueChange={(value) => update({ groupBy: value })}
                   disabled={groups.length === 0}
                 >
-                  <SelectTrigger className='w-full' aria-label='Grouping'>
-                    <SelectValue placeholder='Select a grouping' />
+                  <SelectTrigger
+                    className='w-full'
+                    aria-label={t('dashboard:form.grouping')}
+                  >
+                    <SelectValue
+                      placeholder={t('dashboard:form.selectGrouping')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {groups.map((option) => (
                       <SelectItem key={option.id} value={option.id}>
-                        {option.label}
+                        {groupByLabel(option.id, option.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -228,11 +253,11 @@ export function WidgetFormSheet({
             ) : null}
             {source && source.dateBasis === null ? (
               <p className='self-end text-xs text-muted-foreground sm:col-span-2'>
-                Current stock is a live snapshot; no date range applies.
+                {t('dashboard:form.snapshot')}
               </p>
             ) : (
               <div className='space-y-2'>
-                <Label>Date range</Label>
+                <Label>{t('dashboard:form.dateRange')}</Label>
                 <Select
                   value={draft.dateRange ?? undefined}
                   onValueChange={(value) =>
@@ -241,13 +266,18 @@ export function WidgetFormSheet({
                     })
                   }
                 >
-                  <SelectTrigger className='w-full' aria-label='Date range'>
-                    <SelectValue placeholder='Select a date range' />
+                  <SelectTrigger
+                    className='w-full'
+                    aria-label={t('dashboard:form.dateRange')}
+                  >
+                    <SelectValue
+                      placeholder={t('dashboard:form.selectDateRange')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {ranges.map((option) => (
                       <SelectItem key={option.id} value={option.id}>
-                        {option.label}
+                        {dateRangeLabel(option.id, option.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -256,7 +286,7 @@ export function WidgetFormSheet({
             )}
             {source && canSplitByStatus(source, draft, group) ? (
               <div className='space-y-2'>
-                <Label>Split series</Label>
+                <Label>{t('dashboard:form.splitSeries')}</Label>
                 <Select
                   value={draft.seriesBy ?? 'none'}
                   onValueChange={(value) =>
@@ -265,14 +295,19 @@ export function WidgetFormSheet({
                     })
                   }
                 >
-                  <SelectTrigger className='w-full' aria-label='Split series'>
+                  <SelectTrigger
+                    className='w-full'
+                    aria-label={t('dashboard:form.splitSeries')}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='none'>Single series</SelectItem>
+                    <SelectItem value='none'>
+                      {t('dashboard:form.singleSeries')}
+                    </SelectItem>
                     {source.series.map((option) => (
                       <SelectItem key={option.id} value={option.id}>
-                        {option.label}
+                        {catalogSeriesLabel(option.id, option.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -280,7 +315,7 @@ export function WidgetFormSheet({
               </div>
             ) : null}
             <div className='space-y-2'>
-              <Label htmlFor={widthId}>Width (columns)</Label>
+              <Label htmlFor={widthId}>{t('dashboard:form.width')}</Label>
               <Input
                 id={widthId}
                 type='number'
@@ -293,7 +328,7 @@ export function WidgetFormSheet({
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor={heightId}>Height (rows)</Label>
+              <Label htmlFor={heightId}>{t('dashboard:form.height')}</Label>
               <Input
                 id={heightId}
                 type='number'
@@ -305,17 +340,17 @@ export function WidgetFormSheet({
               />
             </div>
             <p className='text-xs text-muted-foreground sm:col-span-2'>
-              Cards sit on a four-column grid. Width is a column count and
-              height is any whole number of rows; a wider card keeps its right
-              edge on the grid.
+              {t('dashboard:form.gridHint')}
             </p>
           </div>
 
           {statuses ? (
             <fieldset className='space-y-2'>
-              <legend className='text-sm font-medium'>{statuses.label}</legend>
+              <legend className='text-sm font-medium'>
+                {catalogFilterLabel(statuses.id, statuses.label)}
+              </legend>
               <p className='text-xs text-muted-foreground'>
-                Leave every option unchecked to include all statuses.
+                {t('dashboard:form.statusHint')}
               </p>
               <div className='grid gap-2 sm:grid-cols-2'>
                 {statuses.options.map((option) => (
@@ -338,7 +373,7 @@ export function WidgetFormSheet({
                         })
                       }
                     />
-                    {option.label}
+                    {statusLabel(option.value, option.label)}
                   </label>
                 ))}
               </div>
@@ -346,10 +381,12 @@ export function WidgetFormSheet({
           ) : null}
 
           <section
-            aria-label='Card preview'
+            aria-label={t('dashboard:form.previewRegion')}
             className='space-y-2 rounded-md border border-border p-3'
           >
-            <h3 className='text-sm font-medium'>Preview</h3>
+            <h3 className='text-sm font-medium'>
+              {t('dashboard:form.preview')}
+            </h3>
             {validation ? (
               <p role='alert' className='text-sm text-destructive'>
                 {validation}
@@ -383,10 +420,10 @@ export function WidgetFormSheet({
         </div>
         <SheetFooter className='flex-row justify-end gap-2 border-t border-border'>
           <Button type='button' variant='outline' onClick={onCancel}>
-            Cancel
+            {t('dashboard:form.cancel')}
           </Button>
           <Button type='button' onClick={save} disabled={validation !== null}>
-            Save card
+            {t('dashboard:form.saveCard')}
           </Button>
         </SheetFooter>
       </SheetContent>

@@ -46,6 +46,7 @@ import {
   type Transition,
   type Variants,
 } from 'motion/react'
+import { locale, t } from '@/lib/i18n'
 import styles from './sortable-data-table.module.css'
 
 /** Extra column metadata this table understands on top of TanStack's. */
@@ -97,7 +98,10 @@ const springs = {
   morph: { type: 'spring', stiffness: 420, damping: 40, mass: 1 },
 } as const
 const blur = (px: number) => `blur(${px}px)`
-const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' })
+const collator = new Intl.Collator(locale, {
+  numeric: true,
+  sensitivity: 'base',
+})
 const comparable = (value: unknown) =>
   value instanceof Date ? value.getTime() : value
 /** Arc compares numbers numerically and every other value with a numeric-aware collator. */
@@ -336,8 +340,8 @@ export function SortableDataTable<TData extends object>({
   data,
   columns,
   getRowId,
-  caption = 'Data table',
-  emptyMessage = 'No rows to show',
+  caption = t('common:table.caption'),
+  emptyMessage = t('common:table.empty'),
   sorting: sortingProp,
   defaultSorting,
   onSortingChange,
@@ -345,7 +349,10 @@ export function SortableDataTable<TData extends object>({
   rowSelection: rowSelectionProp,
   defaultRowSelection,
   onRowSelectionChange,
-  itemName = { one: 'row', other: 'rows' },
+  itemName = {
+    one: t('common:table.row', { count: 1 }),
+    other: t('common:table.row', { count: 2 }),
+  },
 }: SortableDataTableProps<TData>) {
   const reduced = useReducedMotion() ?? false
   const direction = useDirection()
@@ -494,7 +501,7 @@ export function SortableDataTable<TData extends object>({
 
   const shownCount = selectedCount || keys.length
   const noun = selectedCount
-    ? 'selected'
+    ? t('common:table.selectedLabel')
     : keys.length === 1
       ? itemName.one
       : itemName.other
@@ -509,9 +516,12 @@ export function SortableDataTable<TData extends object>({
     const descending = column.getIsSorted() === 'asc'
     column.toggleSorting(descending, false)
     setAnnouncement(
-      `Sorted by ${labelFor(column)}, ${
-        descending ? 'descending' : 'ascending'
-      }`
+      t('common:table.sortedBy', {
+        column: labelFor(column),
+        direction: descending
+          ? t('common:table.descending')
+          : t('common:table.ascending'),
+      })
     )
   }
 
@@ -527,7 +537,9 @@ export function SortableDataTable<TData extends object>({
     onRowSelectionChange?.(pruned)
     const count = keys.filter((id) => pruned[id]).length
     setAnnouncement(
-      count ? `${count} of ${keys.length} selected` : 'Selection cleared'
+      count
+        ? t('common:table.selectedOfTotal', { count, total: keys.length })
+        : t('common:table.selectionCleared')
     )
   }
 
@@ -678,7 +690,7 @@ export function SortableDataTable<TData extends object>({
                     inputRef={selectAllRef}
                     checked={allSelected}
                     mixed={selectedCount > 0 && !allSelected}
-                    label='Select all rows on this page'
+                    label={t('common:a11y.selectAllRows')}
                     nav='head'
                     reduced={reduced}
                     disabled={!rows.length}
@@ -717,13 +729,19 @@ export function SortableDataTable<TData extends object>({
                         type='button'
                         data-nav='head'
                         onClick={() => sortBy(column)}
-                        aria-label={`Sort by ${labelFor(column)}${
+                        aria-label={
                           active
-                            ? `, currently ${
-                                direction === 'asc' ? 'ascending' : 'descending'
-                              }`
-                            : ''
-                        }`}
+                            ? t('common:a11y.sortByActive', {
+                                column: labelFor(column),
+                                direction:
+                                  direction === 'asc'
+                                    ? t('common:table.ascending')
+                                    : t('common:table.descending'),
+                              })
+                            : t('common:a11y.sortBy', {
+                                column: labelFor(column),
+                              })
+                        }
                       >
                         <span className={styles.sortInner}>
                           {flexRender(
@@ -766,9 +784,11 @@ export function SortableDataTable<TData extends object>({
                       <td role='cell' className={styles.selectCell}>
                         <SelectBox
                           checked={row.getIsSelected()}
-                          label={`Select ${String(
-                            row.getVisibleCells()[0]?.getValue() ?? row.id
-                          )}`}
+                          label={t('common:a11y.selectRow', {
+                            name: String(
+                              row.getVisibleCells()[0]?.getValue() ?? row.id
+                            ),
+                          })}
                           nav='row'
                           reduced={reduced}
                           onToggle={(extend) => toggleRow(row.id, extend)}
@@ -812,7 +832,7 @@ export function SortableDataTable<TData extends object>({
       {selectable ? (
         <div className={styles.footer}>
           <span className={styles.srOnly}>
-            {shownCount} {noun}
+            {t('common:table.summary', { count: shownCount, noun })}
           </span>
           <span
             className={styles.count}
@@ -862,7 +882,7 @@ export function SortableDataTable<TData extends object>({
                     : { scale: 0.97, transition: { duration: timings.instant } }
                 }
               >
-                Clear selection
+                {t('common:a11y.clearSelection')}
               </motion.button>
             ) : null}
           </AnimatePresence>

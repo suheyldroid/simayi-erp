@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ import { PageControls } from '@/features/users/components/page-controls'
 import { organizationApi, organizationErrorMessage } from './api'
 import {
   organizationMemberRoles,
+  organizationRoleLabel,
   splitMemberRoles,
   type OrgMember,
 } from './model'
@@ -46,7 +48,9 @@ function RoleChoices({
 }) {
   return (
     <fieldset className='space-y-2' disabled={disabled}>
-      <legend className='text-sm font-medium'>Roles</legend>
+      <legend className='text-sm font-medium'>
+        {t('global:organizationMembers.rolesLegend')}
+      </legend>
       {choices.map((role) => {
         const id = `${idPrefix}-${role}`
         return (
@@ -62,7 +66,7 @@ function RoleChoices({
                 )
               }}
             />
-            <Label htmlFor={id}>{role}</Label>
+            <Label htmlFor={id}>{organizationRoleLabel(role)}</Label>
           </div>
         )
       })}
@@ -119,7 +123,7 @@ export function MembersPanel({
       setRoles(['member'])
       setAddOpen(false)
       await refresh()
-      toast.success('Member added.')
+      toast.success(t('global:organizationMembers.added'))
     } catch (caught) {
       setError(organizationErrorMessage(caught))
     } finally {
@@ -131,9 +135,7 @@ export function MembersPanel({
     <div className='space-y-6'>
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <p className='max-w-xl text-sm text-muted-foreground'>
-          Add a person by their existing user id. Organization owners are not
-          platform administrators, and this page does not search the global user
-          directory.
+          {t('global:organizationMembers.intro')}
         </p>
         {canCreate ? (
           <Sheet
@@ -144,7 +146,7 @@ export function MembersPanel({
             }}
           >
             <SheetTrigger asChild>
-              <Button>Add member</Button>
+              <Button>{t('global:organizationMembers.addTrigger')}</Button>
             </SheetTrigger>
             <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
               <form
@@ -152,15 +154,18 @@ export function MembersPanel({
                 onSubmit={(event) => void addMember(event)}
               >
                 <SheetHeader>
-                  <SheetTitle>Add existing user</SheetTitle>
+                  <SheetTitle>
+                    {t('global:organizationMembers.addTitle')}
+                  </SheetTitle>
                   <SheetDescription>
-                    Membership is created inside this organization only. The
-                    user id is not looked up in any global directory.
+                    {t('global:organizationMembers.addDescription')}
                   </SheetDescription>
                 </SheetHeader>
                 <div className='min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='member-user-id'>User id</Label>
+                    <Label htmlFor='member-user-id'>
+                      {t('global:organizationMembers.userIdLabel')}
+                    </Label>
                     <Input
                       id='member-user-id'
                       required
@@ -187,7 +192,9 @@ export function MembersPanel({
                       userId.trim().length === 0
                     }
                   >
-                    {pending ? 'Adding…' : 'Add member'}
+                    {pending
+                      ? t('global:shared.adding')
+                      : t('global:organizationMembers.addTrigger')}
                   </Button>
                 </SheetFooter>
               </form>
@@ -195,12 +202,14 @@ export function MembersPanel({
           </Sheet>
         ) : null}
       </div>
-      {members.isPending ? <p role='status'>Loading members…</p> : null}
+      {members.isPending ? (
+        <p role='status'>{t('global:organizationMembers.loading')}</p>
+      ) : null}
       {members.isError ? (
         <p role='alert'>
-          Could not load members.{' '}
+          {t('global:organizationMembers.loadFailed')}{' '}
           <Button variant='outline' onClick={() => void members.refetch()}>
-            Retry
+            {t('global:shared.retry')}
           </Button>
         </p>
       ) : null}
@@ -208,10 +217,18 @@ export function MembersPanel({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>User id</TableHead>
-              <TableHead>Roles</TableHead>
+              <TableHead>
+                {t('global:organizationMembers.columns.name')}
+              </TableHead>
+              <TableHead>
+                {t('global:organizationMembers.columns.email')}
+              </TableHead>
+              <TableHead>
+                {t('global:organizationMembers.columns.userId')}
+              </TableHead>
+              <TableHead>
+                {t('global:organizationMembers.columns.roles')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -229,7 +246,9 @@ export function MembersPanel({
             ))}
             {members.data.members.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4}>No members on this page.</TableCell>
+                <TableCell colSpan={4}>
+                  {t('global:organizationMembers.empty')}
+                </TableCell>
               </TableRow>
             ) : null}
           </TableBody>
@@ -279,7 +298,7 @@ function MemberRow({
   async function save() {
     if (!canUpdate || locked) return
     if (selected.length === 0) {
-      setError('Choose at least one role.')
+      setError(t('global:organizationMembers.rolesRequired'))
       return
     }
     setPending(true)
@@ -292,7 +311,7 @@ function MemberRow({
       )
       setEditOpen(false)
       await onChanged()
-      toast.success('Member roles updated.')
+      toast.success(t('global:organizationMembers.rolesUpdated'))
     } catch (caught) {
       setError(organizationErrorMessage(caught))
     } finally {
@@ -308,7 +327,7 @@ function MemberRow({
       await organizationApi.removeMember(organizationId, member.id)
       setConfirmRemove(false)
       await onChanged()
-      toast.success('Member removed. Their records stay attached to the owner.')
+      toast.success(t('global:organizationMembers.removed'))
     } catch (caught) {
       setError(organizationErrorMessage(caught))
     } finally {
@@ -322,7 +341,7 @@ function MemberRow({
       <TableCell>{member.user.email}</TableCell>
       <TableCell className='break-all'>{member.userId}</TableCell>
       <TableCell className='space-y-2'>
-        <p>{current.join(', ')}</p>
+        <p>{current.map(organizationRoleLabel).join(', ')}</p>
         {canUpdate && !locked ? (
           <Sheet
             open={editOpen}
@@ -333,15 +352,19 @@ function MemberRow({
           >
             <SheetTrigger asChild>
               <Button type='button' variant='outline' size='sm'>
-                Edit roles
+                {t('global:organizationMembers.editTrigger')}
               </Button>
             </SheetTrigger>
             <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
               <SheetHeader>
-                <SheetTitle>Edit member roles</SheetTitle>
+                <SheetTitle>
+                  {t('global:organizationMembers.editTitle')}
+                </SheetTitle>
                 <SheetDescription>
-                  {member.user.name} ({member.user.email}). The server still
-                  enforces which roles you may grant.
+                  {t('global:organizationMembers.editDescription', {
+                    name: member.user.name,
+                    email: member.user.email,
+                  })}
                 </SheetDescription>
               </SheetHeader>
               <div className='min-h-0 flex-1 overflow-y-auto px-4 pb-4'>
@@ -362,7 +385,9 @@ function MemberRow({
                   }
                   onClick={() => void save()}
                 >
-                  {pending ? 'Saving…' : 'Save roles'}
+                  {pending
+                    ? t('global:shared.saving')
+                    : t('global:organizationMembers.saveRoles')}
                 </Button>
               </SheetFooter>
             </SheetContent>
@@ -370,7 +395,7 @@ function MemberRow({
         ) : null}
         {locked ? (
           <p className='text-sm text-muted-foreground'>
-            Only an organization owner can change this member&apos;s role.
+            {t('global:organizationMembers.ownerOnly')}
           </p>
         ) : null}
         {canDelete && !locked ? (
@@ -380,7 +405,7 @@ function MemberRow({
             disabled={pending}
             onClick={() => setConfirmRemove(true)}
           >
-            Remove member
+            {t('global:organizationMembers.removeTrigger')}
           </Button>
         ) : null}
         {!editOpen && !confirmRemove && error ? (
@@ -389,10 +414,12 @@ function MemberRow({
         <ConfirmDialog
           open={confirmRemove && canDelete && !locked}
           onOpenChange={setConfirmRemove}
-          title={`Remove ${member.user.name} from the organization?`}
-          desc='The server can still refuse this removal. Their records stay attached to the organization owner.'
+          title={t('global:organizationMembers.removeTitle', {
+            name: member.user.name,
+          })}
+          desc={t('global:organizationMembers.removeDescription')}
           destructive
-          confirmText='Remove member'
+          confirmText={t('global:organizationMembers.removeConfirm')}
           isLoading={pending}
           handleConfirm={() => void remove()}
         >

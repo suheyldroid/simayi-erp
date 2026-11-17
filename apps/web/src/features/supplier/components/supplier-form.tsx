@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
@@ -121,10 +122,12 @@ export function SupplierForm({
       >
         <SheetHeader>
           <SheetTitle>
-            {creating ? 'Create supplier' : 'Edit supplier'}
+            {creating
+              ? t('operations:supplier.form.createTitle')
+              : t('operations:supplier.form.editTitle')}
           </SheetTitle>
           <SheetDescription>
-            Supplier and contact details, with the primary delivery address.
+            {t('operations:supplier.form.description')}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -137,7 +140,7 @@ export function SupplierForm({
               <FieldInput
                 field={{
                   name: 'name',
-                  label: 'Name',
+                  label: t('operations:supplier.form.name'),
                   required: true,
                   maxLength: 100,
                 }}
@@ -146,7 +149,7 @@ export function SupplierForm({
               <FieldInput
                 field={{
                   name: 'description',
-                  label: 'Description',
+                  label: t('operations:supplier.form.descriptionField'),
                   required: true,
                   maxLength: 500,
                   type: 'textarea',
@@ -159,7 +162,7 @@ export function SupplierForm({
                 disabled={busy}
                 resolveImage={imageUrl}
                 credentialImagePrefix={supplierImagePrefix}
-                alt='Supplier image preview'
+                alt={t('operations:supplier.form.imageAlt')}
                 onChange={(next) => {
                   setImage(next.image)
                   setFile(next.file)
@@ -167,25 +170,39 @@ export function SupplierForm({
               />
               <div className='grid gap-3 sm:grid-cols-2'>
                 <FieldInput
-                  field={{ name: 'phone', label: 'Phone', maxLength: 50 }}
+                  field={{
+                    name: 'phone',
+                    label: t('operations:supplier.form.phone'),
+                    maxLength: 50,
+                  }}
                   value={current?.phone}
                 />
                 <FieldInput
-                  field={{ name: 'taxId', label: 'Tax ID', maxLength: 50 }}
+                  field={{
+                    name: 'taxId',
+                    label: t('operations:supplier.form.taxId'),
+                    maxLength: 50,
+                  }}
                   value={current?.taxId}
                 />
               </div>
               <fieldset className='space-y-3 rounded-md border p-3'>
-                <legend className='px-1 text-sm font-medium'>Contact</legend>
+                <legend className='px-1 text-sm font-medium'>
+                  {t('operations:supplier.form.contactLegend')}
+                </legend>
                 <div className='grid gap-3 sm:grid-cols-3'>
                   <FieldInput
-                    field={{ name: 'contact', label: 'Name', maxLength: 100 }}
+                    field={{
+                      name: 'contact',
+                      label: t('operations:supplier.form.contactName'),
+                      maxLength: 100,
+                    }}
                     value={current?.contact}
                   />
                   <FieldInput
                     field={{
                       name: 'contactPhone',
-                      label: 'Phone',
+                      label: t('operations:supplier.form.contactPhone'),
                       maxLength: 100,
                     }}
                     value={current?.contactPhone}
@@ -193,7 +210,7 @@ export function SupplierForm({
                   <FieldInput
                     field={{
                       name: 'contactRole',
-                      label: 'Role',
+                      label: t('operations:supplier.form.contactRole'),
                       maxLength: 100,
                     }}
                     value={current?.contactRole}
@@ -201,20 +218,30 @@ export function SupplierForm({
                 </div>
               </fieldset>
               <fieldset className='space-y-3 rounded-md border p-3'>
-                <legend className='px-1 text-sm font-medium'>Address</legend>
+                <legend className='px-1 text-sm font-medium'>
+                  {t('operations:supplier.form.addressLegend')}
+                </legend>
                 <div className='grid gap-3 sm:grid-cols-2'>
                   <FieldInput
-                    field={{ name: 'line1', label: 'Line 1', maxLength: 50 }}
+                    field={{
+                      name: 'line1',
+                      label: t('operations:supplier.form.line1'),
+                      maxLength: 50,
+                    }}
                     value={current?.line1}
                   />
                   <FieldInput
-                    field={{ name: 'line2', label: 'Line 2', maxLength: 50 }}
+                    field={{
+                      name: 'line2',
+                      label: t('operations:supplier.form.line2'),
+                      maxLength: 50,
+                    }}
                     value={current?.line2}
                   />
                   <FieldInput
                     field={{
                       name: 'postalCode',
-                      label: 'Postal code',
+                      label: t('operations:supplier.form.postalCode'),
                       maxLength: 10,
                     }}
                     value={current?.postalCode}
@@ -222,7 +249,7 @@ export function SupplierForm({
                   <FieldInput
                     field={{
                       name: 'postalCity',
-                      label: 'Postal city',
+                      label: t('operations:supplier.form.postalCity'),
                       maxLength: 50,
                     }}
                     value={current?.postalCity}
@@ -230,19 +257,23 @@ export function SupplierForm({
                   <FieldInput
                     field={{
                       name: 'province',
-                      label: 'Province',
+                      label: t('operations:supplier.form.province'),
                       maxLength: 50,
                     }}
                     value={current?.province}
                   />
                   <FieldInput
-                    field={{ name: 'country', label: 'Country', maxLength: 50 }}
+                    field={{
+                      name: 'country',
+                      label: t('operations:supplier.form.country'),
+                      maxLength: 50,
+                    }}
                     value={current?.country}
                   />
                   <FieldInput
                     field={{
                       name: 'shippingNotes',
-                      label: 'Shipping notes',
+                      label: t('operations:supplier.form.shippingNotes'),
                       maxLength: 100,
                     }}
                     value={current?.shippingNotes}
@@ -250,7 +281,9 @@ export function SupplierForm({
                   <FieldInput
                     field={{
                       name: 'internalShippingNotes',
-                      label: 'Internal shipping notes',
+                      label: t(
+                        'operations:supplier.form.internalShippingNotes'
+                      ),
                       maxLength: 100,
                     }}
                     value={current?.internalShippingNotes}
@@ -258,7 +291,7 @@ export function SupplierForm({
                   <FieldInput
                     field={{
                       name: 'addressLink',
-                      label: 'Address link',
+                      label: t('operations:supplier.form.addressLink'),
                       maxLength: 2000,
                     }}
                     value={current?.addressLink}
@@ -267,7 +300,7 @@ export function SupplierForm({
               </fieldset>
               <FlagInput
                 name='active'
-                label='Active'
+                label={t('operations:supplier.form.active')}
                 defaultChecked={current?.active ?? true}
               />
             </fieldset>
@@ -284,10 +317,12 @@ export function SupplierForm({
               onClick={onClose}
               disabled={busy}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button type='submit' disabled={busy}>
-              {submitting ? 'Saving…' : 'Save'}
+              {submitting
+                ? t('operations:common.saving')
+                : t('operations:common.save')}
             </Button>
           </SheetFooter>
         </form>

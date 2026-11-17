@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { errorMessage } from '../api'
-import { monthLabel, monthRangeLabel } from '../format'
+import { formatCount, monthLabel, monthRangeLabel } from '../format'
 import { systemDashboardQueryOptions } from '../queries'
 import { ActivityChart } from './activity-chart'
 import { StatCard } from './stat-card'
@@ -23,29 +24,28 @@ export function SystemOverview({ userId }: { userId: string }) {
   const newOrganizations = organizations.reduce((sum, value) => sum + value, 0)
   const totalSales = sales.reduce((sum, value) => sum + value, 0)
   const totalPurchases = purchases.reduce((sum, value) => sum + value, 0)
-  const scope = range ? `, ${range}` : ' in the last six months'
 
   return (
     <section aria-labelledby='platform-activity-heading' className='space-y-4'>
       <div>
         <h2 id='platform-activity-heading' className='text-xl font-semibold'>
-          Platform activity
+          {t('dashboard:systemOverview.heading')}
         </h2>
         <p className='text-sm text-muted-foreground'>
-          Totals cover all time. Charts count records created in each of the
-          last six UTC months.
+          {t('dashboard:systemOverview.description')}
         </p>
       </div>
       {dashboard.isPending ? (
-        <p role='status'>Loading platform activity…</p>
+        <p role='status'>{t('dashboard:systemOverview.loading')}</p>
       ) : null}
       {dashboard.isError ? (
         <div role='alert' className='space-y-2'>
           <p>
-            Could not load platform activity. {errorMessage(dashboard.error)}
+            {t('dashboard:systemOverview.error')}{' '}
+            {errorMessage(dashboard.error)}
           </p>
           <Button variant='outline' onClick={() => void dashboard.refetch()}>
-            Retry
+            {t('dashboard:common.retry')}
           </Button>
         </div>
       ) : null}
@@ -53,70 +53,100 @@ export function SystemOverview({ userId }: { userId: string }) {
         <>
           <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
             <StatCard
-              label='Users'
+              label={t('dashboard:systemOverview.statUsers')}
               value={dashboard.data.totals.users}
-              description='All-time platform accounts'
+              description={t('dashboard:systemOverview.statUsersDescription')}
             />
             <StatCard
-              label='Organizations'
+              label={t('dashboard:systemOverview.statOrganizations')}
               value={dashboard.data.totals.organizations}
-              description='All-time organizations'
+              description={t(
+                'dashboard:systemOverview.statOrganizationsDescription'
+              )}
             />
             <StatCard
-              label='Sales'
+              label={t('dashboard:systemOverview.statSales')}
               value={dashboard.data.totals.sales}
-              description='All-time recorded sales'
+              description={t('dashboard:systemOverview.statSalesDescription')}
             />
             <StatCard
-              label='Purchase orders'
+              label={t('dashboard:systemOverview.statPurchases')}
               value={dashboard.data.totals.purchases}
-              description='All-time purchase orders, all statuses'
+              description={t(
+                'dashboard:systemOverview.statPurchasesDescription'
+              )}
             />
           </div>
           <div className='grid gap-4 lg:grid-cols-2'>
             <ActivityChart
-              title='New users and organizations'
-              description={`New accounts and organizations created per month${
-                range ? `, ${range}` : ''
-              }. ${newUsers} new users and ${newOrganizations} new organizations in this period.`}
+              title={t('dashboard:systemOverview.userChartTitle')}
+              description={
+                range
+                  ? t('dashboard:systemOverview.userChartDescription', {
+                      range,
+                      users: formatCount(newUsers),
+                      organizations: formatCount(newOrganizations),
+                    })
+                  : t('dashboard:systemOverview.userChartDescriptionNoRange', {
+                      users: formatCount(newUsers),
+                      organizations: formatCount(newOrganizations),
+                    })
+              }
               monthLabels={labels}
               series={[
                 {
                   key: 'users',
-                  label: 'New users',
+                  label: t('dashboard:systemOverview.userSeries'),
                   color: 'var(--chart-1)',
                   values: users,
                 },
                 {
                   key: 'organizations',
-                  label: 'New organizations',
+                  label: t('dashboard:systemOverview.organizationSeries'),
                   color: 'var(--chart-2)',
                   values: organizations,
                 },
               ]}
-              emptyMessage={`No new users or organizations were created${scope}.`}
+              emptyMessage={
+                range
+                  ? t('dashboard:systemOverview.userChartEmpty', { range })
+                  : t('dashboard:systemOverview.userChartEmptyNoRange')
+              }
             />
             <ActivityChart
-              title='Sales and purchase orders'
-              description={`Sales and purchase orders created per month${
-                range ? `, ${range}` : ''
-              }. ${totalSales} sales and ${totalPurchases} purchase orders in this period.`}
+              title={t('dashboard:systemOverview.salesChartTitle')}
+              description={
+                range
+                  ? t('dashboard:systemOverview.salesChartDescription', {
+                      range,
+                      sales: formatCount(totalSales),
+                      purchases: formatCount(totalPurchases),
+                    })
+                  : t('dashboard:systemOverview.salesChartDescriptionNoRange', {
+                      sales: formatCount(totalSales),
+                      purchases: formatCount(totalPurchases),
+                    })
+              }
               monthLabels={labels}
               series={[
                 {
                   key: 'sales',
-                  label: 'Sales',
+                  label: t('dashboard:systemOverview.salesSeries'),
                   color: 'var(--chart-3)',
                   values: sales,
                 },
                 {
                   key: 'purchases',
-                  label: 'Purchase orders',
+                  label: t('dashboard:systemOverview.purchaseSeries'),
                   color: 'var(--chart-4)',
                   values: purchases,
                 },
               ]}
-              emptyMessage={`No sales or purchase orders were created${scope}.`}
+              emptyMessage={
+                range
+                  ? t('dashboard:systemOverview.salesChartEmpty', { range })
+                  : t('dashboard:systemOverview.salesChartEmptyNoRange')
+              }
             />
           </div>
         </>

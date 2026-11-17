@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { useQuery } from '@tanstack/react-query'
 import { XIcon } from 'lucide-react'
+import { t } from '@/lib/i18n'
 import { organizationCacheScope } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -95,7 +96,9 @@ export function SupplierSelect({
                   value == null && 'text-muted-foreground'
                 )}
               >
-                {value == null ? 'Select supplier' : value.name}
+                {value == null
+                  ? t('operations:supplier.select.placeholder')
+                  : value.name}
               </span>
               <span
                 aria-hidden='true'
@@ -114,8 +117,8 @@ export function SupplierSelect({
           >
             <Command shouldFilter={false} loop>
               <CommandInput
-                aria-label='Search suppliers'
-                placeholder='Search suppliers…'
+                aria-label={t('operations:supplier.select.searchLabel')}
+                placeholder={t('operations:supplier.select.searchPlaceholder')}
                 value={search}
                 onValueChange={(next) => {
                   setSearch(next)
@@ -130,7 +133,7 @@ export function SupplierSelect({
                     role='status'
                     className='p-3 text-sm text-muted-foreground'
                   >
-                    Loading suppliers…
+                    {t('operations:supplier.select.loading')}
                   </p>
                 ) : options.isError ? (
                   <div
@@ -145,12 +148,14 @@ export function SupplierSelect({
                       disabled={disabled}
                       onClick={() => void options.refetch()}
                     >
-                      Retry
+                      {t('operations:common.retry')}
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <CommandEmpty>No suppliers found.</CommandEmpty>
+                    <CommandEmpty>
+                      {t('operations:supplier.select.empty')}
+                    </CommandEmpty>
                     <CommandGroup>
                       {suppliers.map((supplier) => (
                         <CommandItem
@@ -196,15 +201,16 @@ export function SupplierSelect({
                   disabled={page === 0 || options.isFetching || disabled}
                   onClick={() => setPage((current) => Math.max(0, current - 1))}
                 >
-                  Previous
+                  {t('operations:supplier.select.previous')}
                 </Button>
                 <span className='text-xs text-muted-foreground'>
                   {total === 0
-                    ? 'No suppliers'
-                    : `${page * PAGE_SIZE + 1}–${Math.min(
-                        (page + 1) * PAGE_SIZE,
-                        total
-                      )} of ${total}`}
+                    ? t('operations:supplier.select.none')
+                    : t('operations:supplier.select.range', {
+                        from: page * PAGE_SIZE + 1,
+                        to: Math.min((page + 1) * PAGE_SIZE, total),
+                        total,
+                      })}
                 </span>
                 <Button
                   type='button'
@@ -213,7 +219,7 @@ export function SupplierSelect({
                   disabled={!hasNext || options.isFetching || disabled}
                   onClick={() => setPage((current) => current + 1)}
                 >
-                  Next
+                  {t('operations:supplier.select.next')}
                 </Button>
               </div>
             </Command>
@@ -224,7 +230,7 @@ export function SupplierSelect({
             type='button'
             variant='ghost'
             size='icon'
-            aria-label={`Clear ${label.toLowerCase()}`}
+            aria-label={t('operations:supplier.select.clear', { label })}
             disabled={disabled}
             className='absolute end-1 top-1/2 size-7 -translate-y-1/2 rounded-sm text-muted-foreground'
             onClick={(event) => {

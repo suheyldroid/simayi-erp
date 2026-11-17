@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { t } from '@/lib/i18n'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -56,7 +57,9 @@ export function FieldInput({
             disabled={disabled}
           >
             <SelectTrigger id={id}>
-              <SelectValue placeholder='Select…' />
+              <SelectValue
+                placeholder={t('common:actions.selectPlaceholder')}
+              />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((option) => (

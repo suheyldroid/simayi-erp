@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { sessionQuery } from '@/lib/auth'
+import { locale, t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
 import useDialogState from '@/hooks/use-dialog-state'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -36,7 +37,7 @@ export function ProfileDropdown() {
           <Button
             variant='ghost'
             className='relative h-8 w-8 rounded-full'
-            aria-label='Account menu'
+            aria-label={t('common:a11y.accountMenu')}
           >
             <Avatar className='h-8 w-8'>
               <AvatarImage
@@ -49,7 +50,7 @@ export function ProfileDropdown() {
                 }
               />
               <AvatarFallback>
-                {user?.name.slice(0, 2).toUpperCase() ?? 'U'}
+                {user?.name.slice(0, 2).toLocaleUpperCase(locale) ?? 'U'}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -66,12 +67,12 @@ export function ProfileDropdown() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem asChild>
-              <Link to='/settings'>Settings</Link>
+              <Link to='/settings'>{t('common:account.settings')}</Link>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant='destructive' onClick={() => setOpen(true)}>
-            Sign out
+            {t('common:account.signOut')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -3,6 +3,7 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { t } from '@/lib/i18n'
 import { showSubmittedData } from '@/lib/show-submitted-data'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,15 +30,20 @@ import { type User } from '../data/schema'
 
 const formSchema = z
   .object({
-    firstName: z.string().min(1, 'First Name is required.'),
-    lastName: z.string().min(1, 'Last Name is required.'),
-    username: z.string().min(1, 'Username is required.'),
-    phoneNumber: z.string().min(1, 'Phone number is required.'),
+    firstName: z
+      .string()
+      .min(1, t('global:users.management.required.firstName')),
+    lastName: z.string().min(1, t('global:users.management.required.lastName')),
+    username: z.string().min(1, t('global:users.management.required.username')),
+    phoneNumber: z.string().min(1, t('global:users.management.required.phone')),
     email: z.email({
-      error: (iss) => (iss.input === '' ? 'Email is required.' : undefined),
+      error: (iss) =>
+        iss.input === ''
+          ? t('global:users.management.required.email')
+          : undefined,
     }),
     password: z.string().transform((pwd) => pwd.trim()),
-    role: z.string().min(1, 'Role is required.'),
+    role: z.string().min(1, t('global:users.management.required.role')),
     confirmPassword: z.string().transform((pwd) => pwd.trim()),
     isEdit: z.boolean(),
   })
@@ -47,7 +53,7 @@ const formSchema = z
       return data.password.length > 0
     },
     {
-      message: 'Password is required.',
+      message: t('global:users.management.required.password'),
       path: ['password'],
     }
   )
@@ -57,7 +63,7 @@ const formSchema = z
       return password.length >= 8
     },
     {
-      message: 'Password must be at least 8 characters long.',
+      message: t('global:users.management.required.passwordMin8'),
       path: ['password'],
     }
   )
@@ -67,7 +73,7 @@ const formSchema = z
       return /[a-z]/.test(password)
     },
     {
-      message: 'Password must contain at least one lowercase letter.',
+      message: t('global:users.management.required.passwordLowercase'),
       path: ['password'],
     }
   )
@@ -77,7 +83,7 @@ const formSchema = z
       return /\d/.test(password)
     },
     {
-      message: 'Password must contain at least one number.',
+      message: t('global:users.management.required.passwordNumber'),
       path: ['password'],
     }
   )
@@ -87,7 +93,7 @@ const formSchema = z
       return password === confirmPassword
     },
     {
-      message: "Passwords don't match.",
+      message: t('global:users.management.required.passwordMismatch'),
       path: ['confirmPassword'],
     }
   )
@@ -145,10 +151,15 @@ export function UsersActionDialog({
     >
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader className='text-start'>
-          <DialogTitle>{isEdit ? 'Edit User' : 'Add New User'}</DialogTitle>
+          <DialogTitle>
+            {isEdit
+              ? t('global:users.management.editTitle')
+              : t('global:users.management.addTitle')}
+          </DialogTitle>
           <DialogDescription>
-            {isEdit ? 'Update the user here. ' : 'Create new user here. '}
-            Click save when you&apos;re done.
+            {isEdit
+              ? t('global:users.management.editDescription')
+              : t('global:users.management.addDescription')}
           </DialogDescription>
         </DialogHeader>
         <div className='h-105 w-[calc(100%+0.75rem)] overflow-y-auto py-1 pe-3'>
@@ -164,11 +175,13 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      First Name
+                      {t('global:users.management.fields.firstName')}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='John'
+                        placeholder={t(
+                          'global:users.management.placeholders.firstName'
+                        )}
                         className='col-span-4'
                         autoComplete='off'
                         {...field}
@@ -184,11 +197,13 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Last Name
+                      {t('global:users.management.fields.lastName')}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Doe'
+                        placeholder={t(
+                          'global:users.management.placeholders.lastName'
+                        )}
                         className='col-span-4'
                         autoComplete='off'
                         {...field}
@@ -204,11 +219,13 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Username
+                      {t('global:users.management.fields.username')}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='john_doe'
+                        placeholder={t(
+                          'global:users.management.placeholders.username'
+                        )}
                         className='col-span-4'
                         {...field}
                       />
@@ -222,10 +239,14 @@ export function UsersActionDialog({
                 name='email'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>Email</FormLabel>
+                    <FormLabel className='col-span-2 text-end'>
+                      {t('global:users.management.fields.email')}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='john.doe@gmail.com'
+                        placeholder={t(
+                          'global:users.management.placeholders.email'
+                        )}
                         className='col-span-4'
                         {...field}
                       />
@@ -240,11 +261,13 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Phone Number
+                      {t('global:users.management.fields.phone')}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='+123456789'
+                        placeholder={t(
+                          'global:users.management.placeholders.phone'
+                        )}
                         className='col-span-4'
                         {...field}
                       />
@@ -258,11 +281,13 @@ export function UsersActionDialog({
                 name='role'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-end'>Role</FormLabel>
+                    <FormLabel className='col-span-2 text-end'>
+                      {t('global:users.management.fields.role')}
+                    </FormLabel>
                     <SelectDropdown
                       defaultValue={field.value}
                       onValueChange={field.onChange}
-                      placeholder='Select a role'
+                      placeholder={t('global:users.management.selectRole')}
                       className='col-span-4'
                       items={roles.map(({ label, value }) => ({
                         label,
@@ -279,11 +304,13 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Password
+                      {t('global:users.management.fields.password')}
                     </FormLabel>
                     <FormControl>
                       <PasswordInput
-                        placeholder='e.g., S3cur3P@ssw0rd'
+                        placeholder={t(
+                          'global:users.management.placeholders.password'
+                        )}
                         className='col-span-4'
                         {...field}
                       />
@@ -298,12 +325,14 @@ export function UsersActionDialog({
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
-                      Confirm Password
+                      {t('global:users.management.fields.confirmPassword')}
                     </FormLabel>
                     <FormControl>
                       <PasswordInput
                         disabled={!isPasswordTouched}
-                        placeholder='e.g., S3cur3P@ssw0rd'
+                        placeholder={t(
+                          'global:users.management.placeholders.password'
+                        )}
                         className='col-span-4'
                         {...field}
                       />
@@ -317,7 +346,7 @@ export function UsersActionDialog({
         </div>
         <DialogFooter>
           <Button type='submit' form='user-form'>
-            Save changes
+            {t('global:users.management.saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

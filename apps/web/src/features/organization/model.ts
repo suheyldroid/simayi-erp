@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { locale, t } from '@/lib/i18n'
 
 export const organizationSchema = z.object({
   id: z.string(),
@@ -63,7 +64,7 @@ export function organizationInitials(
     .filter(Boolean)
     .slice(0, 2)
   if (words.length === 0) return '?'
-  return words.map((word) => word[0]?.toUpperCase() ?? '').join('')
+  return words.map((word) => word[0]?.toLocaleUpperCase(locale) ?? '').join('')
 }
 
 /**
@@ -77,6 +78,14 @@ export function splitMemberRoles(role: string) {
     .split(',')
     .map((item) => item.trim())
     .filter((item) => item.length > 0)
+}
+
+/**
+ * Display label for a native role value. The stored value never changes; an
+ * unknown (custom) role is shown verbatim.
+ */
+export function organizationRoleLabel(role: string) {
+  return t(`global:organizationMembers.roles.${role}`, { defaultValue: role })
 }
 
 export function slugFromName(name: string) {

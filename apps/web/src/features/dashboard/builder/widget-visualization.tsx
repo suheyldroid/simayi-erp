@@ -13,7 +13,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
+import { formatCount } from '../format'
+import { localizeResult } from '../labels'
 import { errorMessage } from './api'
 import type { DashboardWidget, DashboardWidgetResult } from './model'
 
@@ -45,7 +48,7 @@ function tooltipProps() {
   return {
     formatter: (value: unknown, name: unknown) =>
       [
-        Number(value).toLocaleString(),
+        formatCount(Number(value)),
         typeof name === 'string' ? name : String(name),
       ] as [string, string],
     contentStyle: {
@@ -87,15 +90,17 @@ function DataTable({
   return (
     <details className='shrink-0 text-xs text-muted-foreground'>
       <summary className='w-fit cursor-pointer rounded-sm focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'>
-        View data table
+        {t('dashboard:visualization.viewDataTable')}
       </summary>
       <div className='mt-2 max-h-64 overflow-auto'>
         <table className='w-full border-collapse text-left'>
-          <caption className='sr-only'>{title} numeric values</caption>
+          <caption className='sr-only'>
+            {t('dashboard:visualization.dataTableCaption', { title })}
+          </caption>
           <thead>
             <tr className='border-b border-border'>
               <th scope='col' className='py-1 pe-3 font-medium'>
-                Category
+                {t('dashboard:visualization.category')}
               </th>
               {result.series.map((series) => (
                 <th
@@ -119,7 +124,7 @@ function DataTable({
                 </th>
                 {result.series.map((series) => (
                   <td key={series.key} className='py-1 pe-3 tabular-nums'>
-                    {(series.values[index] ?? 0).toLocaleString()}
+                    {formatCount(series.values[index] ?? 0)}
                   </td>
                 ))}
               </tr>
@@ -313,7 +318,7 @@ function DonutChart({ result }: { result: DashboardWidgetResult }) {
             />
             <span className='truncate'>{slice.name}</span>
             <span className='ms-auto tabular-nums'>
-              {slice.value.toLocaleString()}
+              {formatCount(slice.value)}
             </span>
           </li>
         ))}
@@ -345,18 +350,18 @@ export function WidgetVisualization({
   if (pending)
     return (
       <p role='status' className='text-sm text-muted-foreground'>
-        Loading card data…
+        {t('dashboard:visualization.loading')}
       </p>
     )
   if (error)
     return (
       <div role='alert' className='space-y-2'>
         <p className='text-sm'>
-          Could not load this card. {errorMessage(error)}
+          {t('dashboard:visualization.error')} {errorMessage(error)}
         </p>
         {onRetry ? (
           <Button variant='outline' size='sm' onClick={onRetry}>
-            Retry
+            {t('dashboard:common.retry')}
           </Button>
         ) : null}
       </div>
@@ -364,32 +369,36 @@ export function WidgetVisualization({
   if (!result)
     return (
       <p className='text-sm text-muted-foreground'>
-        No result returned for this card.
+        {t('dashboard:visualization.noResult')}
       </p>
     )
+
+  // Only display labels are localized; every value, key and date stays as the
+  // API returned it.
+  const view = localizeResult(widget, result)
 
   if (widget.type === 'kpi')
     return (
       <div className='space-y-1'>
         <p className='text-3xl font-semibold tabular-nums'>
-          {result.total.toLocaleString()}
+          {formatCount(view.total)}
           <span className='ms-2 text-sm font-normal text-muted-foreground'>
-            {result.unitLabel}
+            {view.unitLabel}
           </span>
         </p>
         <p id={descriptionId} className='text-xs text-muted-foreground'>
-          {result.measureLabel}
-          {result.rangeLabel
-            ? ` · ${result.rangeLabel}`
-            : ' · Current snapshot'}
+          {view.measureLabel}
+          {view.rangeLabel
+            ? ` · ${view.rangeLabel}`
+            : ` · ${t('dashboard:common.currentSnapshot')}`}
         </p>
       </div>
     )
 
-  if (result.categories.length === 0)
+  if (view.categories.length === 0)
     return (
       <p className='text-sm text-muted-foreground'>
-        No matching records for this card.
+        {t('dashboard:visualization.noRecords')}
       </p>
     )
 
@@ -402,29 +411,29 @@ export function WidgetVisualization({
       <figcaption id={titleId} className='sr-only'>
         {widget.title}
       </figcaption>
-      {result.series.length > 1 ? <SeriesLegend result={result} /> : null}
-      {result.total === 0 ? (
+      {view.series.length > 1 ? <SeriesLegend result={view} /> : null}
+      {view.total === 0 ? (
         <p
           id={descriptionId}
           className='shrink-0 text-xs text-muted-foreground'
         >
-          No matching records; the chart shows real zero counts.
+          {t('dashboard:visualization.zeroNote')}
         </p>
       ) : (
         <p
           id={descriptionId}
           className='shrink-0 text-xs text-muted-foreground'
         >
-          {result.total.toLocaleString()} {result.unitLabel}
-          {result.rangeLabel ? ` · ${result.rangeLabel}` : ''}
+          {formatCount(view.total)} {view.unitLabel}
+          {view.rangeLabel ? ` · ${view.rangeLabel}` : ''}
         </p>
       )}
       {widget.type === 'donut' ? (
-        <DonutChart result={result} />
+        <DonutChart result={view} />
       ) : (
-        <CartesianChart widget={widget} result={result} />
+        <CartesianChart widget={widget} result={view} />
       )}
-      <DataTable title={widget.title} result={result} />
+      <DataTable title={widget.title} result={view} />
     </figure>
   )
 }

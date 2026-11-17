@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useOptionalBranch } from '@/lib/branch-boundary'
+import {
+  captureBranchScope,
+  isBranchScopeCurrent,
+  type CapturedBranchScope,
+} from '@/lib/branch-scope'
 import { isPositiveDecimal, subtractDecimalStrings } from '@/lib/decimal-string'
+import { t } from '@/lib/i18n'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import {
@@ -56,12 +63,13 @@ function PurchaseLineForm({
     >
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
         <SheetHeader>
-          <SheetTitle>Add line</SheetTitle>
+          <SheetTitle>
+            {t('operations:purchasing.lines.createTitle')}
+          </SheetTitle>
           <SheetDescription>
-            An item and its ordered quantity in the item's stock unit. A written
-            price uses the fixed system currency (
-            {systemCurrency ?? 'not configured'}). The order version is sent
-            with the line so a stale order cannot be changed.
+            {t('operations:purchasing.lines.createDescription', {
+              currency: systemCurrency ?? t('operations:common.notConfigured'),
+            })}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -69,12 +77,14 @@ function PurchaseLineForm({
           onSubmit={(event) => {
             event.preventDefault()
             if (!item) {
-              setValidationError('Choose an item')
+              setValidationError(t('operations:purchasing.lines.chooseItem'))
               return
             }
             if (!item.units) {
               setValidationError(
-                `${item.name} has no unit assigned. Assign a unit in Items before ordering it.`
+                t('operations:purchasing.lines.missingUnit', {
+                  item: item.name,
+                })
               )
               return
             }
@@ -97,7 +107,7 @@ function PurchaseLineForm({
           <div className='flex-1 space-y-4 overflow-y-auto px-4 pb-4'>
             <fieldset disabled={pending} className='space-y-4'>
               <ItemSelect
-                label='Item'
+                label={t('operations:purchasing.lines.item')}
                 value={item}
                 activeOnly={false}
                 disabled={pending}
@@ -107,20 +117,27 @@ function PurchaseLineForm({
                 <FieldInput
                   field={{
                     name: 'quantity',
-                    label: 'Quantity',
+                    label: t('operations:purchasing.lines.quantity'),
                     required: true,
                   }}
                 />
                 <p className='text-xs text-muted-foreground'>
                   {item
-                    ? `Ordered in ${item.units || 'an unresolved unit'}.`
-                    : 'Choose an item to see its unit.'}
+                    ? t('operations:purchasing.lines.unitHint', {
+                        unit:
+                          item.units || t('operations:common.unresolvedUnit'),
+                      })
+                    : t('operations:purchasing.lines.unitPlaceholder')}
                 </p>
               </div>
               <FieldInput
                 field={{
                   name: 'purchasePrice',
-                  label: `Unit price (${systemCurrency ?? 'system currency'})`,
+                  label: t('operations:purchasing.lines.unitPrice', {
+                    currency:
+                      systemCurrency ??
+                      t('operations:purchasing.systemCurrency'),
+                  }),
                 }}
               />
             </fieldset>
@@ -137,10 +154,10 @@ function PurchaseLineForm({
               onClick={onClose}
               disabled={pending}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button type='submit' disabled={pending}>
-              Add line
+              {t('operations:purchasing.lines.submit')}
             </Button>
           </SheetFooter>
         </form>
@@ -167,44 +184,62 @@ export function OrderLines({
   onRetry: () => void
 }) {
   const client = useQueryClient()
+  const selectedBranch = useOptionalBranch()
   const [adding, setAdding] = useState(false)
   const [removeLine, setRemoveLine] = useState<PurchaseLine | null>(null)
   const save = useMutation({
-    mutationFn: (input: { body: LineInput; scope: string }) =>
-      purchasingApi.addLine(order.uuid, input.body),
+    mutationFn: (input: {
+      body: LineInput
+      scope: string
+      ui: CapturedBranchScope
+    }) => purchasingApi.addLine(order.uuid, input.body),
     onSuccess: async (_line, input) => {
-      await client.invalidateQueries({ queryKey: ['purchasing'] })
+      await client.invalidateQueries({ queryKey: ['purchasing', input.scope] })
       // The line write refreshes the finance reservation of the order.
       await client.invalidateQueries({ queryKey: ['finance', input.scope] })
+      if (!isBranchScopeCurrent(input.ui)) return
       setAdding(false)
-      toast.success('Line added')
+      toast.success(t('operations:purchasing.lines.added'))
     },
-    onError: (caught) => toast.error(errorMessage(caught)),
+    onError: (caught, input) => {
+      if (isBranchScopeCurrent(input.ui)) toast.error(errorMessage(caught))
+    },
   })
   const remove = useMutation({
-    mutationFn: (input: { line: PurchaseLine; scope: string }) =>
-      purchasingApi.removeLine(order.uuid, input.line.uuid, order.version),
+    mutationFn: (input: {
+      line: PurchaseLine
+      scope: string
+      ui: CapturedBranchScope
+    }) => purchasingApi.removeLine(order.uuid, input.line.uuid, order.version),
     onSuccess: async (_result, input) => {
-      await client.invalidateQueries({ queryKey: ['purchasing'] })
+      await client.invalidateQueries({ queryKey: ['purchasing', input.scope] })
       // The line write refreshes the finance reservation of the order.
       await client.invalidateQueries({ queryKey: ['finance', input.scope] })
+      if (!isBranchScopeCurrent(input.ui)) return
       setRemoveLine(null)
-      toast.success('Line deleted')
+      toast.success(t('operations:purchasing.lines.deleted'))
     },
-    onError: (caught) => toast.error(errorMessage(caught)),
+    onError: (caught, input) => {
+      if (isBranchScopeCurrent(input.ui)) toast.error(errorMessage(caught))
+    },
   })
+  // A line with any receipt or reversal event cannot be deleted, even when its
+  // net received quantity is back to zero.
   const canRemoveLine =
-    removeLine !== null && editable && !isPositiveDecimal(removeLine.received)
+    removeLine !== null &&
+    editable &&
+    !isPositiveDecimal(removeLine.received) &&
+    removeLine.receiptEventCount === 0
   const columns: SortableColumn<PurchaseLine>[] = [
     {
       id: 'item',
-      header: 'Item',
+      header: t('operations:purchasing.lines.item'),
       accessorFn: (line) => line.item?.name ?? '',
       cell: ({ row }) => row.original.item?.name ?? '—',
     },
     {
       id: 'ipn',
-      header: 'IPN',
+      header: t('operations:purchasing.lines.ipn'),
       // Free-form codes: the numeric collator misorders dotted fractions, so
       // this column stays unsorted instead of promising an order it cannot keep.
       enableSorting: false,
@@ -213,7 +248,7 @@ export function OrderLines({
     },
     {
       id: 'quantity',
-      header: 'Ordered',
+      header: t('operations:purchasing.lines.ordered'),
       // Exact decimal strings stay strings; sorting them through Number() would
       // corrupt the order, so every quantity column is unsorted.
       enableSorting: false,
@@ -223,7 +258,7 @@ export function OrderLines({
     },
     {
       id: 'received',
-      header: 'Received',
+      header: t('operations:purchasing.lines.received'),
       enableSorting: false,
       meta: { numeric: true },
       accessorFn: (line) => line.received,
@@ -231,7 +266,7 @@ export function OrderLines({
     },
     {
       id: 'outstanding',
-      header: 'Outstanding',
+      header: t('operations:purchasing.lines.outstanding'),
       enableSorting: false,
       meta: { numeric: true },
       cell: ({ row }) =>
@@ -239,32 +274,38 @@ export function OrderLines({
     },
     {
       id: 'unit',
-      header: 'Unit',
+      header: t('operations:purchasing.lines.unit'),
       accessorFn: (line) => line.unitCode ?? '',
-      cell: ({ row }) => row.original.unitCode ?? 'Unknown unit',
+      cell: ({ row }) =>
+        row.original.unitCode ?? t('operations:common.unknownUnit'),
     },
     {
       id: 'price',
-      header: 'Unit price',
+      header: t('operations:purchasing.lines.unitPriceColumn'),
       enableSorting: false,
       cell: ({ row }) =>
         row.original.purchasePrice == null
           ? '—'
-          : `${row.original.purchasePrice} ${row.original.currencyCode ?? 'Unknown currency'}`,
+          : `${row.original.purchasePrice} ${
+              row.original.currencyCode ??
+              t('operations:common.unknownCurrency')
+            }`,
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: t('operations:purchasing.lines.actions'),
       enableSorting: false,
       cell: ({ row }) =>
-        editable && !isPositiveDecimal(row.original.received) ? (
+        editable &&
+        !isPositiveDecimal(row.original.received) &&
+        row.original.receiptEventCount === 0 ? (
           <Button
             type='button'
             variant='outline'
             disabled={remove.isPending}
             onClick={() => setRemoveLine(row.original)}
           >
-            Delete
+            {t('operations:common.delete')}
           </Button>
         ) : null,
     },
@@ -272,23 +313,27 @@ export function OrderLines({
   return (
     <section className='space-y-2'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
-        <h2 className='text-xl font-semibold'>Lines</h2>
+        <h2 className='text-xl font-semibold'>
+          {t('operations:purchasing.lines.title')}
+        </h2>
         {editable && (
           <Button
             type='button'
             variant='outline'
             onClick={() => setAdding(true)}
           >
-            Add line
+            {t('operations:purchasing.lines.add')}
           </Button>
         )}
       </div>
-      {pending && <p role='status'>Loading lines…</p>}
+      {pending && (
+        <p role='status'>{t('operations:purchasing.lines.loading')}</p>
+      )}
       {error != null && (
         <p role='alert'>
           {errorMessage(error)}{' '}
           <Button variant='outline' onClick={onRetry}>
-            Retry
+            {t('operations:common.retry')}
           </Button>
         </p>
       )}
@@ -297,8 +342,8 @@ export function OrderLines({
           data={lines}
           columns={columns}
           getRowId={(line) => line.uuid}
-          caption='Purchase order lines'
-          emptyMessage='No lines yet.'
+          caption={t('operations:purchasing.lines.caption')}
+          emptyMessage={t('operations:purchasing.lines.empty')}
         />
       )}
       {editable && adding && (
@@ -309,7 +354,11 @@ export function OrderLines({
           error={save.error}
           onClose={() => setAdding(false)}
           onSubmit={(body) =>
-            save.mutate({ body, scope: organizationCacheScope() })
+            save.mutate({
+              body,
+              scope: organizationCacheScope(),
+              ui: captureBranchScope(selectedBranch?.branch.uuid ?? null),
+            })
           }
         />
       )}
@@ -318,9 +367,9 @@ export function OrderLines({
         onOpenChange={(open) => {
           if (!open) setRemoveLine(null)
         }}
-        title='Delete purchase order line'
-        desc='A line can be deleted only while no stock has been received for it.'
-        confirmText='Delete'
+        title={t('operations:purchasing.lines.deleteTitle')}
+        desc={t('operations:purchasing.lines.deleteDescription')}
+        confirmText={t('operations:common.delete')}
         destructive
         disabled={!canRemoveLine}
         isLoading={remove.isPending}
@@ -328,12 +377,14 @@ export function OrderLines({
           if (
             removeLine === null ||
             !editable ||
-            isPositiveDecimal(removeLine.received)
+            isPositiveDecimal(removeLine.received) ||
+            removeLine.receiptEventCount > 0
           )
             return
           remove.mutate({
             line: removeLine,
             scope: organizationCacheScope(),
+            ui: captureBranchScope(selectedBranch?.branch.uuid ?? null),
           })
         }}
       />

@@ -2,7 +2,11 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { useOrganizationSlug } from '@/lib/organization-boundary'
+import { t } from '@/lib/i18n'
+import {
+  organizationLocation,
+  useOrganizationScope,
+} from '@/lib/organization-navigation'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,72 +30,83 @@ import {
 type EntryForm = 'income' | 'expense'
 
 function movementColumns(
-  organizationSlug: string
+  organizationSlug: string,
+  branchUuid: string | null
 ): SortableColumn<MoneyMovement>[] {
   return [
     {
       id: 'date',
-      header: 'Date',
+      header: t('operations:finance.list.columns.date'),
       accessorFn: (movement) => movement.occurredAt,
       cell: ({ getValue }) => String(getValue() ?? ''),
     },
     {
       id: 'type',
-      header: 'Type',
+      header: t('operations:finance.list.columns.type'),
       accessorFn: (movement) => movementKindLabel(movement.kind),
-      cell: ({ getValue }) => String(getValue() ?? ''),
+      cell: ({ row }) => movementKindLabel(row.original.kind),
     },
     {
       id: 'amount',
-      header: 'Amount',
+      header: t('operations:finance.list.columns.amount'),
       accessorFn: (movement) => movement.amount,
       cell: ({ row }) => `${row.original.amount} ${row.original.currencyCode}`,
     },
     {
       id: 'supplier',
-      header: 'Supplier',
+      header: t('operations:finance.list.columns.supplier'),
       accessorFn: (movement) => movement.supplierName ?? '',
       cell: ({ getValue }) => String(getValue() ?? '') || '—',
     },
     {
+      id: 'branch',
+      header: t('operations:finance.list.columns.branch'),
+      accessorFn: (movement) => movement.branchName ?? '',
+      cell: ({ getValue }) =>
+        String(getValue() ?? '') || t('operations:finance.companyWide'),
+    },
+    {
       id: 'purchase',
-      header: 'Purchase order',
+      header: t('operations:finance.list.columns.purchaseOrder'),
       accessorFn: (movement) => movement.purchaseOrderReference ?? '',
       cell: ({ getValue }) => String(getValue() ?? '') || '—',
     },
     {
       id: 'sale',
-      header: 'Sale',
+      header: t('operations:finance.list.columns.sale'),
       accessorFn: (movement) => movement.saleReference ?? '',
       cell: ({ getValue }) => String(getValue() ?? '') || '—',
     },
     {
       id: 'note',
-      header: 'Note',
+      header: t('operations:finance.list.columns.note'),
       accessorFn: (movement) => movement.note,
       cell: ({ getValue }) => String(getValue() ?? '') || '—',
     },
     {
       id: 'status',
-      header: 'Status',
+      header: t('operations:finance.list.columns.status'),
       accessorFn: (movement) => movementStatusLabel(movement),
-      cell: ({ getValue }) => String(getValue() ?? ''),
+      cell: ({ row }) => movementStatusLabel(row.original),
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: t('operations:finance.list.columns.actions'),
       enableSorting: false,
       cell: ({ row }) => (
         <Link
-          to='/o/$organizationSlug/finance/$movementId'
-          params={{
+          {...organizationLocation(
             organizationSlug,
-            movementId: row.original.uuid,
-          }}
-          aria-label={`Details for money movement ${row.original.uuid}`}
+            branchUuid,
+            '/finance/$movementId',
+            { movementId: row.original.uuid }
+          )}
+          aria-label={t('operations:finance.list.detailsLabel', {
+            uuid: row.original.uuid,
+          })}
           className='rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
         >
-          Details
+          {t('operations:finance.list.details')}
         </Link>
       ),
     },
@@ -107,13 +122,11 @@ export function FinancePage() {
       </Header>
       <Main className='space-y-6'>
         <div>
-          <h1 className='text-2xl font-bold'>Finance</h1>
+          <h1 className='text-2xl font-bold'>
+            {t('operations:finance.index.title')}
+          </h1>
           <p className='text-muted-foreground'>
-            The cash balance is the exact sum of every posted money movement; a
-            purchase order reserves what it will cost while it is still open, so
-            only the available balance (balance minus on hold) is free. A
-            completed purchase posts its exact cash outflow once, and a
-            cancelled order releases the reservation without debiting cash.
+            {t('operations:finance.index.description')}
           </p>
         </div>
         <FinanceDirectory />
@@ -123,7 +136,7 @@ export function FinancePage() {
 }
 
 function FinanceDirectory() {
-  const organizationSlug = useOrganizationSlug()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const client = useQueryClient()
   const scope = organizationCacheScope()
   const [page, setPage] = useState(0)
@@ -131,8 +144,8 @@ function FinanceDirectory() {
   const [search, setSearch] = useState('')
   const [form, setForm] = useState<EntryForm | null>(null)
   const columns = useMemo(
-    () => movementColumns(organizationSlug),
-    [organizationSlug]
+    () => movementColumns(organizationSlug, branchUuid),
+    [organizationSlug, branchUuid]
   )
   const summary = useQuery({
     queryKey: ['finance', scope, 'summary'],
@@ -151,7 +164,7 @@ function FinanceDirectory() {
     onSuccess: async (_movement, input) => {
       setForm(null)
       await client.invalidateQueries({ queryKey: ['finance', input.scope] })
-      toast.success('Income recorded')
+      toast.success(t('operations:finance.list.incomeRecorded'))
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   })
@@ -161,7 +174,7 @@ function FinanceDirectory() {
     onSuccess: async (_movement, input) => {
       setForm(null)
       await client.invalidateQueries({ queryKey: ['finance', input.scope] })
-      toast.success('Expense recorded')
+      toast.success(t('operations:finance.list.expenseRecorded'))
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   })
@@ -172,56 +185,62 @@ function FinanceDirectory() {
   return (
     <div className='space-y-4'>
       <section className='space-y-2 rounded-md border border-border p-4'>
-        <h2 className='text-xl font-semibold'>Cash balance</h2>
-        {summary.isPending && <p role='status'>Loading finance summary…</p>}
+        <h2 className='text-xl font-semibold'>
+          {t('operations:finance.summary.title')}
+        </h2>
+        <p className='text-sm text-muted-foreground'>
+          {t('operations:finance.summary.description')}
+        </p>
+        {summary.isPending && (
+          <p role='status'>{t('operations:finance.summary.loading')}</p>
+        )}
         {summary.isError && (
           <p role='alert'>
             {errorMessage(summary.error)}{' '}
             <Button variant='outline' onClick={() => void summary.refetch()}>
-              Retry
+              {t('operations:common.retry')}
             </Button>
           </p>
         )}
         {summaryData && !summaryData.configured && (
           <div className='space-y-1 text-sm'>
-            <p>Finance is not configured for this organization yet.</p>
+            <p>{t('operations:finance.summary.notConfigured')}</p>
             <p className='text-muted-foreground'>
-              The first money entry captures the organization currency from the
-              system default. Ask a platform administrator to set a system
-              default currency if none exists.
+              {t('operations:finance.summary.notConfiguredHint')}
             </p>
           </div>
         )}
         {summaryData && (
           <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
-            <dt>Currency</dt>
-            <dd>{summaryData.currencyCode ?? 'Not configured yet'}</dd>
-            <dt>Cash balance</dt>
+            <dt>{t('operations:finance.summary.fields.currency')}</dt>
+            <dd>
+              {summaryData.currencyCode ??
+                t('operations:finance.notConfigured')}
+            </dd>
+            <dt>{t('operations:finance.summary.fields.balance')}</dt>
             <dd className='font-medium'>
               {summaryData.balance}
               {summaryData.currencyCode ? ` ${summaryData.currencyCode}` : ''}
             </dd>
-            <dt>On hold</dt>
+            <dt>{t('operations:finance.summary.fields.onHold')}</dt>
             <dd>
               {summaryData.onHold}
               {summaryData.currencyCode ? ` ${summaryData.currencyCode}` : ''}
             </dd>
-            <dt>Available balance</dt>
+            <dt>{t('operations:finance.summary.fields.available')}</dt>
             <dd className='font-medium'>
               {summaryData.availableBalance}
               {summaryData.currencyCode ? ` ${summaryData.currencyCode}` : ''}
             </dd>
-            <dt>Posted entries</dt>
+            <dt>{t('operations:finance.summary.fields.postedEntries')}</dt>
             <dd>{summaryData.movementCount}</dd>
-            <dt>Holds awaiting pricing</dt>
+            <dt>{t('operations:finance.summary.fields.pendingPricing')}</dt>
             <dd>{summaryData.pendingPricingCount}</dd>
           </dl>
         )}
         {summaryData && summaryData.pendingPricingCount > 0 && (
           <p className='text-sm text-muted-foreground'>
-            A purchase order holds only its known priced lines, so its amount
-            stays incomplete until every line has a price in the finance
-            currency.
+            {t('operations:finance.summary.pendingPricingHint')}
           </p>
         )}
       </section>
@@ -234,7 +253,7 @@ function FinanceDirectory() {
             setForm('income')
           }}
         >
-          Add income
+          {t('operations:finance.list.addIncome')}
         </Button>
         <Button
           type='button'
@@ -243,7 +262,7 @@ function FinanceDirectory() {
             setForm('expense')
           }}
         >
-          Add expense
+          {t('operations:finance.list.addExpense')}
         </Button>
       </div>
       <form
@@ -255,38 +274,40 @@ function FinanceDirectory() {
         }}
       >
         <Input
-          aria-label='Search money movements'
+          aria-label={t('operations:finance.list.searchLabel')}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder='Search money movements'
+          placeholder={t('operations:finance.list.searchPlaceholder')}
           maxLength={100}
           className='max-w-sm'
         />
-        <Button variant='outline'>Find</Button>
+        <Button variant='outline'>{t('operations:common.find')}</Button>
       </form>
-      {movements.isPending && <p role='status'>Loading money movements…</p>}
+      {movements.isPending && (
+        <p role='status'>{t('operations:finance.list.loading')}</p>
+      )}
       {movements.isError && (
         <p role='alert'>
           {errorMessage(movements.error)}{' '}
           <Button variant='outline' onClick={() => void movements.refetch()}>
-            Retry
+            {t('operations:common.retry')}
           </Button>
         </p>
       )}
       {data && (
         <>
           <p className='text-sm text-muted-foreground'>
-            {data.total} money movements. Sorting applies to this page only.
+            {t('operations:finance.list.total', { count: data.total })}
           </p>
           <SortableDataTable
             data={data.items}
             columns={columns}
             getRowId={(movement) => movement.uuid}
-            caption='Money movements'
+            caption={t('operations:finance.list.caption')}
             emptyMessage={
               search
-                ? 'No money movements match this search.'
-                : 'No money movements have been posted yet.'
+                ? t('operations:finance.list.emptySearch')
+                : t('operations:finance.list.empty')
             }
           />
         </>
@@ -299,14 +320,22 @@ function FinanceDirectory() {
       />
       {form !== null && (
         <MoneyForm
-          title={form === 'income' ? 'Add income' : 'Add expense'}
+          title={
+            form === 'income'
+              ? t('operations:finance.list.addIncome')
+              : t('operations:finance.list.addExpense')
+          }
           description={
             form === 'income'
-              ? 'General income is a cash inflow. It is not a sale receipt or a supplier payment.'
-              : 'A general expense is a cash outflow. It is not a supplier payment.'
+              ? t('operations:finance.list.incomeDescription')
+              : t('operations:finance.list.expenseDescription')
           }
           currencyCode={summaryData?.currencyCode ?? null}
-          submitLabel={form === 'income' ? 'Add income' : 'Add expense'}
+          submitLabel={
+            form === 'income'
+              ? t('operations:finance.list.addIncome')
+              : t('operations:finance.list.addExpense')
+          }
           pending={pending}
           error={activeMutation.error}
           onClose={() => {

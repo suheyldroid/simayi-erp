@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { useOrganizationSlug } from '@/lib/organization-boundary'
+import { t } from '@/lib/i18n'
+import {
+  organizationLocation,
+  useOrganizationScope,
+} from '@/lib/organization-navigation'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,7 +38,7 @@ export function SupplierLedgerPanel({
   supplierUuid: string
   supplierName: string
 }) {
-  const organizationSlug = useOrganizationSlug()
+  const { organizationSlug, branchUuid } = useOrganizationScope()
   const client = useQueryClient()
   const scope = organizationCacheScope()
   const [page, setPage] = useState(0)
@@ -62,7 +66,7 @@ export function SupplierLedgerPanel({
         }),
         client.invalidateQueries({ queryKey: ['finance', input.scope] }),
       ])
-      toast.success('Supplier payment recorded')
+      toast.success(t('operations:supplier.ledger.paymentRecorded'))
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   })
@@ -71,7 +75,7 @@ export function SupplierLedgerPanel({
     onSuccess: async () => {
       setReversalTarget(null)
       await invalidate()
-      toast.success('Supplier payment reversed')
+      toast.success(t('operations:supplier.ledger.paymentReversed'))
     },
     onError: (caught) => toast.error(errorMessage(caught)),
   })
@@ -82,12 +86,11 @@ export function SupplierLedgerPanel({
     <div className='space-y-4'>
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <div>
-          <h2 className='text-xl font-semibold'>Supplier ledger</h2>
+          <h2 className='text-xl font-semibold'>
+            {t('operations:supplier.ledger.title')}
+          </h2>
           <p className='text-sm text-muted-foreground'>
-            Completing a purchase order posts its total as debt and settles it
-            with an equal auto-posted payment, so the completed order carries no
-            unpaid amount; that same transaction takes the cash once. A manual
-            payment posts the exact cash outflow and the same debt reduction.
+            {t('operations:supplier.ledger.description')}
           </p>
         </div>
         <div className='flex flex-wrap gap-2'>
@@ -98,47 +101,71 @@ export function SupplierLedgerPanel({
               setPaymentOpen(true)
             }}
           >
-            Record payment
+            {t('operations:supplier.ledger.recordPayment')}
           </Button>
         </div>
       </div>
-      {ledger.isPending && <p role='status'>Loading supplier ledger…</p>}
+      {ledger.isPending && (
+        <p role='status'>{t('operations:supplier.ledger.loading')}</p>
+      )}
       {ledger.isError && (
         <p role='alert'>
           {errorMessage(ledger.error)}{' '}
           <Button variant='outline' onClick={() => void ledger.refetch()}>
-            Retry
+            {t('operations:common.retry')}
           </Button>
         </p>
       )}
       {data && !ledger.isError && (
         <>
           <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
-            <dt>Currency</dt>
-            <dd>{data.currencyCode ?? 'Finance is not configured yet'}</dd>
-            <dt>Outstanding</dt>
+            <dt>{t('operations:supplier.ledger.fields.currency')}</dt>
+            <dd>
+              {data.currencyCode ??
+                t('operations:supplier.ledger.notConfigured')}
+            </dd>
+            <dt>{t('operations:supplier.ledger.fields.outstanding')}</dt>
             <dd className='font-medium'>
               {`${data.outstanding} ${data.currencyCode ?? ''}`.trim()}
             </dd>
           </dl>
           {data.outstanding.startsWith('-') && (
             <p className='text-sm text-muted-foreground'>
-              A negative balance is a supplier credit (advance).
+              {t('operations:supplier.ledger.negativeBalance')}
             </p>
           )}
           <Table>
             <caption className='sr-only'>
-              Ledger entries for {supplierName}
+              {t('operations:supplier.ledger.caption', {
+                supplier: supplierName,
+              })}
             </caption>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Note</TableHead>
-                <TableHead>Reference</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>
+                  {t('operations:supplier.ledger.columns.date')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:supplier.ledger.columns.type')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:supplier.ledger.columns.amount')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:supplier.ledger.columns.note')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:supplier.ledger.columns.sourceBranch')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:supplier.ledger.columns.reference')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:supplier.ledger.columns.status')}
+                </TableHead>
+                <TableHead>
+                  {t('operations:supplier.ledger.columns.actions')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -151,27 +178,34 @@ export function SupplierLedgerPanel({
                   </TableCell>
                   <TableCell>{entry.note || '—'}</TableCell>
                   <TableCell>
+                    {entry.branchName ??
+                      t('operations:supplier.ledger.companyWide')}
+                  </TableCell>
+                  <TableCell>
                     {entry.purchaseOrderUuid != null ? (
                       <Link
-                        to='/o/$organizationSlug/purchasing/$orderId'
-                        params={{
+                        {...organizationLocation(
                           organizationSlug,
-                          orderId: entry.purchaseOrderUuid,
-                        }}
+                          entry.branchUuid,
+                          '/purchasing/$orderId',
+                          { orderId: entry.purchaseOrderUuid }
+                        )}
                         className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                       >
-                        {entry.purchaseOrderReference ?? 'Purchase order'}
+                        {entry.purchaseOrderReference ??
+                          t('operations:supplier.ledger.purchaseOrder')}
                       </Link>
                     ) : entry.moneyMovementUuid != null ? (
                       <Link
-                        to='/o/$organizationSlug/finance/$movementId'
-                        params={{
+                        {...organizationLocation(
                           organizationSlug,
-                          movementId: entry.moneyMovementUuid,
-                        }}
+                          branchUuid,
+                          '/finance/$movementId',
+                          { movementId: entry.moneyMovementUuid }
+                        )}
                         className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                       >
-                        Money movement
+                        {t('operations:supplier.ledger.moneyMovement')}
                       </Link>
                     ) : (
                       '—'
@@ -179,10 +213,10 @@ export function SupplierLedgerPanel({
                   </TableCell>
                   <TableCell>
                     {entry.kind === 'reversal'
-                      ? 'Reversal'
+                      ? t('operations:supplier.ledger.reversal')
                       : entry.reversed
-                        ? 'Reversed'
-                        : 'Posted'}
+                        ? t('operations:supplier.ledger.reversed')
+                        : t('operations:supplier.ledger.posted')}
                   </TableCell>
                   <TableCell>
                     {entry.kind === 'payment' &&
@@ -196,7 +230,7 @@ export function SupplierLedgerPanel({
                           setReversalTarget(entry)
                         }}
                       >
-                        Reverse
+                        {t('operations:supplier.ledger.reverse')}
                       </Button>
                     ) : (
                       '—'
@@ -206,8 +240,8 @@ export function SupplierLedgerPanel({
               ))}
               {data.items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7}>
-                    No ledger entries for this supplier yet.
+                  <TableCell colSpan={8}>
+                    {t('operations:supplier.ledger.empty')}
                   </TableCell>
                 </TableRow>
               )}
@@ -223,10 +257,10 @@ export function SupplierLedgerPanel({
       )}
       {paymentOpen && (
         <MoneyForm
-          title='Record supplier payment'
-          description='A payment posts an exact cash outflow and reduces what this supplier is owed by the same amount. A payment above the debt leaves a supplier credit.'
+          title={t('operations:supplier.ledger.paymentFormTitle')}
+          description={t('operations:supplier.ledger.paymentFormDescription')}
           currencyCode={data?.currencyCode ?? null}
-          submitLabel='Record payment'
+          submitLabel={t('operations:supplier.ledger.recordPayment')}
           pending={pending}
           error={activeError}
           onClose={() => {
@@ -245,12 +279,13 @@ export function SupplierLedgerPanel({
             reversal.reset()
           }
         }}
-        title='Reverse supplier payment'
-        desc={`Reverse the payment of ${reversalTarget?.amount ?? ''} ${
-          reversalTarget?.currencyCode ?? ''
-        }? The cash inflow and the debt reduction are reversed together, once.`}
-        cancelBtnText='Keep payment'
-        confirmText='Reverse payment'
+        title={t('operations:supplier.ledger.reversalTitle')}
+        desc={t('operations:supplier.ledger.reversalDescription', {
+          amount: reversalTarget?.amount ?? '',
+          currency: reversalTarget?.currencyCode ?? '',
+        })}
+        cancelBtnText={t('operations:supplier.ledger.keepPayment')}
+        confirmText={t('operations:supplier.ledger.reversalConfirm')}
         destructive
         isLoading={reversal.isPending}
         handleConfirm={() => {

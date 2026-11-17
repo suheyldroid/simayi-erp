@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   Card,
@@ -7,6 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { utcTimestamp } from '../format'
+import { dateBasisLabel, measureLabel } from '../labels'
 import type { DashboardWidget, DashboardWidgetResult } from './model'
 import { WidgetVisualization } from './widget-visualization'
 
@@ -32,6 +35,16 @@ export function WidgetCard({
   editing: boolean
   actions?: ReactNode
 }) {
+  const measure = result
+    ? measureLabel(widget.source, result.measure, result.measureLabel)
+    : ''
+  const basis =
+    result === undefined
+      ? null
+      : result.dateBasis === null
+        ? t('dashboard:common.currentStockSnapshot')
+        : dateBasisLabel(widget.source, result.dateBasis)
+
   return (
     <Card className='relative h-full min-w-0 gap-0 overflow-hidden rounded-md py-0 shadow-none'>
       <CardHeader
@@ -49,9 +62,14 @@ export function WidgetCard({
             {widget.title}
           </CardTitle>
           <CardDescription className='truncate text-[11px]'>
-            {result?.measureLabel ?? ''}
-            {editing && result?.measureLabel ? ' · ' : null}
-            {editing ? `column ${widget.x + 1}, row ${widget.y + 1}` : null}
+            {measure}
+            {editing && measure ? ' · ' : null}
+            {editing
+              ? t('dashboard:card.position', {
+                  column: widget.x + 1,
+                  row: widget.y + 1,
+                })
+              : null}
           </CardDescription>
         </div>
         {actions ? (
@@ -71,10 +89,12 @@ export function WidgetCard({
           error={error}
           onRetry={onRetry}
         />
-        {result ? (
+        {result && basis ? (
           <p className='mt-auto shrink-0 text-[11px] text-muted-foreground'>
-            {result.dateBasis ?? 'Current stock snapshot'} · as of{' '}
-            {result.asOf.replace('T', ' ').slice(0, 16)} UTC
+            {t('dashboard:common.asOf', {
+              basis,
+              time: utcTimestamp(result.asOf),
+            })}
           </p>
         ) : null}
       </CardContent>

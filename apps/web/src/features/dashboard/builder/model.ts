@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 import { resourceUuid } from '@/lib/resource-uuid'
 
 export const widgetTypeSchema = z.enum([
@@ -55,7 +56,9 @@ export const dashboardWidgetSchema = z
     }),
   })
   .refine((widget) => widget.x + widget.w <= dashboardGridColumns, {
-    message: 'A card must fit inside the four grid columns',
+    message: t('dashboard:validation.fitColumns', {
+      columns: dashboardGridColumns,
+    }),
     path: ['x'],
   })
 export type DashboardWidget = z.infer<typeof dashboardWidgetSchema>
@@ -149,6 +152,7 @@ export const dashboardWidgetResultSchema = z.object({
   rangeLabel: z.string().nullable(),
   dateBasis: z.string().nullable(),
   categories: z.array(z.string()).max(60),
+  categoryKeys: z.array(z.string()).max(60),
   series: z.array(resultSeriesSchema).max(8),
   asOf: z.string(),
 })
@@ -163,7 +167,9 @@ export type DashboardData = z.infer<typeof dashboardDataSchema>
 /**
  * Current builder context. The account and organization identifiers are only
  * cache/draft namespaces; the server derives the layout owner and tenant from
- * the session and never accepts them from the client.
+ * the session and never accepts them from the client. The selected branch
+ * filters business data only: the saved layout stays per account and company,
+ * so switching branch never changes which layout row is read or written.
  */
 export type DashboardBuilderScope =
   | {
@@ -176,4 +182,6 @@ export type DashboardBuilderScope =
       accountId: string
       organizationId: string
       organizationSlug: string
+      branchUuid: string | null
+      branchName: string | null
     }

@@ -1,4 +1,5 @@
 import { useSearch } from '@tanstack/react-router'
+import { t } from '@/lib/i18n'
 import {
   Card,
   CardContent,
@@ -17,9 +18,11 @@ export function SignIn() {
     <AuthLayout>
       <Card className='max-w-sm gap-4'>
         <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Sign in</CardTitle>
+          <CardTitle className='text-lg tracking-tight'>
+            {t('global:auth.signIn.title')}
+          </CardTitle>
           <CardDescription>
-            Sign in with the account provided by your ERP administrator.
+            {t('global:auth.signIn.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -27,7 +30,7 @@ export function SignIn() {
         </CardContent>
         <CardFooter>
           <p className='px-8 text-center text-sm text-muted-foreground'>
-            Need an account or a password reset? Contact your administrator.
+            {t('global:auth.signIn.footer')}
           </p>
         </CardFooter>
       </Card>

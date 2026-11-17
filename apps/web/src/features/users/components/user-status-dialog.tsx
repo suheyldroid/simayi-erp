@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { usersApi } from '../api'
 import type { User } from '../model'
@@ -29,13 +30,11 @@ export function UserStatusDialog({
       onClose()
       toast.success(
         deactivating
-          ? 'User deactivated. All sessions revoked.'
-          : 'User activated.'
+          ? t('global:users.statusDialog.deactivated')
+          : t('global:users.statusDialog.activated')
       )
     } catch {
-      toast.error(
-        'Could not change user status. Administrator accounts cannot be deactivated here.'
-      )
+      toast.error(t('global:users.statusDialog.failed'))
     } finally {
       setSaving(false)
     }
@@ -47,13 +46,25 @@ export function UserStatusDialog({
       onOpenChange={(open) => {
         if (!open && !saving) onClose()
       }}
-      title={deactivating ? 'Deactivate user' : 'Activate user'}
+      title={
+        deactivating
+          ? t('global:users.statusDialog.deactivateTitle')
+          : t('global:users.statusDialog.activateTitle')
+      }
       desc={
         deactivating
-          ? `Deactivate ${user?.email ?? ''}? All sessions will end and sign-in will be blocked.`
-          : `Allow ${user?.email ?? ''} to sign in again?`
+          ? t('global:users.statusDialog.deactivateDescription', {
+              email: user?.email ?? '',
+            })
+          : t('global:users.statusDialog.activateDescription', {
+              email: user?.email ?? '',
+            })
       }
-      confirmText={deactivating ? 'Deactivate' : 'Activate'}
+      confirmText={
+        deactivating
+          ? t('global:users.statusDialog.deactivate')
+          : t('global:users.statusDialog.activate')
+      }
       destructive={deactivating}
       isLoading={saving}
       handleConfirm={confirm}

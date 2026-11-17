@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { locale, t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -27,11 +28,9 @@ export function Units() {
   return (
     <section className='space-y-6'>
       <div>
-        <h2 className='text-2xl font-bold'>Units</h2>
+        <h2 className='text-2xl font-bold'>{t('catalog:units.title')}</h2>
         <p className='text-muted-foreground'>
-          System-wide measurement codes used by item stock quantities in every
-          organization. Inactive units stay on existing items but cannot be
-          selected for new ones.
+          {t('catalog:units.description')}
         </p>
       </div>
       <UnitDirectory />
@@ -45,7 +44,7 @@ function CreateUnitAction() {
   return (
     <>
       <Button type='button' onClick={() => setOpen(true)}>
-        New unit
+        {t('catalog:units.new')}
       </Button>
       <UnitForm
         draft={open ? { mode: 'create' } : null}
@@ -81,35 +80,50 @@ function UnitDirectory() {
     () => [
       {
         id: 'name',
-        header: 'Name',
+        header: t('catalog:units.fields.name'),
         accessorFn: (unit) => unit.name,
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'code',
-        header: 'Code',
+        header: t('catalog:units.fields.code'),
         accessorFn: (unit) => unit.code,
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
+        id: 'divisible',
+        header: t('catalog:units.fields.divisible'),
+        accessorFn: (unit) =>
+          unit.divisible
+            ? t('catalog:units.divisibleYes')
+            : t('catalog:units.divisibleNo'),
+        cell: ({ getValue }) => String(getValue() ?? ''),
+      },
+      {
         id: 'status',
-        header: 'Status',
-        accessorFn: (unit) => (unit.active ? 'Active' : 'Inactive'),
+        header: t('catalog:units.fields.status'),
+        accessorFn: (unit) =>
+          unit.active
+            ? t('catalog:common.active')
+            : t('catalog:common.inactive'),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: t('catalog:common.actions'),
         enableSorting: false,
-        meta: { label: 'Actions', width: 110 },
+        meta: { label: t('catalog:common.actions'), width: 110 },
         cell: ({ row }) => (
           <Link
             to='/settings/system/units/$unitId'
             params={{ unitId: row.original.uuid }}
-            aria-label={`View details for ${row.original.name} (${row.original.code})`}
+            aria-label={t('catalog:units.viewDetails', {
+              name: row.original.name,
+              code: row.original.code,
+            })}
             className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
           >
-            Details
+            {t('catalog:common.details')}
           </Link>
         ),
       },
@@ -128,8 +142,8 @@ function UnitDirectory() {
           }}
         >
           <Input
-            aria-label='Search units'
-            placeholder='Search name or code'
+            aria-label={t('catalog:units.searchLabel')}
+            placeholder={t('catalog:units.searchPlaceholder')}
             maxLength={100}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -148,42 +162,54 @@ function UnitDirectory() {
               }
             }}
           >
-            <SelectTrigger className='w-40' aria-label='Unit status'>
+            <SelectTrigger
+              className='w-40'
+              aria-label={t('catalog:units.statusLabel')}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='all'>Any status</SelectItem>
-              <SelectItem value='active'>Active</SelectItem>
-              <SelectItem value='inactive'>Inactive</SelectItem>
+              <SelectItem value='all'>
+                {t('catalog:units.statusAll')}
+              </SelectItem>
+              <SelectItem value='active'>
+                {t('catalog:common.active')}
+              </SelectItem>
+              <SelectItem value='inactive'>
+                {t('catalog:common.inactive')}
+              </SelectItem>
             </SelectContent>
           </Select>
-          <Button variant='outline'>Find</Button>
+          <Button variant='outline'>{t('catalog:common.find')}</Button>
         </form>
         <CreateUnitAction />
       </div>
-      {units.isPending && <p role='status'>Loading units…</p>}
+      {units.isPending && <p role='status'>{t('catalog:units.loading')}</p>}
       {units.isError && (
         <p role='alert'>
           {errorMessage(units.error)}{' '}
           <Button variant='outline' onClick={() => void units.refetch()}>
-            Retry
+            {t('catalog:common.retry')}
           </Button>
         </p>
       )}
       {units.data && (
         <>
           <p className='text-sm text-muted-foreground'>
-            {units.data.total} units. Sorting applies to this page only.
+            {t('catalog:units.summary', {
+              total: units.data.total.toLocaleString(locale),
+              sortingNote: t('catalog:common.sortingNote'),
+            })}
           </p>
           <p className='text-sm text-muted-foreground'>
-            Select Details in a row to open its unit.
+            {t('catalog:units.openHint')}
           </p>
           <SortableDataTable
             data={units.data.items}
             columns={columns}
             getRowId={(unit) => unit.uuid}
-            caption='Units'
-            emptyMessage='No units match these filters.'
+            caption={t('catalog:units.caption')}
+            emptyMessage={t('catalog:units.empty')}
           />
         </>
       )}

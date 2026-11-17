@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useBlocker } from '@tanstack/react-router'
 import { Pencil } from 'lucide-react'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { dashboardBuilderApi, errorMessage, isDashboardConflict } from './api'
@@ -96,6 +98,18 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
     onError: (error) => setSaveError(error),
   })
   const busy = saveMutation.isPending || sheet !== null
+  const sheetOpen = sheet !== null
+  // The draft, its revision baseline and the open card editor live only in
+  // this component. Company and branch paths are different route matches, so
+  // any navigation — a branch or company switch included — unmounts this tree.
+  // Block it while work is unsaved and let the user discard explicitly instead
+  // of losing the draft silently. Nothing is autosaved.
+  const isUnsaved = useCallback(() => dirty || sheetOpen, [dirty, sheetOpen])
+  const navigationBlocker = useBlocker({
+    shouldBlockFn: isUnsaved,
+    withResolver: true,
+    enableBeforeUnload: isUnsaved,
+  })
 
   function exitEditing() {
     setDraft(null)
@@ -141,9 +155,7 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
         ? replaceWidget(draft, widget)
         : insertWidget(draft, widget)
     if (!next) {
-      setPlacementError(
-        'This card could not be placed on the grid. Try another size, or move or remove another card first.'
-      )
+      setPlacementError(t('dashboard:builder.placementError'))
       return
     }
     setPlacementError(null)
@@ -159,17 +171,41 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
         : undefined
 
   return (
-    <section aria-label='Personal dashboard' className='space-y-3'>
+    <section
+      aria-label={
+        scope.kind === 'global'
+          ? t('dashboard:builder.sectionGlobal')
+          : scope.branchName
+            ? t('dashboard:builder.sectionBranch', { branch: scope.branchName })
+            : t('dashboard:builder.sectionOrganization')
+      }
+      className='space-y-3'
+    >
       <div className='flex items-start justify-between gap-3'>
-        <p className='max-w-3xl text-sm text-muted-foreground'>
-          {scope.kind === 'global'
-            ? 'Your own layout across every organization you currently belong to. It aggregates live business counts and never changes your active organization or business access.'
-            : 'Your own layout inside this organization. Every member sees the same business data, but each account keeps a separate layout.'}
-        </p>
+        <div className='max-w-3xl space-y-1'>
+          <p className='text-sm text-muted-foreground'>
+            {scope.kind === 'global'
+              ? t('dashboard:builder.introGlobal')
+              : t('dashboard:builder.introOrganization')}
+          </p>
+          {scope.kind === 'organization' ? (
+            <p className='text-sm text-muted-foreground'>
+              {t('dashboard:builder.dataScope')}{' '}
+              <span className='font-medium text-foreground'>
+                {scope.branchName
+                  ? t('dashboard:builder.scopeBranch', {
+                      branch: scope.branchName,
+                    })
+                  : t('dashboard:builder.scopeCompany')}
+              </span>
+              . {t('dashboard:builder.scopeFixed')}
+            </p>
+          ) : null}
+        </div>
         {!editing && saved && widgets.length > 0 ? (
           <TooltipIconButton
-            label='Edit dashboard'
-            tooltip='Edit dashboard layout'
+            label={t('dashboard:builder.edit')}
+            tooltip={t('dashboard:builder.editTooltip')}
             onClick={startEditing}
           >
             <Pencil aria-hidden='true' />
@@ -178,15 +214,15 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
       </div>
 
       {layoutQuery.isPending ? (
-        <p role='status'>Loading your dashboard…</p>
+        <p role='status'>{t('dashboard:builder.loading')}</p>
       ) : null}
       {layoutQuery.isError ? (
         <div role='alert' className='space-y-2'>
           <p>
-            Could not load your dashboard. {errorMessage(layoutQuery.error)}
+            {t('dashboard:builder.loadError')} {errorMessage(layoutQuery.error)}
           </p>
           <Button variant='outline' onClick={() => void layoutQuery.refetch()}>
-            Retry
+            {t('dashboard:common.retry')}
           </Button>
         </div>
       ) : null}
@@ -201,7 +237,7 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
               widgets.length >= (catalog?.maxWidgets ?? 24)
             }
           >
-            Add card
+            {t('dashboard:builder.addCard')}
           </Button>
           <Button
             onClick={save}
@@ -209,21 +245,19 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
               !dirty || saveMutation.isPending || baselineRevision === null
             }
           >
-            {saveMutation.isPending ? 'Saving…' : 'Save'}
+            {saveMutation.isPending
+              ? t('dashboard:builder.saving')
+              : t('dashboard:builder.save')}
           </Button>
           <Button
             variant='outline'
             onClick={cancelEditing}
             disabled={saveMutation.isPending}
           >
-            Cancel
+            {t('dashboard:builder.cancel')}
           </Button>
           <p className='text-xs text-muted-foreground'>
-            Drag a card to move it — or focus a card, press Enter and use the
-            arrow keys — and drag a card edge or corner to resize it to any
-            column span and row height. Escape cancels the gesture in progress,
-            and other cards reflow out of the way. Cancel discards the whole
-            draft; nothing is saved until you choose Save.
+            {t('dashboard:builder.editingHint')}
           </p>
         </div>
       ) : null}
@@ -231,20 +265,20 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
       {editing && catalogQuery.isError ? (
         <div role='alert' className='space-y-2'>
           <p>
-            Could not load the card catalog. {errorMessage(catalogQuery.error)}
+            {t('dashboard:builder.catalogError')}{' '}
+            {errorMessage(catalogQuery.error)}
           </p>
           <Button variant='outline' onClick={() => void catalogQuery.refetch()}>
-            Retry
+            {t('dashboard:common.retry')}
           </Button>
         </div>
       ) : null}
       {editing && catalogQuery.isPending ? (
-        <p role='status'>Loading the card catalog…</p>
+        <p role='status'>{t('dashboard:builder.catalogLoading')}</p>
       ) : null}
       {stale ? (
         <p role='status' className='text-sm text-muted-foreground'>
-          This dashboard was saved from another session. Saving here will report
-          a conflict instead of overwriting it.
+          {t('dashboard:builder.stale')}
         </p>
       ) : null}
       {saveError ? (
@@ -252,10 +286,12 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
           role='alert'
           className='space-y-2 rounded-md border border-destructive/40 p-3'
         >
-          <p>Could not save your dashboard. {errorMessage(saveError)}</p>
+          <p>
+            {t('dashboard:builder.saveError')} {errorMessage(saveError)}
+          </p>
           {conflict ? (
             <Button variant='outline' onClick={() => setReloadOpen(true)}>
-              Reload saved layout
+              {t('dashboard:builder.reload')}
             </Button>
           ) : null}
         </div>
@@ -265,20 +301,20 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
         <div className='space-y-2 rounded-md border border-dashed border-border p-6 text-center'>
           <p className='text-sm text-muted-foreground'>
             {editing
-              ? 'This dashboard is empty. Add a card to start.'
-              : 'Your dashboard is empty.'}
+              ? t('dashboard:builder.emptyEditing')
+              : t('dashboard:builder.emptyView')}
           </p>
           {editing ? (
             <Button
               onClick={addCard}
               disabled={!catalog || saveMutation.isPending}
             >
-              Add a card
+              {t('dashboard:builder.addCardCta')}
             </Button>
           ) : (
             <TooltipIconButton
-              label='Edit dashboard'
-              tooltip='Edit dashboard layout'
+              label={t('dashboard:builder.edit')}
+              tooltip={t('dashboard:builder.editTooltip')}
               onClick={startEditing}
             >
               <Pencil aria-hidden='true' />
@@ -322,11 +358,32 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
       ) : null}
 
       <ConfirmDialog
+        open={navigationBlocker.status === 'blocked'}
+        onOpenChange={(open) => {
+          // Cancel, Escape or an outside press keeps the draft: the blocked
+          // navigation is dropped, never confirmed on the user's behalf.
+          if (!open) navigationBlocker.reset?.()
+        }}
+        title={t('dashboard:builder.discardTitle')}
+        desc={t('dashboard:builder.discardDesc')}
+        confirmText={t('dashboard:builder.discardConfirm')}
+        destructive
+        // A pending save may still commit, so it must not be reported as a
+        // discarded draft. Cancel stays available.
+        disabled={saveMutation.isPending}
+        handleConfirm={() => {
+          // Discard must clear the draft and the open editor even when the
+          // destination does not unmount the builder (same path/hash moves).
+          exitEditing()
+          navigationBlocker.proceed?.()
+        }}
+      />
+      <ConfirmDialog
         open={discardOpen}
         onOpenChange={setDiscardOpen}
-        title='Discard dashboard changes?'
-        desc='Your unsaved card changes, positions and sizes will be discarded and the saved dashboard will be restored.'
-        confirmText='Discard'
+        title={t('dashboard:builder.discardTitle')}
+        desc={t('dashboard:builder.discardDesc')}
+        confirmText={t('dashboard:builder.discardConfirm')}
         destructive
         handleConfirm={() => {
           setDiscardOpen(false)
@@ -336,9 +393,9 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
       <ConfirmDialog
         open={reloadOpen}
         onOpenChange={setReloadOpen}
-        title='Reload the saved layout?'
-        desc='Your unsaved changes will be discarded so the latest saved dashboard can be loaded.'
-        confirmText='Reload'
+        title={t('dashboard:builder.reloadTitle')}
+        desc={t('dashboard:builder.reloadDesc')}
+        confirmText={t('dashboard:builder.reloadConfirm')}
         destructive
         handleConfirm={() => {
           setReloadOpen(false)
@@ -351,13 +408,13 @@ export function DashboardBuilder({ scope }: { scope: DashboardBuilderScope }) {
         onOpenChange={(open) => {
           if (!open) setRemoveId(null)
         }}
-        title='Remove this card?'
+        title={t('dashboard:builder.removeTitle')}
         desc={
           removing
-            ? `"${removing.title}" will be removed from this draft. Nothing is saved until you choose Save.`
-            : 'This card will be removed from the draft.'
+            ? t('dashboard:builder.removeDesc', { title: removing.title })
+            : t('dashboard:builder.removeDescGeneric')
         }
-        confirmText='Remove'
+        confirmText={t('dashboard:builder.removeConfirm')}
         destructive
         handleConfirm={() => {
           if (removeId)

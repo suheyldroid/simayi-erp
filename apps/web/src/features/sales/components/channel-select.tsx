@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,7 +48,7 @@ export function ChannelSelect({
   )
   return (
     <div className='space-y-2'>
-      <Label id={labelId}>Sales channel</Label>
+      <Label id={labelId}>{t('operations:sales.channel.label')}</Label>
       <Select
         value={value?.uuid}
         disabled={disabled || channels.isPending}
@@ -56,13 +57,15 @@ export function ChannelSelect({
         }}
       >
         <SelectTrigger aria-labelledby={labelId} className='w-full'>
-          <SelectValue placeholder='Choose a channel' />
+          <SelectValue
+            placeholder={t('operations:sales.channel.placeholder')}
+          />
         </SelectTrigger>
         <SelectContent>
           {items.map((channel) => (
             <SelectItem key={channel.uuid} value={channel.uuid}>
               {channel.name}
-              {channel.active ? '' : ' (inactive)'}
+              {channel.active ? '' : t('operations:common.inactiveSuffix')}
             </SelectItem>
           ))}
         </SelectContent>
@@ -75,25 +78,28 @@ export function ChannelSelect({
             variant='outline'
             onClick={() => void channels.refetch()}
           >
-            Retry
+            {t('operations:common.retry')}
           </Button>
         </p>
       )}
       {channels.data && channels.data.total > items.length && (
         <p className='text-xs text-muted-foreground'>
-          Showing {items.length} of {channels.data.total} channels.
+          {t('operations:sales.channel.showing', {
+            shown: items.length,
+            total: channels.data.total,
+          })}
         </p>
       )}
       <div className='flex items-end gap-2'>
         <div className='min-w-0 flex-1 space-y-1'>
           <Label htmlFor={newNameId} className='text-xs'>
-            New channel
+            {t('operations:sales.channel.newLabel')}
           </Label>
           <Input
             id={newNameId}
             value={newName}
             onChange={(event) => setNewName(event.target.value)}
-            placeholder='Channel name'
+            placeholder={t('operations:sales.channel.namePlaceholder')}
             maxLength={100}
             disabled={disabled || creation.isPending}
           />
@@ -104,7 +110,7 @@ export function ChannelSelect({
           disabled={disabled || creation.isPending || newName.trim() === ''}
           onClick={() => creation.mutate(newName.trim())}
         >
-          Add channel
+          {t('operations:sales.channel.add')}
         </Button>
       </div>
       {creation.isError && (

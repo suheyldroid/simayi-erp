@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -12,10 +13,11 @@ export function PurchasingPage() {
       </Header>
       <Main className='space-y-6'>
         <div>
-          <h1 className='text-2xl font-bold'>Purchasing</h1>
+          <h1 className='text-2xl font-bold'>
+            {t('operations:purchasing.index.title')}
+          </h1>
           <p className='text-muted-foreground'>
-            Purchase orders, item lines, and receipts into stock. Open an order
-            to manage its lines, extras, status, and receipts.
+            {t('operations:purchasing.index.description')}
           </p>
         </div>
         <OrdersDirectory />

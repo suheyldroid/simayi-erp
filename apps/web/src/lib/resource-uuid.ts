@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 
 /**
  * Application-owned resource identity. Every public record key is a UUID
@@ -11,7 +12,7 @@ export const resourceUuidRegex =
 export const resourceUuid = z
   .string()
   .trim()
-  .regex(resourceUuidRegex, 'Use a UUID.')
+  .regex(resourceUuidRegex, t('common:validation.uuid'))
   .transform((value) => value.toLowerCase())
 
 /**

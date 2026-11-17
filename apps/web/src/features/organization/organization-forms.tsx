@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
+import { organizationLocation } from '@/lib/organization-navigation'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,7 +37,7 @@ async function availableSlug(name: string) {
       48
     )
   }
-  throw new Error('Choose a different organization name.')
+  throw new Error(t('global:organizationForms.slugUnavailable'))
 }
 
 /**
@@ -87,9 +89,7 @@ export function CreateOrganizationSheet() {
       await client.invalidateQueries({ queryKey: membershipListQueryKey })
       resetDraft()
       setOpen(false)
-      toast.success(
-        'Organization created. Open it from the list when ready to work in it.'
-      )
+      toast.success(t('global:organizationForms.created'))
     } catch (caught) {
       setError(organizationErrorMessage(caught))
     } finally {
@@ -107,7 +107,7 @@ export function CreateOrganizationSheet() {
       }}
     >
       <SheetTrigger asChild>
-        <Button>Create organization</Button>
+        <Button>{t('global:organizationForms.createTrigger')}</Button>
       </SheetTrigger>
       <SheetContent
         className='flex w-full flex-col gap-0 sm:max-w-md'
@@ -123,15 +123,18 @@ export function CreateOrganizationSheet() {
           onSubmit={(event) => void submit(event)}
         >
           <SheetHeader>
-            <SheetTitle>Create organization</SheetTitle>
+            <SheetTitle>
+              {t('global:organizationForms.createTrigger')}
+            </SheetTitle>
             <SheetDescription>
-              The new organization starts with you as its owner. Your current
-              active organization stays selected until you open the new one.
+              {t('global:organizationForms.createDescription')}
             </SheetDescription>
           </SheetHeader>
           <div className='min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-4'>
             <div className='space-y-2'>
-              <Label htmlFor='organization-name'>Name</Label>
+              <Label htmlFor='organization-name'>
+                {t('global:organizationForms.nameLabel')}
+              </Label>
               <Input
                 id='organization-name'
                 required
@@ -147,8 +150,8 @@ export function CreateOrganizationSheet() {
               disabled={pending}
               resolveImage={imageUrl}
               credentialImagePrefix={organizationLogoPrefix}
-              label='Logo'
-              alt='Organization logo preview'
+              label={t('global:organizationForms.logoLabel')}
+              alt={t('global:organizationForms.logoAlt')}
               onChange={(next) => {
                 setLogo(next.image)
                 setFile(next.file)
@@ -158,7 +161,9 @@ export function CreateOrganizationSheet() {
           <SheetFooter>
             {error ? <p role='alert'>{error}</p> : null}
             <Button disabled={pending || name.trim().length === 0}>
-              {pending ? 'Creating…' : 'Create organization'}
+              {pending
+                ? t('global:shared.creating')
+                : t('global:organizationForms.createTrigger')}
             </Button>
           </SheetFooter>
         </form>
@@ -196,9 +201,7 @@ export function EditOrganizationSheet({
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!canUpdate) {
-      setError(
-        'Only organization owners and admins can update this organization.'
-      )
+      setError(t('global:organizationForms.updateForbidden'))
       return
     }
     if (pending) return
@@ -261,14 +264,13 @@ export function EditOrganizationSheet({
         // This page lives under the old slug; navigate to the canonical new
         // slug so the boundary never re-runs its old-slug guard.
         await navigate({
-          to: '/o/$organizationSlug',
-          params: { organizationSlug: updated.slug },
+          ...organizationLocation(updated.slug, null, ''),
           replace: true,
         })
-        toast.success('Organization updated and moved to its new slug.')
+        toast.success(t('global:organizationForms.updatedAndMoved'))
         return
       }
-      toast.success('Organization updated.')
+      toast.success(t('global:organizationForms.updated'))
     } catch (caught) {
       setError(organizationErrorMessage(caught))
     } finally {
@@ -288,7 +290,9 @@ export function EditOrganizationSheet({
       }}
     >
       <SheetTrigger asChild>
-        <Button variant='outline'>Edit organization</Button>
+        <Button variant='outline'>
+          {t('global:organizationForms.editTrigger')}
+        </Button>
       </SheetTrigger>
       <SheetContent
         className='flex w-full flex-col gap-0 sm:max-w-md'
@@ -304,15 +308,19 @@ export function EditOrganizationSheet({
           onSubmit={(event) => void save(event)}
         >
           <SheetHeader>
-            <SheetTitle>Organization settings</SheetTitle>
+            <SheetTitle>{t('global:organizationForms.editTitle')}</SheetTitle>
             <SheetDescription>
-              Name, slug and logo for {organization.name}.
+              {t('global:organizationForms.editDescription', {
+                name: organization.name,
+              })}
             </SheetDescription>
           </SheetHeader>
           <div className='min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-4'>
             <fieldset disabled={pending} className='space-y-3'>
               <div className='space-y-2'>
-                <Label htmlFor='edit-organization-name'>Name</Label>
+                <Label htmlFor='edit-organization-name'>
+                  {t('global:organizationForms.nameLabel')}
+                </Label>
                 <Input
                   id='edit-organization-name'
                   required
@@ -322,7 +330,9 @@ export function EditOrganizationSheet({
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='edit-organization-slug'>Slug</Label>
+                <Label htmlFor='edit-organization-slug'>
+                  {t('global:organizationForms.slugLabel')}
+                </Label>
                 <Input
                   id='edit-organization-slug'
                   required
@@ -337,8 +347,8 @@ export function EditOrganizationSheet({
                 disabled={pending}
                 resolveImage={imageUrl}
                 credentialImagePrefix={organizationLogoPrefix}
-                label='Logo'
-                alt='Organization logo preview'
+                label={t('global:organizationForms.logoLabel')}
+                alt={t('global:organizationForms.logoAlt')}
                 onChange={(next) => {
                   setLogo(next.image)
                   setFile(next.file)
@@ -356,7 +366,9 @@ export function EditOrganizationSheet({
                 slug.trim().length === 0
               }
             >
-              {pending ? 'Saving…' : 'Save organization'}
+              {pending
+                ? t('global:shared.saving')
+                : t('global:organizationForms.save')}
             </Button>
           </SheetFooter>
         </form>
@@ -398,7 +410,7 @@ export function DeleteOrganizationButton({
         disabled={pending}
         onClick={() => setConfirmDelete(true)}
       >
-        Delete organization
+        {t('global:organizationForms.deleteTrigger')}
       </Button>
       <ConfirmDialog
         open={confirmDelete}
@@ -406,10 +418,10 @@ export function DeleteOrganizationButton({
           setConfirmDelete(next)
           if (next) setError('')
         }}
-        title='Delete this organization?'
-        desc='The server can still refuse this delete.'
+        title={t('global:organizationForms.deleteTitle')}
+        desc={t('global:organizationForms.deleteDescription')}
         destructive
-        confirmText='Delete organization'
+        confirmText={t('global:organizationForms.deleteConfirm')}
         isLoading={pending}
         handleConfirm={() => void remove()}
       >

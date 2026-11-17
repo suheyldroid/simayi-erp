@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
+import { dateLocale, t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -17,7 +18,7 @@ type DatePickerProps = {
 export function DatePicker({
   selected,
   onSelect,
-  placeholder = 'Pick a date',
+  placeholder = t('common:calendar.pickDate'),
 }: DatePickerProps) {
   return (
     <Popover>
@@ -28,7 +29,7 @@ export function DatePicker({
           className='w-60 justify-start text-start font-normal data-[empty=true]:text-muted-foreground'
         >
           {selected ? (
-            format(selected, 'MMM d, yyyy')
+            format(selected, 'd MMM yyyy', { locale: dateLocale })
           ) : (
             <span>{placeholder}</span>
           )}

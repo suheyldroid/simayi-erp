@@ -1,8 +1,10 @@
 import { z } from 'zod'
-import axios, { AxiosHeaders } from 'axios'
+import axios, { AxiosHeaders, type AxiosInstance } from 'axios'
 import { queryOptions } from '@tanstack/react-query'
 import { adminClient, organizationClient } from 'better-auth/client/plugins'
 import { createAuthClient } from 'better-auth/react'
+import { BRANCH_HEADER, getBranchRequestSignal } from '@/lib/branch-scope'
+import { t } from '@/lib/i18n'
 import {
   ORGANIZATION_HEADER,
   getPinnedOrganizationId,
@@ -92,6 +94,16 @@ export const globalApi = axios.create({
   withCredentials: true,
 })
 
+/**
+ * Branch HTTP client. Branch-sensitive requests pass the captured branch UUID
+ * explicitly as request config: `branchApi.get(url, { branchUuid })`. Company
+ * and global requests stay on `api`/`globalApi` and never send this header.
+ */
+export const branchApi = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  withCredentials: true,
+})
+
 export const authClient = createAuthClient({
   baseURL: api.defaults.baseURL,
   basePath: '/auth',
@@ -116,6 +128,28 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+branchApi.interceptors.request.use((config) => {
+  const headers = AxiosHeaders.from(config.headers)
+  if (isOrganizationFrozen()) {
+    return Promise.reject(
+      new axios.CanceledError('Organization switch in progress')
+    )
+  }
+  if (!config.branchUuid) {
+    return Promise.reject(
+      new axios.CanceledError('Branch request requires a branch')
+    )
+  }
+  const organizationId = getPinnedOrganizationId()
+  if (organizationId) headers.set(ORGANIZATION_HEADER, organizationId)
+  headers.set(BRANCH_HEADER, config.branchUuid)
+  config.headers = headers
+  // Branch-transition abort: a pending request from the previous selection can
+  // never resolve into the new branch subtree.
+  if (!config.signal) config.signal = getBranchRequestSignal()
+  return config
+})
+
 function responseCode(data: unknown) {
   if (typeof data !== 'object' || data === null) return undefined
   if (
@@ -135,15 +169,20 @@ export function isOrganizationMismatch(error: unknown) {
   return responseCode(error.response.data) === 'ORGANIZATION_MISMATCH'
 }
 
-api.interceptors.response.use(
-  (response) => response,
-  (error: unknown) => {
-    if (isOrganizationMismatch(error)) {
-      window.location.reload()
+function reloadOnOrganizationMismatch(client: AxiosInstance) {
+  client.interceptors.response.use(
+    (response) => response,
+    (error: unknown) => {
+      if (isOrganizationMismatch(error)) {
+        window.location.reload()
+      }
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
-  }
-)
+  )
+}
+
+reloadOnOrganizationMismatch(api)
+reloadOnOrganizationMismatch(branchApi)
 
 export function isAdministrator(
   user: { role?: string | null } | null | undefined
@@ -160,7 +199,9 @@ async function readGlobalSession(): Promise<GlobalSession | null> {
         ? failure.status
         : undefined
     if (status === 401) return null
-    throw new Error(result.error.message ?? 'Could not load your account.')
+    throw new Error(
+      result.error.message ?? t('common:states.accountLoadFailed')
+    )
   }
   if (result.data == null) return null
   const parsed = nativeSessionSchema.parse(result.data)

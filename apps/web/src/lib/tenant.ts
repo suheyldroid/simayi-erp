@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n'
+
 /**
  * Tenant header attached to business requests. Same value the backend reads in
  * its tenant actor resolution.
@@ -49,9 +51,7 @@ export function noteSessionOrganization(activeOrganizationId: string | null) {
 
 export function assertSameOrganization(organizationId: string) {
   if (frozen || getPinnedOrganizationId() !== organizationId)
-    throw new Error(
-      'This page belongs to a different organization. Reload before saving.'
-    )
+    throw new Error(t('common:errors.organizationScopeChanged'))
 }
 
 export async function cancelOrganizationQueries() {

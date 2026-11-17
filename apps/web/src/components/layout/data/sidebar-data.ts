@@ -5,6 +5,7 @@ import {
   Building,
   Building2,
   CreditCard,
+  GitBranch,
   LayoutDashboard,
   LayoutGrid,
   ListTree,
@@ -15,6 +16,8 @@ import {
   Users,
   UsersRound,
 } from 'lucide-react'
+import { t } from '@/lib/i18n'
+import type { OrganizationTarget } from '@/lib/organization-navigation'
 import { type SidebarData } from '../types'
 
 /**
@@ -25,16 +28,16 @@ import { type SidebarData } from '../types'
 export const systemSidebarData: SidebarData = {
   navGroups: [
     {
-      title: 'Global',
+      title: t('common:navigation.global'),
       context: 'global',
       items: [
         {
-          title: 'Dashboard',
+          title: t('common:navigation.dashboard'),
           url: '/',
           icon: LayoutDashboard,
         },
         {
-          title: 'Organizations',
+          title: t('common:navigation.organizations'),
           url: '/organization',
           icon: Building2,
         },
@@ -46,18 +49,20 @@ export const systemSidebarData: SidebarData = {
 export type OrganizationNavEntry = {
   title: string
   /**
-   * Typed route path; the shell resolves its concrete URL with the verified
-   * `organizationSlug` param, never by string concatenation.
+   * Organization-relative target. The shell resolves it for the verified scope
+   * (company or branch path) through `organizationLocation`, never by string
+   * concatenation.
    */
-  to:
-    | '/o/$organizationSlug'
-    | '/o/$organizationSlug/supplier'
-    | '/o/$organizationSlug/stock'
-    | '/o/$organizationSlug/purchasing'
-    | '/o/$organizationSlug/sales'
-    | '/o/$organizationSlug/pos-devices'
-    | '/o/$organizationSlug/finance'
-    | '/o/$organizationSlug/settings'
+  target: Extract<
+    OrganizationTarget,
+    | ''
+    | '/supplier'
+    | '/stock'
+    | '/purchasing'
+    | '/sales'
+    | '/pos-devices'
+    | '/finance'
+  >
   icon: ElementType
   /** Overview already is this workspace; it is not repeated as a section card. */
   overview?: boolean
@@ -71,41 +76,41 @@ export type OrganizationNavEntry = {
  */
 export const organizationNavEntries: readonly OrganizationNavEntry[] = [
   {
-    title: 'Overview',
-    to: '/o/$organizationSlug',
+    title: t('common:navigation.overview'),
+    target: '',
     icon: LayoutGrid,
     overview: true,
   },
   {
-    title: 'Suppliers',
-    to: '/o/$organizationSlug/supplier',
+    title: t('common:navigation.suppliers'),
+    target: '/supplier',
     icon: Building,
   },
   {
-    title: 'Stock',
-    to: '/o/$organizationSlug/stock',
+    title: t('common:navigation.stock'),
+    target: '/stock',
     icon: Package,
     matchChildren: true,
   },
   {
-    title: 'Purchasing',
-    to: '/o/$organizationSlug/purchasing',
+    title: t('common:navigation.purchasing'),
+    target: '/purchasing',
     icon: ShoppingCart,
   },
   {
-    title: 'Sales',
-    to: '/o/$organizationSlug/sales',
+    title: t('common:navigation.sales'),
+    target: '/sales',
     icon: Receipt,
   },
   {
-    title: 'POS devices',
-    to: '/o/$organizationSlug/pos-devices',
+    title: t('common:navigation.posDevices'),
+    target: '/pos-devices',
     icon: CreditCard,
     matchChildren: true,
   },
   {
-    title: 'Finance',
-    to: '/o/$organizationSlug/finance',
+    title: t('common:navigation.finance'),
+    target: '/finance',
     icon: Wallet,
     matchChildren: true,
   },
@@ -114,16 +119,10 @@ export const organizationNavEntries: readonly OrganizationNavEntry[] = [
 export type OrganizationSettingsNavEntry = {
   title: string
   /**
-   * Typed route path inside the settings shell; the shell resolves its
-   * concrete URL with the verified `organizationSlug` param.
+   * Organization-relative settings target; the shell resolves it for the
+   * verified scope (company or branch settings path).
    */
-  to:
-    | '/o/$organizationSlug/settings/items'
-    | '/o/$organizationSlug/settings/item-categories'
-    | '/o/$organizationSlug/settings/recipes'
-    | '/o/$organizationSlug/settings/manage'
-    | '/o/$organizationSlug/settings/members'
-    | '/o/$organizationSlug/settings/teams'
+  target: Extract<OrganizationTarget, `/settings${string}`>
   icon: ElementType
   /** List entries stay active on their detail routes. */
   matchChildren?: boolean
@@ -139,36 +138,42 @@ export type OrganizationSettingsNavEntry = {
 export const organizationSettingsNavEntries: readonly OrganizationSettingsNavEntry[] =
   [
     {
-      title: 'Items',
-      to: '/o/$organizationSlug/settings/items',
+      title: t('common:navigation.items'),
+      target: '/settings/items',
       icon: Boxes,
       matchChildren: true,
     },
     {
-      title: 'Item categories',
-      to: '/o/$organizationSlug/settings/item-categories',
+      title: t('common:navigation.itemCategories'),
+      target: '/settings/item-categories',
       icon: ListTree,
       matchChildren: true,
     },
     {
-      title: 'Recipes',
-      to: '/o/$organizationSlug/settings/recipes',
+      title: t('common:navigation.recipes'),
+      target: '/settings/recipes',
       icon: BookOpen,
       matchChildren: true,
     },
     {
-      title: 'Details',
-      to: '/o/$organizationSlug/settings/manage',
+      title: t('common:navigation.branches'),
+      target: '/settings/branches',
+      icon: GitBranch,
+      matchChildren: true,
+    },
+    {
+      title: t('common:navigation.details'),
+      target: '/settings/manage',
       icon: Building2,
     },
     {
-      title: 'Members',
-      to: '/o/$organizationSlug/settings/members',
+      title: t('common:navigation.members'),
+      target: '/settings/members',
       icon: Users,
     },
     {
-      title: 'Teams',
-      to: '/o/$organizationSlug/settings/teams',
+      title: t('common:navigation.teams'),
+      target: '/settings/teams',
       icon: UsersRound,
     },
   ]

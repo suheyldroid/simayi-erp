@@ -1,10 +1,17 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { useOptionalBranch } from '@/lib/branch-boundary'
+import { captureBranchScope, isBranchScopeCurrent } from '@/lib/branch-scope'
+import { locale, t } from '@/lib/i18n'
 import { invalidateItemStockCaches } from '@/lib/item-stock-cache'
-import { useOrganizationSlug } from '@/lib/organization-boundary'
+import {
+  organizationLocation,
+  useOrganizationResourceParams,
+  useOrganizationScope,
+} from '@/lib/organization-navigation'
 import { parseResourceUuid } from '@/lib/resource-uuid'
 import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
@@ -14,18 +21,15 @@ import { errorMessage, itemApi } from './api'
 import { ItemForm } from './components/item-form'
 import type { Item } from './model'
 
-const itemRoute = getRouteApi(
-  '/_authenticated/o/$organizationSlug/settings/items/$itemId'
-)
-
-const itemLabel = (item: Item) => item.name || item.ipn || 'Item'
+const itemLabel = (item: Item) =>
+  item.name || item.ipn || t('catalog:items.fallbackName')
 
 function EditItemAction({ item }: { item: Item }) {
   const [draft, setDraft] = useState<Item | null>(null)
   return (
     <>
       <Button type='button' variant='outline' onClick={() => setDraft(item)}>
-        Edit
+        {t('catalog:common.edit')}
       </Button>
       <ItemForm
         draft={draft ? { mode: 'edit', item: draft } : null}
@@ -47,19 +51,24 @@ function DeleteItemAction({
 }) {
   const navigate = useNavigate()
   const client = useQueryClient()
+  const { branchUuid } = useOrganizationScope()
   const [target, setTarget] = useState<Item | null>(null)
   const deletion = useMutation({
     mutationFn: (input: { uuid: string; scope: string }) =>
       itemApi.removeItem(input.uuid),
     onSuccess: async (_data, input) => {
       await invalidateItemStockCaches(client, input.scope)
+      // Branch balances embed the shared item identity, so every branch stock
+      // view of this company is refreshed after the catalog deletion.
+      await client.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'stock' &&
+          typeof query.queryKey[1] === 'string' &&
+          query.queryKey[1].startsWith(`${input.scope}::`),
+      })
       await client.invalidateQueries({ queryKey: ['item-category'] })
       setTarget(null)
-      toast.success('Item deleted')
-      await navigate({
-        to: '/o/$organizationSlug/settings/items',
-        params: { organizationSlug },
-      })
+      toast.success(t('catalog:items.deletedToast'))
     },
     onError: (error) => toast.error(errorMessage(error)),
   })
@@ -71,24 +80,38 @@ function DeleteItemAction({
         disabled={deletion.isPending}
         onClick={() => setTarget(item)}
       >
-        Delete
+        {t('catalog:common.delete')}
       </Button>
       <ConfirmDialog
         open={target != null}
         onOpenChange={(open) => {
           if (!open) setTarget(null)
         }}
-        title='Delete item'
-        desc='This permanently deletes the item. Items used by a recipe cannot be deleted.'
-        confirmText='Delete'
+        title={t('catalog:items.deleteTitle')}
+        desc={t('catalog:items.deleteDescription')}
+        confirmText={t('catalog:common.delete')}
         destructive
         isLoading={deletion.isPending}
         handleConfirm={() => {
-          if (target)
-            deletion.mutate({
-              uuid: target.uuid,
-              scope: organizationCacheScope(),
-            })
+          if (!target) return
+          const ui = captureBranchScope(branchUuid)
+          deletion.mutate(
+            { uuid: target.uuid, scope: organizationCacheScope() },
+            {
+              onSuccess: () => {
+                // The catalog write is not aborted by a scope switch; only the
+                // scope that confirmed the deletion is redirected.
+                if (!isBranchScopeCurrent(ui)) return
+                void navigate(
+                  organizationLocation(
+                    organizationSlug,
+                    ui.branchUuid,
+                    '/settings/items'
+                  )
+                )
+              },
+            }
+          )
         }}
       />
     </>
@@ -96,9 +119,10 @@ function DeleteItemAction({
 }
 
 export function ItemDetail() {
-  const { itemId } = itemRoute.useParams()
-  const organizationSlug = useOrganizationSlug()
-  const uuid = parseResourceUuid(itemId)
+  const { itemId, organizationSlug, branchUuid } =
+    useOrganizationResourceParams()
+  const branch = useOptionalBranch()
+  const uuid = parseResourceUuid(itemId ?? '')
   const details = useQuery({
     queryKey: ['item', 'items', organizationCacheScope(), 'detail', uuid],
     queryFn: () => itemApi.item(uuid as string),
@@ -121,26 +145,31 @@ export function ItemDetail() {
     <section className='space-y-6'>
       <div>
         <Link
-          to='/o/$organizationSlug/settings/items'
-          params={{ organizationSlug }}
+          {...organizationLocation(
+            organizationSlug,
+            branchUuid,
+            '/settings/items'
+          )}
           className='rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
         >
-          Back to items
+          {t('catalog:items.back')}
         </Link>
         <h2 className='mt-2 text-2xl font-bold'>
-          {liveItem ? itemLabel(liveItem) : 'Item details'}
+          {liveItem ? itemLabel(liveItem) : t('catalog:items.detailTitle')}
         </h2>
       </div>
-      {uuid === null && <p role='alert'>Item not found.</p>}
-      {uuid !== null && details.isPending && <p role='status'>Loading item…</p>}
+      {uuid === null && <p role='alert'>{t('catalog:items.notFound')}</p>}
+      {uuid !== null && details.isPending && (
+        <p role='status'>{t('catalog:items.loadingOne')}</p>
+      )}
       {details.isError && detailStatus === 404 && (
-        <p role='alert'>Item not found.</p>
+        <p role='alert'>{t('catalog:items.notFound')}</p>
       )}
       {details.isError && detailStatus !== 404 && (
         <p role='alert'>
-          Could not load this item.{' '}
+          {t('catalog:items.loadError')}{' '}
           <Button variant='outline' onClick={() => void details.refetch()}>
-            Retry
+            {t('catalog:common.retry')}
           </Button>
         </p>
       )}
@@ -149,12 +178,20 @@ export function ItemDetail() {
           <section className='space-y-4 rounded-md border border-border p-4'>
             <div className='flex flex-wrap items-start justify-between gap-3'>
               <div>
-                <h3 className='text-xl font-semibold'>Item details</h3>
+                <h3 className='text-xl font-semibold'>
+                  {t('catalog:items.detailTitle')}
+                </h3>
                 <p className='text-sm text-muted-foreground'>
-                  ID {item.uuid}
-                  {item.ipn ? ` · IPN ${item.ipn}` : ''}
-                  {item.category ? ` · ${item.category.pathstring}` : ''}
-                  {` · version ${item.version}`}
+                  {[
+                    t('catalog:items.meta.id', { uuid: item.uuid }),
+                    item.ipn
+                      ? t('catalog:items.meta.ipn', { ipn: item.ipn })
+                      : null,
+                    item.category ? item.category.pathstring : null,
+                    t('catalog:items.meta.version', { version: item.version }),
+                  ]
+                    .filter((part) => part !== null)
+                    .join(' · ')}
                 </p>
               </div>
               <div className='flex flex-wrap gap-2'>
@@ -162,24 +199,32 @@ export function ItemDetail() {
                   key={`edit-${organizationSlug}-${item.uuid}`}
                   item={item}
                 />
-                <DeleteItemAction
-                  key={`delete-${organizationSlug}-${item.uuid}`}
-                  item={item}
-                  organizationSlug={organizationSlug}
-                />
+                {!item.hasReceipts && (
+                  <DeleteItemAction
+                    key={`delete-${organizationSlug}-${item.uuid}`}
+                    item={item}
+                    organizationSlug={organizationSlug}
+                  />
+                )}
               </div>
             </div>
             {item.description && <p className='text-sm'>{item.description}</p>}
+            {item.hasReceipts && (
+              <p className='text-sm text-muted-foreground'>
+                {t('catalog:items.receiptsLock')}
+              </p>
+            )}
             <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
-              <dt>Category</dt>
+              <dt>{t('catalog:items.fields.category')}</dt>
               <dd>
                 {item.category ? (
                   <Link
-                    to='/o/$organizationSlug/settings/item-categories/$categoryId'
-                    params={{
+                    {...organizationLocation(
                       organizationSlug,
-                      categoryId: item.category.uuid,
-                    }}
+                      branchUuid,
+                      '/settings/item-categories/$categoryId',
+                      { categoryId: item.category.uuid }
+                    )}
                     className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                   >
                     {item.category.pathstring}
@@ -188,7 +233,7 @@ export function ItemDetail() {
                   '—'
                 )}
               </dd>
-              <dt>Unit</dt>
+              <dt>{t('catalog:items.fields.unit')}</dt>
               <dd>
                 {item.unit ? (
                   <span>
@@ -197,29 +242,42 @@ export function ItemDetail() {
                 ) : item.units ? (
                   item.units
                 ) : (
-                  'Unresolved (legacy)'
+                  t('catalog:items.unresolvedLegacy')
                 )}
-                {item.unit && !item.unit.active ? ' · inactive' : null}
+                {item.unit && !item.unit.active
+                  ? t('catalog:items.inactiveSuffix')
+                  : null}
               </dd>
-              <dt>Minimum stock</dt>
-              <dd>{item.minimumStock}</dd>
-              <dt>Default expiry</dt>
-              <dd>{item.defaultExpiry} days</dd>
-              <dt>Image</dt>
+              <dt>{t('catalog:items.fields.defaultExpiry')}</dt>
+              <dd>
+                {t('catalog:items.expiryDays', {
+                  days: item.defaultExpiry.toLocaleString(locale),
+                })}
+              </dd>
+              <dt>{t('catalog:items.fields.image')}</dt>
               <dd className='break-all'>{item.image || '—'}</dd>
-              <dt>Status</dt>
-              <dd>{item.active ? 'Active' : 'Inactive'}</dd>
-              <dt>Created</dt>
+              <dt>{t('catalog:items.fields.status')}</dt>
+              <dd>
+                {item.active
+                  ? t('catalog:common.active')
+                  : t('catalog:common.inactive')}
+              </dd>
+              <dt>{t('catalog:items.fields.created')}</dt>
               <dd>
                 {item.creationDate
-                  ? new Date(item.creationDate).toLocaleDateString()
+                  ? new Date(item.creationDate).toLocaleDateString(locale)
                   : '—'}
               </dd>
             </dl>
           </section>
           <section className='space-y-4'>
-            <h3 className='text-xl font-semibold'>Stock</h3>
-            <ItemStockPanel key={item.uuid} item={item} />
+            <h3 className='text-xl font-semibold'>
+              {t('catalog:items.stockHeading')}
+            </h3>
+            <ItemStockPanel
+              itemUuid={item.uuid}
+              branch={branch == null ? null : branch.branch}
+            />
           </section>
         </>
       )}

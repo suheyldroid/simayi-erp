@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 
 /**
  * Native Better Auth account fields the current user may change. Email, role,
@@ -10,8 +11,8 @@ export const profileFormSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, 'Enter a name.')
-    .max(150, 'Name must not be longer than 150 characters.'),
+    .min(1, t('global:settings.validation.nameRequired'))
+    .max(150, t('global:settings.validation.nameTooLong')),
 })
 
 export type ProfileFormValues = z.infer<typeof profileFormSchema>

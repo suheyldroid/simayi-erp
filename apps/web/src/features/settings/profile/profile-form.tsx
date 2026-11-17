@@ -3,12 +3,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { errorMessage } from '@/lib/api-error'
 import {
   authClient,
   organizationSessionQueryKey,
   sessionQuery,
   type SessionUser,
 } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
 import { Button } from '@/components/ui/button'
 import {
@@ -79,7 +81,7 @@ export function ProfileForm({
       const input = profileUpdateInput(values, imageRef ?? null)
       const result = await authClient.updateUser(input)
       if (result.error) {
-        setError(result.error.message ?? 'Could not update your profile.')
+        setError(errorMessage(result.error))
         return
       }
       form.reset({ name: input.name })
@@ -93,14 +95,10 @@ export function ProfileForm({
         client.invalidateQueries({ queryKey: ['user', user.id] }),
         client.invalidateQueries({ queryKey: ['user-options'] }),
       ])
-      toast.success('Profile updated.')
+      toast.success(t('global:settings.profile.updated'))
       saved = true
     } catch (caught) {
-      setError(
-        caught instanceof Error && caught.message
-          ? caught.message
-          : 'Could not reach the account service. Try again.'
-      )
+      setError(errorMessage(caught))
     } finally {
       setPending(false)
       onPendingChange(false)
@@ -122,8 +120,8 @@ export function ProfileForm({
               disabled={pending}
               resolveImage={imageUrl}
               credentialImagePrefix={avatarReferencePrefix}
-              label='Avatar'
-              alt='Avatar preview'
+              label={t('global:settings.profile.avatarLabel')}
+              alt={t('global:settings.profile.avatarAlt')}
               onChange={(next) => {
                 setImage(next.image)
                 setFile(next.file)
@@ -135,17 +133,19 @@ export function ProfileForm({
               name='name'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>
+                    {t('global:settings.profile.nameLabel')}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       autoComplete='name'
                       maxLength={150}
-                      placeholder='Your name'
+                      placeholder={t('global:settings.profile.namePlaceholder')}
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    This is the name shown in the header and account menus.
+                    {t('global:settings.profile.nameDescription')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -165,10 +165,12 @@ export function ProfileForm({
             disabled={pending}
             onClick={onCancel}
           >
-            Cancel
+            {t('global:settings.profile.cancel')}
           </Button>
           <Button type='submit' disabled={pending}>
-            {pending ? 'Saving…' : 'Save profile'}
+            {pending
+              ? t('global:shared.saving')
+              : t('global:settings.profile.save')}
           </Button>
         </SheetFooter>
       </form>

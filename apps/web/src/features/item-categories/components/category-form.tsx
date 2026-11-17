@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -29,9 +30,10 @@ export type CategoryDraft =
   | { mode: 'create-child'; parentUuid: string }
 
 function draftTitle(draft: CategoryDraft) {
-  if (draft.mode === 'edit') return 'Edit category'
-  if (draft.mode === 'create-child') return 'New child category'
-  return 'New category'
+  if (draft.mode === 'edit') return t('catalog:itemCategories.form.editTitle')
+  if (draft.mode === 'create-child')
+    return t('catalog:itemCategories.form.createChildTitle')
+  return t('catalog:itemCategories.form.createTitle')
 }
 
 function draftKey(draft: CategoryDraft) {
@@ -59,7 +61,11 @@ export function CategoryForm({
     onSuccess: async (saved) => {
       await client.invalidateQueries({ queryKey: ['item-category'] })
       await client.invalidateQueries({ queryKey: ['item'] })
-      toast.success(editing ? 'Category updated' : 'Category created')
+      toast.success(
+        editing
+          ? t('catalog:itemCategories.form.updatedToast')
+          : t('catalog:itemCategories.form.createdToast')
+      )
       onSaved?.(saved)
       onOpenChange(false)
     },
@@ -69,10 +75,13 @@ export function CategoryForm({
     <Sheet open={draft != null} onOpenChange={onOpenChange}>
       <SheetContent className='w-full gap-0 sm:max-w-lg'>
         <SheetHeader>
-          <SheetTitle>{draft ? draftTitle(draft) : 'Category'}</SheetTitle>
+          <SheetTitle>
+            {draft
+              ? draftTitle(draft)
+              : t('catalog:itemCategories.form.fallbackTitle')}
+          </SheetTitle>
           <SheetDescription>
-            Structural categories organize the tree and cannot contain items
-            directly. A category cannot be moved under its own child.
+            {t('catalog:itemCategories.form.description')}
           </SheetDescription>
         </SheetHeader>
         {draft && (
@@ -134,7 +143,7 @@ function CategoryFormBody({
         <FieldInput
           field={{
             name: 'name',
-            label: 'Name',
+            label: t('catalog:itemCategories.form.nameLabel'),
             required: true,
             maxLength: 100,
           }}
@@ -143,14 +152,14 @@ function CategoryFormBody({
         <FieldInput
           field={{
             name: 'description',
-            label: 'Description',
+            label: t('catalog:itemCategories.form.descriptionLabel'),
             type: 'textarea',
             maxLength: 250,
           }}
           value={category?.description ?? ''}
         />
         <ItemCategorySelect
-          label='Parent category'
+          label={t('catalog:itemCategories.form.parentLabel')}
           value={parent}
           fallbackUuid={parent == null ? parentUuid : null}
           structural='any'
@@ -163,13 +172,13 @@ function CategoryFormBody({
         />
         <FlagInput
           name='structural'
-          label='Structural'
+          label={t('catalog:itemCategories.form.structuralLabel')}
           defaultChecked={category?.structural ?? false}
         />
       </div>
       <SheetFooter className='border-t border-border'>
         <Button type='submit' disabled={!canSubmit || pending}>
-          Save
+          {t('catalog:common.save')}
         </Button>
       </SheetFooter>
     </form>

@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import axios from 'axios'
+import { errorMessage, translatedServerMessage } from '@/lib/api-error'
 import { api, authClient, readAccountSession } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import {
   assertSameOrganization,
   cancelOrganizationQueries,
@@ -58,7 +60,7 @@ function organizationTarget(target: string) {
     !url.pathname.startsWith('/o/') ||
     url.pathname.length <= '/o/'.length
   )
-    throw new Error('Organization navigation must stay inside an organization.')
+    throw new Error(t('global:organizationApi.targetOutside'))
   return `${url.pathname}${url.search}${url.hash}`
 }
 
@@ -76,25 +78,16 @@ function authCode(error: unknown) {
 }
 
 export function organizationErrorMessage(error: unknown) {
-  if (axios.isAxiosError(error)) {
-    const data: unknown = error.response?.data
-    if (typeof data === 'object' && data !== null) {
-      if ('message' in data && typeof data.message === 'string')
-        return data.message
-      if ('error' in data) {
-        const body = data.error
-        if (
-          typeof body === 'object' &&
-          body !== null &&
-          'message' in body &&
-          typeof body.message === 'string'
-        )
-          return body.message
-      }
-    }
-  }
-  if (error instanceof Error && error.message) return error.message
-  return 'Organization request failed.'
+  // API envelopes, Zod issues and native error objects keep their shared
+  // translation and status mapping.
+  if (!(error instanceof Error) || axios.isAxiosError(error))
+    return errorMessage(error)
+  // Native Better Auth text raised as an Error is mapped through the shared
+  // message resource; an already localized guard message passes through. An
+  // empty message still surfaces a failure instead of an empty alert.
+  if (error.message)
+    return translatedServerMessage(error.message) ?? error.message
+  return errorMessage(error)
 }
 
 export class OrganizationRequestError extends Error {
@@ -114,7 +107,7 @@ export const organizationApi = {
     return unwrap(
       await authClient.organization.list(),
       (value) => z.array(organizationSchema).parse(value),
-      'Could not list organizations.'
+      t('global:organizationApi.listFailed')
     )
   },
   async get(organizationId: string) {
@@ -124,11 +117,14 @@ export const organizationApi = {
     })
     if (result.error)
       throw new OrganizationRequestError(
-        result.error.message ?? 'Could not load the organization.',
+        result.error.message ?? t('global:organizationApi.loadFailed'),
         result.error.status
       )
     if (result.data == null)
-      throw new OrganizationRequestError('Organization not found.', 404)
+      throw new OrganizationRequestError(
+        t('global:organizationApi.notFound'),
+        404
+      )
     return organizationSchema.parse(result.data)
   },
   async checkSlug(slug: string) {
@@ -137,11 +133,11 @@ export const organizationApi = {
       if (authCode(result.error) === 'ORGANIZATION_SLUG_ALREADY_TAKEN')
         return false
       throw new Error(
-        result.error.message ?? 'Could not check the organization slug.'
+        result.error.message ?? t('global:organizationApi.slugCheckFailed')
       )
     }
     if (result.data == null)
-      throw new Error('Could not check the organization slug.')
+      throw new Error(t('global:organizationApi.slugCheckFailed'))
     return z.object({ status: z.boolean() }).parse(result.data).status
   },
   async create(input: {
@@ -153,7 +149,7 @@ export const organizationApi = {
     return unwrap(
       await authClient.organization.create(input),
       (value) => organizationSchema.parse(value),
-      'Could not create the organization.'
+      t('global:organizationApi.createFailed')
     )
   },
   async update(
@@ -171,7 +167,7 @@ export const organizationApi = {
     })
     if (result.error)
       throw new Error(
-        result.error.message ?? 'Could not update the organization.'
+        result.error.message ?? t('global:organizationApi.updateFailed')
       )
     return result.data ? organizationSchema.parse(result.data) : null
   },
@@ -179,16 +175,14 @@ export const organizationApi = {
     assertSameOrganization(organizationId)
     const session = await readAccountSession()
     if (session.session.activeOrganizationId !== organizationId)
-      throw new Error(
-        'Delete is only available for the active organization. Select it before deleting.'
-      )
+      throw new Error(t('global:organizationApi.deleteOnlyActive'))
     freezeOrganization()
     await cancelOrganizationQueries()
     try {
       const result = await authClient.organization.delete({ organizationId })
       if (result.error)
         throw new Error(
-          result.error.message ?? 'Could not delete the organization.'
+          result.error.message ?? t('global:organizationApi.deleteFailed')
         )
       window.location.assign('/')
     } catch (error) {
@@ -213,15 +207,13 @@ export const organizationApi = {
       })
       if (activated.error)
         throw new Error(
-          activated.error.message ?? 'Could not select the organization.'
+          activated.error.message ?? t('global:organizationApi.selectFailed')
         )
       const session = await readAccountSession()
       if (session.session.activeOrganizationId !== organizationId) {
         // Restore the exact previous value, including "no active organization".
         await authClient.organization.setActive({ organizationId: previous })
-        throw new Error(
-          'The active organization did not match the organization you selected.'
-        )
+        throw new Error(t('global:organizationApi.activeMismatch'))
       }
       window.location.assign(destination)
     } catch (error) {
@@ -233,12 +225,16 @@ export const organizationApi = {
     const result = await authClient.organization.getActiveMember()
     if (result.error)
       throw new OrganizationRequestError(
-        result.error.message ?? 'Could not load your membership.',
+        result.error.message ??
+          t('global:organizationApi.membershipLoadFailed'),
         result.error.status,
         authCode(result.error)
       )
     if (result.data == null)
-      throw new OrganizationRequestError('Membership not found.', 404)
+      throw new OrganizationRequestError(
+        t('global:organizationApi.membershipNotFound'),
+        404
+      )
     return activeMemberSchema.parse(result.data)
   },
   async members(organizationId: string, offset: number, limit = 20) {
@@ -248,7 +244,7 @@ export const organizationApi = {
         query: { organizationId, limit, offset },
       }),
       (value) => membersSchema.parse(value),
-      'Could not list members.'
+      t('global:organizationApi.membersListFailed')
     )
   },
   async addMember(organizationId: string, userId: string, role: string[]) {
@@ -278,14 +274,16 @@ export const organizationApi = {
       memberIdOrEmail,
     })
     if (result.error)
-      throw new Error(result.error.message ?? 'Could not remove the member.')
+      throw new Error(
+        result.error.message ?? t('global:organizationApi.memberRemoveFailed')
+      )
   },
   async teams(organizationId: string) {
     assertSameOrganization(organizationId)
     return unwrap(
       await authClient.organization.listTeams({ query: { organizationId } }),
       (value) => z.array(teamSchema).parse(value),
-      'Could not list teams.'
+      t('global:organizationApi.teamsListFailed')
     )
   },
   async createTeam(organizationId: string, name: string) {
@@ -293,7 +291,7 @@ export const organizationApi = {
     return unwrap(
       await authClient.organization.createTeam({ organizationId, name }),
       (value) => teamSchema.parse(value),
-      'Could not create the team.'
+      t('global:organizationApi.teamCreateFailed')
     )
   },
   async updateTeam(organizationId: string, teamId: string, name: string) {
@@ -301,14 +299,14 @@ export const organizationApi = {
     return unwrap(
       await authClient.organization.updateTeam({ teamId, data: { name } }),
       (value) => teamSchema.parse(value),
-      'Could not rename the team.'
+      t('global:organizationApi.teamRenameFailed')
     )
   },
   async removeTeam(organizationId: string, teamId: string) {
     assertSameOrganization(organizationId)
     const session = await readAccountSession()
     if (session.session.activeOrganizationId !== organizationId)
-      throw new Error('Delete the team from its active organization.')
+      throw new Error(t('global:organizationApi.teamDeleteFromActive'))
     if (session.session.activeTeamId === teamId) {
       const cleared = await authClient.organization.setActiveTeam({
         teamId: null,
@@ -316,27 +314,29 @@ export const organizationApi = {
       if (cleared.error)
         throw new Error(
           cleared.error.message ??
-            'Could not clear the active team before deleting it.'
+            t('global:organizationApi.activeTeamClearFailed')
         )
       const confirmed = await readAccountSession()
       if (
         confirmed.session.activeOrganizationId !== organizationId ||
         confirmed.session.activeTeamId === teamId
       )
-        throw new Error('The active team is still the team being deleted.')
+        throw new Error(t('global:organizationApi.activeTeamStillDeleted'))
     }
     const result = await authClient.organization.removeTeam({
       organizationId,
       teamId,
     })
     if (result.error)
-      throw new Error(result.error.message ?? 'Could not delete the team.')
+      throw new Error(
+        result.error.message ?? t('global:organizationApi.teamDeleteFailed')
+      )
   },
   async teamMembers(teamId: string) {
     return unwrap(
       await authClient.organization.listTeamMembers({ query: { teamId } }),
       (value) => z.array(teamMemberSchema).parse(value),
-      'Could not list team members.'
+      t('global:organizationApi.teamMembersListFailed')
     )
   },
   async addTeamMember(organizationId: string, teamId: string, userId: string) {
@@ -347,7 +347,9 @@ export const organizationApi = {
       userId,
     })
     if (result.error)
-      throw new Error(result.error.message ?? 'Could not add the team member.')
+      throw new Error(
+        result.error.message ?? t('global:organizationApi.teamMemberAddFailed')
+      )
   },
   async removeTeamMember(
     organizationId: string,
@@ -362,7 +364,8 @@ export const organizationApi = {
     })
     if (result.error)
       throw new Error(
-        result.error.message ?? 'Could not remove the team member.'
+        result.error.message ??
+          t('global:organizationApi.teamMemberRemoveFailed')
       )
   },
   async activateTeam(organizationId: string, teamId: string | null) {
@@ -373,14 +376,15 @@ export const organizationApi = {
       const result = await authClient.organization.setActiveTeam({ teamId })
       if (result.error)
         throw new Error(
-          result.error.message ?? 'Could not change the active team.'
+          result.error.message ??
+            t('global:organizationApi.activeTeamChangeFailed')
         )
       const session = await readAccountSession()
       if (
         session.session.activeOrganizationId !== organizationId ||
         session.session.activeTeamId !== teamId
       ) {
-        throw new Error('The active team did not match the team you selected.')
+        throw new Error(t('global:organizationApi.activeTeamMismatch'))
       }
       reloadDocument()
     } catch (error) {

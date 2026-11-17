@@ -6,6 +6,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
 import { authClient, safeRedirect, sessionQuery } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,9 +22,10 @@ import { PasswordInput } from '@/components/password-input'
 
 const formSchema = z.object({
   email: z.email({
-    error: (iss) => (iss.input === '' ? 'Please enter your email.' : undefined),
+    error: (iss) =>
+      iss.input === '' ? t('global:auth.validation.emailRequired') : undefined,
   }),
-  password: z.string().min(1, 'Please enter your password.'),
+  password: z.string().min(1, t('global:auth.validation.passwordRequired')),
 })
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
@@ -49,18 +51,20 @@ export function UserAuthForm({
         form.setError('root', {
           message:
             error.status === 429
-              ? 'Too many attempts. Please try again later.'
-              : 'Sign-in failed. Check your email, password, and account status.',
+              ? t('global:auth.signIn.tooManyAttempts')
+              : t('global:auth.signIn.failed'),
         })
         return
       }
       queryClient.clear()
       const session = await queryClient.fetchQuery(sessionQuery)
       if (!session) throw new Error('Session unavailable')
-      toast.success(`Welcome back, ${session.user.name}!`)
+      toast.success(
+        t('global:auth.signIn.welcome', { name: session.user.name })
+      )
       await navigate({ to: safeRedirect(redirectTo), replace: true })
     } catch {
-      form.setError('root', { message: 'Unable to connect. Please try again.' })
+      form.setError('root', { message: t('global:auth.signIn.connection') })
     }
   }
 
@@ -76,10 +80,10 @@ export function UserAuthForm({
           name='email'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('global:auth.emailLabel')}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder='name@example.com'
+                  placeholder={t('global:auth.emailPlaceholder')}
                   autoComplete='username'
                   inputMode='email'
                   {...field}
@@ -94,7 +98,7 @@ export function UserAuthForm({
           name='password'
           render={({ field }) => (
             <FormItem className='relative'>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t('global:auth.passwordLabel')}</FormLabel>
               <FormControl>
                 <PasswordInput
                   placeholder='********'
@@ -107,7 +111,7 @@ export function UserAuthForm({
                 to='/forgot-password'
                 className='absolute inset-e-0 -top-0.5 text-sm font-medium text-muted-foreground hover:opacity-75'
               >
-                Forgot password?
+                {t('global:auth.signIn.forgotPassword')}
               </Link>
             </FormItem>
           )}
@@ -123,7 +127,7 @@ export function UserAuthForm({
           ) : (
             <LogIn />
           )}{' '}
-          Sign in
+          {t('global:auth.signIn.submit')}
         </Button>
       </form>
     </Form>

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 import { resourceUuid } from '@/lib/resource-uuid'
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -24,7 +25,7 @@ const positiveAmount = z
       .string()
       .regex(
         /^(?!0+(?:\.0+)?$)\d{1,13}(?:\.\d{1,6})?$/,
-        'Use a nonzero amount with up to 6 decimals, like 120 or 120,50.'
+        t('operations:common.positiveAmountHint')
       )
   )
 
@@ -56,6 +57,11 @@ const movement = z.object({
   note: z.string(),
   supplierUuid: resourceUuid.nullable(),
   supplierName: z.string().nullable(),
+  // Provenance of the linked document: the original sale branch for a sale
+  // receipt/reversal, the order origin branch for a purchase, null for manual
+  // entries. Company-wide finance never filters by the selected branch.
+  branchUuid: resourceUuid.nullable(),
+  branchName: z.string().nullable(),
   purchaseOrderUuid: resourceUuid.nullable(),
   purchaseOrderReference: z.string().nullable(),
   pricingIncomplete: z.boolean(),
@@ -78,6 +84,8 @@ const supplierEntry = z.object({
   amount: z.string(),
   occurredAt: day,
   note: z.string(),
+  branchUuid: resourceUuid.nullable(),
+  branchName: z.string().nullable(),
   purchaseOrderUuid: resourceUuid.nullable(),
   purchaseOrderReference: z.string().nullable(),
   moneyMovementUuid: resourceUuid.nullable(),
@@ -122,29 +130,29 @@ export type FinanceSummary = z.infer<typeof summary>
 export type SupplierLedger = z.infer<typeof ledger>
 export type MoneyInput = z.infer<typeof FinancePageModel.positiveInput>
 
-const movementKindLabels: Record<MoneyMovementKind, string> = {
-  income: 'Income',
-  expense: 'Expense',
-  supplier_payment: 'Supplier payment',
-  sale_receipt: 'Sale receipt',
-  purchase: 'Purchase',
-  reversal: 'Reversal',
+const movementKindKeys: Record<MoneyMovementKind, string> = {
+  income: 'kind.income',
+  expense: 'kind.expense',
+  supplier_payment: 'kind.supplierPayment',
+  sale_receipt: 'kind.saleReceipt',
+  purchase: 'kind.purchase',
+  reversal: 'kind.reversal',
 }
 
-const movementStatusLabels: Record<MoneyMovementStatus, string> = {
-  on_hold: 'On hold',
-  posted: 'Posted',
-  cancelled: 'Cancelled',
+const movementStatusKeys: Record<MoneyMovementStatus, string> = {
+  on_hold: 'status.onHold',
+  posted: 'status.posted',
+  cancelled: 'status.cancelled',
 }
 
-const supplierEntryKindLabels: Record<SupplierLedgerEntry['kind'], string> = {
-  purchase: 'Purchase',
-  payment: 'Payment',
-  reversal: 'Reversal',
+const supplierEntryKindKeys: Record<SupplierLedgerEntry['kind'], string> = {
+  purchase: 'kind.purchase',
+  payment: 'kind.payment',
+  reversal: 'kind.reversal',
 }
 
 export function movementKindLabel(kind: MoneyMovementKind): string {
-  return movementKindLabels[kind]
+  return t(`operations:finance.${movementKindKeys[kind]}`)
 }
 
 /** Reversed posted entries read as reversed; a lifecycle row keeps its state. */
@@ -153,13 +161,13 @@ export function movementStatusLabel(row: {
   status: MoneyMovementStatus
   reversed: boolean
 }): string {
-  if (row.kind === 'reversal') return 'Reversal'
-  if (row.reversed) return 'Reversed'
-  return movementStatusLabels[row.status]
+  if (row.kind === 'reversal') return t('operations:finance.status.reversal')
+  if (row.reversed) return t('operations:finance.status.reversed')
+  return t(`operations:finance.${movementStatusKeys[row.status]}`)
 }
 
 export function supplierEntryKindLabel(
   kind: SupplierLedgerEntry['kind']
 ): string {
-  return supplierEntryKindLabels[kind]
+  return t(`operations:finance.${supplierEntryKindKeys[kind]}`)
 }

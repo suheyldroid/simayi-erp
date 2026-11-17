@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { isAdministrator, sessionQuery } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -32,18 +33,21 @@ export function Dashboard() {
       </Header>
       <Main className='space-y-8'>
         <div>
-          <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
+          <h1 className='text-2xl font-bold tracking-tight'>
+            {t('dashboard:page.title')}
+          </h1>
           <p className='text-muted-foreground'>
-            Your personal dashboard plus the summaries available to your
-            account.
+            {t('dashboard:page.subtitle')}
           </p>
         </div>
-        {session.isPending ? <p role='status'>Loading your account…</p> : null}
+        {session.isPending ? (
+          <p role='status'>{t('dashboard:common.loadingAccount')}</p>
+        ) : null}
         {session.isError ? (
           <p role='alert'>
-            Could not load your account.{' '}
+            {t('dashboard:common.accountError')}{' '}
             <Button variant='outline' onClick={() => void session.refetch()}>
-              Retry
+              {t('dashboard:common.retry')}
             </Button>
           </p>
         ) : null}

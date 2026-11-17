@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,6 +28,7 @@ export function PurchaseOrderForm({
   pending,
   error,
   fixedSupplier,
+  branch,
   onClose,
   onSubmit,
 }: {
@@ -34,6 +36,8 @@ export function PurchaseOrderForm({
   error: unknown
   /** When set, the order is bound to this supplier and no picker is shown. */
   fixedSupplier?: PurchaseOrderSupplier
+  /** Selected workspace branch; null means Company context. */
+  branch?: { uuid: string; name: string } | null
   onClose: () => void
   onSubmit: (body: OrderInput) => void
 }) {
@@ -50,10 +54,9 @@ export function PurchaseOrderForm({
     >
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-md'>
         <SheetHeader>
-          <SheetTitle>Create purchase order</SheetTitle>
+          <SheetTitle>{t('operations:purchasing.create.title')}</SheetTitle>
           <SheetDescription>
-            A purchase order for one supplier. Item lines, extras, and receipts
-            are added from the order.
+            {t('operations:purchasing.create.description')}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -61,7 +64,9 @@ export function PurchaseOrderForm({
           onSubmit={(event) => {
             event.preventDefault()
             if (!chosenSupplier) {
-              setValidationError('Choose a supplier')
+              setValidationError(
+                t('operations:purchasing.create.chooseSupplier')
+              )
               return
             }
             const form = new FormData(event.currentTarget)
@@ -69,9 +74,11 @@ export function PurchaseOrderForm({
             const description = text(form, 'description').trim()
             const supplierReference = text(form, 'supplierReference').trim()
             const targetDate = text(form, 'targetDate').trim()
+            const origin = String(form.get('origin') ?? 'company')
             try {
               const body = PurchasingModel.orderInput.parse({
                 supplierUuid: chosenSupplier.uuid,
+                branchUuid: origin === 'company' ? null : origin,
                 ...(reference === '' ? {} : { reference }),
                 ...(description === '' ? {} : { description }),
                 ...(supplierReference === '' ? {} : { supplierReference }),
@@ -88,30 +95,64 @@ export function PurchaseOrderForm({
             <fieldset disabled={pending} className='space-y-4'>
               {fixedSupplier ? (
                 <div className='space-y-2'>
-                  <p className='text-sm font-medium'>Supplier</p>
+                  <p className='text-sm font-medium'>
+                    {t('operations:purchasing.create.supplier')}
+                  </p>
                   <p className='text-sm'>
                     {fixedSupplier.name}
                     {fixedSupplier.contact ? ` · ${fixedSupplier.contact}` : ''}
                   </p>
                   <p className='text-sm text-muted-foreground'>
-                    The order is created for this supplier from its detail page.
+                    {t('operations:purchasing.create.fixedSupplierHint')}
                   </p>
                 </div>
               ) : (
                 <SupplierSelect
-                  label='Supplier'
+                  label={t('operations:purchasing.create.supplier')}
                   value={supplier}
                   disabled={pending}
                   onChange={setSupplier}
                 />
               )}
               <FieldInput
-                field={{ name: 'reference', label: 'Reference', maxLength: 64 }}
+                field={{
+                  name: 'origin',
+                  label: t('operations:purchasing.create.origin'),
+                  type: 'select',
+                  required: true,
+                  defaultValue: branch?.uuid ?? 'company',
+                  options: [
+                    {
+                      value: 'company',
+                      label: t('operations:purchasing.companyOrigin'),
+                    },
+                    ...(branch == null
+                      ? []
+                      : [
+                          {
+                            value: branch.uuid,
+                            label: t('operations:purchasing.branchOption', {
+                              branch: branch.name,
+                            }),
+                          },
+                        ]),
+                  ],
+                }}
+              />
+              <p className='text-xs text-muted-foreground'>
+                {t('operations:purchasing.create.originHint')}
+              </p>
+              <FieldInput
+                field={{
+                  name: 'reference',
+                  label: t('operations:purchasing.create.reference'),
+                  maxLength: 64,
+                }}
               />
               <FieldInput
                 field={{
                   name: 'description',
-                  label: 'Description',
+                  label: t('operations:purchasing.create.descriptionField'),
                   maxLength: 250,
                   type: 'textarea',
                 }}
@@ -119,17 +160,18 @@ export function PurchaseOrderForm({
               <FieldInput
                 field={{
                   name: 'supplierReference',
-                  label: 'Supplier reference',
+                  label: t('operations:purchasing.create.supplierReference'),
                   maxLength: 64,
                 }}
               />
               <div className='space-y-2'>
-                <Label htmlFor={targetDateId}>Target date</Label>
+                <Label htmlFor={targetDateId}>
+                  {t('operations:purchasing.create.targetDate')}
+                </Label>
                 <Input id={targetDateId} name='targetDate' type='date' />
               </div>
               <p className='text-sm text-muted-foreground'>
-                The order reference is generated by the server when left blank.
-                Item and extra line prices use the configured system currency.
+                {t('operations:purchasing.create.hint')}
               </p>
             </fieldset>
             {(validationError != null || error != null) && (
@@ -145,10 +187,10 @@ export function PurchaseOrderForm({
               onClick={onClose}
               disabled={pending}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button type='submit' disabled={pending}>
-              Create order
+              {t('operations:purchasing.create.submit')}
             </Button>
           </SheetFooter>
         </form>

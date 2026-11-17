@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { sessionQuery } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { useShellReset } from './use-shell-reset'
 
@@ -48,13 +49,13 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
     return (
       <div className='flex min-h-svh flex-col items-center justify-center gap-4 bg-background p-6 text-center'>
         <div role='alert' className='space-y-2'>
-          <p className='font-medium'>Could not load your account.</p>
+          <p className='font-medium'>{t('common:states.accountLoadFailed')}</p>
           <p className='text-sm text-muted-foreground'>
-            Your session could not be verified.
+            {t('common:states.sessionUnverified')}
           </p>
         </div>
         <Button variant='outline' onClick={() => void sessionRequest.refetch()}>
-          Retry
+          {t('common:actions.retry')}
         </Button>
       </div>
     )

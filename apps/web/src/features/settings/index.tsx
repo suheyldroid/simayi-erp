@@ -1,4 +1,5 @@
 import { Outlet } from '@tanstack/react-router'
+import { t } from '@/lib/i18n'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -9,9 +10,11 @@ import { SettingsNav } from './components/sidebar-nav'
 /**
  * Shared settings frame for personal, platform and organization settings. It
  * owns the one page heading and the categorized inner navigation; route pages
- * render through the outlet, while the organization settings adapter passes its
- * own organization-keyed outlet as children. The outer `_system` shell owns the
- * global sidebar and its provider.
+ * render through the outlet. The navigation derives its organization/company
+ * or branch scope from the verified path, so the same frame serves
+ * `/o/<slug>/settings` and `/o/<slug>/b/<uuid>/settings` without a company
+ * chooser in branch scope. The outer `_system` shell owns the global sidebar
+ * and its provider.
  */
 export function Settings({ children }: { children?: React.ReactNode }) {
   return (
@@ -24,10 +27,10 @@ export function Settings({ children }: { children?: React.ReactNode }) {
       <Main fixed>
         <div className='space-y-0.5'>
           <h1 className='text-2xl font-bold tracking-tight md:text-3xl'>
-            Settings
+            {t('global:settings.frame.title')}
           </h1>
           <p className='text-muted-foreground'>
-            Manage your account, platform access, and organization resources.
+            {t('global:settings.frame.description')}
           </p>
         </div>
         <Separator className='my-4 lg:my-6' />

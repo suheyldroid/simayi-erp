@@ -25,7 +25,7 @@ const dashboardMonthSchema = z.object({
   purchases: count,
 })
 
-/** Active stock item at or below its minimum stock inside a member organization. */
+/** Critical branch stock position: one active item in one active branch. */
 const criticalStockItemSchema = z.object({
   uuid: resourceUuid,
   name: z.string(),
@@ -35,6 +35,8 @@ const criticalStockItemSchema = z.object({
   units: z.string().nullable(),
   organizationName: z.string(),
   organizationSlug: z.string(),
+  branchUuid: resourceUuid,
+  branchName: z.string(),
 })
 
 /**

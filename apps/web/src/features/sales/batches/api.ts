@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { errorMessage } from '@/lib/api-error'
-import { api } from '@/lib/auth'
+import { api, branchApi } from '@/lib/auth'
 import {
   SalesBatchesPageModel,
   type BatchDetail,
@@ -60,60 +60,107 @@ function downloadName(header: string | undefined, fallback: string) {
   return plain ?? fallback
 }
 
+/**
+ * A sales batch is fixed to one branch from upload onward. Lists can run in
+ * Company context, where the backend aggregates every branch of the verified
+ * organization; every other call carries the explicit owning branch so
+ * previews, mappings and stock never mix branches.
+ */
 export const salesBatchesApi = {
-  async list(input: { page: number; search: string }) {
+  async list(input: {
+    branchUuid: string | null
+    page: number
+    search: string
+  }) {
+    const params = {
+      limit: 20,
+      offset: input.page * 20,
+      search: input.search || undefined,
+    }
     return SalesBatchesPageModel.list.parse(
       (
-        await api.get<unknown>('/sales/batches/', {
-          params: {
-            limit: 20,
-            offset: input.page * 20,
-            search: input.search || undefined,
-          },
-        })
+        await (input.branchUuid === null
+          ? api.get<unknown>('/sales/batches/', { params })
+          : branchApi.get<unknown>('/sales/batches/', {
+              branchUuid: input.branchUuid,
+              params,
+            }))
       ).data
     )
   },
-  async get(uuid: string): Promise<BatchDetail> {
+  async get(branchUuid: string | null, uuid: string): Promise<BatchDetail> {
     return SalesBatchesPageModel.detail.parse(
-      (await api.get<unknown>(`/sales/batches/${uuid}`)).data
+      (
+        await (branchUuid === null
+          ? api.get<unknown>(`/sales/batches/${uuid}`)
+          : branchApi.get<unknown>(`/sales/batches/${uuid}`, { branchUuid }))
+      ).data
     )
   },
-  async preview(uuid: string, sheet?: string): Promise<BatchPreview> {
+  async preview(
+    branchUuid: string,
+    uuid: string,
+    sheet?: string
+  ): Promise<BatchPreview> {
     return SalesBatchesPageModel.preview.parse(
       (
-        await api.get<unknown>(`/sales/batches/${uuid}/preview`, {
+        await branchApi.get<unknown>(`/sales/batches/${uuid}/preview`, {
+          branchUuid,
           params: sheet === undefined ? undefined : { sheet },
         })
       ).data
     )
   },
-  async upload(file: File): Promise<BatchDetail> {
+  async upload(branchUuid: string, file: File): Promise<BatchDetail> {
     const body = new FormData()
     body.append('file', file)
     return SalesBatchesPageModel.detail.parse(
-      (await api.post<unknown>('/sales/batches/', body)).data
+      (await branchApi.post<unknown>('/sales/batches/', body, { branchUuid }))
+        .data
     )
   },
-  async update(uuid: string, body: BatchPatch): Promise<BatchDetail> {
+  async update(
+    branchUuid: string,
+    uuid: string,
+    body: BatchPatch
+  ): Promise<BatchDetail> {
     return SalesBatchesPageModel.detail.parse(
-      (await api.patch<unknown>(`/sales/batches/${uuid}`, body)).data
+      (
+        await branchApi.patch<unknown>(`/sales/batches/${uuid}`, body, {
+          branchUuid,
+        })
+      ).data
     )
   },
-  async process(uuid: string): Promise<BatchDetail> {
+  async process(branchUuid: string, uuid: string): Promise<BatchDetail> {
     return SalesBatchesPageModel.detail.parse(
-      (await api.post<unknown>(`/sales/batches/${uuid}/process`)).data
+      (
+        await branchApi.post<unknown>(`/sales/batches/${uuid}/process`, null, {
+          branchUuid,
+        })
+      ).data
     )
   },
-  async destroy(uuid: string) {
-    return (await api.delete<unknown>(`/sales/batches/${uuid}`)).data as {
-      success: true
-    }
+  async destroy(branchUuid: string, uuid: string) {
+    return (
+      await branchApi.delete<unknown>(`/sales/batches/${uuid}`, { branchUuid })
+    ).data as { success: true }
   },
-  async download(uuid: string): Promise<{ blob: Blob; fileName: string }> {
-    const response = await api.get<Blob>(`/sales/batches/${uuid}/file`, {
-      responseType: 'blob',
-    })
+  /**
+   * Workbook download is a read. Company context reads the batch's stored file
+   * through the company client (no branch header), like the batch list/detail;
+   * a branch path downloads through its own captured branch.
+   */
+  async download(
+    branchUuid: string | null,
+    uuid: string
+  ): Promise<{ blob: Blob; fileName: string }> {
+    const response = await (branchUuid === null
+      ? api.get<Blob>(`/sales/batches/${uuid}/file`, { responseType: 'blob' })
+      : branchApi.get<Blob>(`/sales/batches/${uuid}/file`, {
+          branchUuid,
+          responseType: 'blob',
+        }))
     return {
       blob: response.data,
       fileName: downloadName(

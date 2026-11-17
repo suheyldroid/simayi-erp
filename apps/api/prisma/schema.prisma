@@ -1,0 +1,1502 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+}
+
+generator typebox {
+  provider                    = "prismabox"
+  output                      = "./generated/typebox"
+  typeboxImportDependencyName = "elysia"
+  typeboxImportVariableName   = "t"
+  useJsonTypes                = true
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String        @id
+  name          String
+  email         String
+  emailVerified Boolean       @default(false)
+  isActive      Boolean       @default(true)
+  isStaff       Boolean       @default(false)
+  isSuperuser   Boolean       @default(false)
+  role          String?
+  banned        Boolean?      @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  image         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  profiles      UserProfile[]
+  owners        Owner[]
+  members            Member[]
+  invitations        Invitation[]
+  teamMembers        TeamMember[]
+  createdParts       Part[]      @relation("PartCreationUser")
+  itemTracking       ItemTracking[]
+  notesUpdated       Note[]                 @relation("NoteUpdatedBy")
+  noteImages         NotesImage[]
+  attachments        Attachment[]           @relation("AttachmentUploadUser")
+  mediaFiles         MediaFile[]            @relation("MediaFileUploader")
+  notificationMessages NotificationMessage[]
+  webhookEndpoints   WebhookEndpoint[]
+  dashboards          Dashboard[]
+  createdPurchaseOrders  PurchaseOrder[] @relation("PurchaseOrderCreatedBy")
+  receivedPurchaseOrders PurchaseOrder[] @relation("PurchaseOrderReceivedBy")
+  createdBuilds          Build[]         @relation("BuildCreatedBy")
+  buildConsumptions      BuildConsumption[] @relation("BuildConsumptionCreatedBy")
+  createdSalesBatches    SalesBatch[]    @relation("SalesBatchCreatedBy")
+  moneyMovements         MoneyMovement[] @relation("MoneyMovementCreatedBy")
+  supplierLedgerEntries  SupplierLedgerEntry[] @relation("SupplierLedgerEntryCreatedBy")
+  purchaseReceipts       PurchaseReceipt[] @relation("PurchaseReceiptCreatedBy")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id             String   @id
+  expiresAt      DateTime
+  token          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  impersonatedBy        String?
+  activeOrganizationId String?
+  activeTeamId         String?
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeOrganization   Organization? @relation(fields: [activeOrganizationId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  activeTeam           Team?         @relation(fields: [activeTeamId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([token])
+  @@index([userId])
+  @@index([activeOrganizationId])
+  @@index([activeTeamId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Organization {
+  id        String   @id
+  name      String
+  slug      String   @unique
+  logo      String?
+  metadata  String?  @db.Text
+  createdAt DateTime @default(now())
+  members                        Member[]
+  invitations                    Invitation[]
+  teams                          Team[]
+  sessions                       Session[]
+  owners                         Owner[]
+  profiles                       UserProfile[]
+  suppliers                      Supplier[]
+  partCategories                 PartCategory[]
+  parts                          Part[]
+  recipes                        Recipe[]
+  recipeLines                    RecipeLine[]
+  itemTracking                   ItemTracking[]
+  purchaseOrders                 PurchaseOrder[]
+  purchaseOrderLines             PurchaseOrderLineItem[]
+  purchaseOrderExtras            PurchaseOrderExtraLine[]
+  builds                         Build[]
+  buildComponents                BuildComponent[]
+  buildConsumptions              BuildConsumption[]
+  salesChannels                  SalesChannel[]
+  salesChannelMappings           SalesChannelMapping[]
+  salesBatches                   SalesBatch[]
+  salesBatchChannels             SalesBatchChannel[]
+  salesProductMappings           SalesProductMapping[]
+  tags                           Tag[]
+  taggedItems                    TaggedItem[]
+  selectionLists                 SelectionList[]
+  selectionListEntries           SelectionListEntry[]
+  notes                          Note[]
+  notesImages                    NotesImage[]
+  attachments                    Attachment[]
+  mediaFiles                     MediaFile[]
+  notificationEntries            NotificationEntry[]
+  notificationMessages           NotificationMessage[]
+  webhookEndpoints               WebhookEndpoint[]
+  webhookMessages                WebhookMessage[]
+  dashboards                     Dashboard[]
+  finance                        OrganizationFinance?
+  moneyMovements                 MoneyMovement[]
+  supplierLedgerEntries          SupplierLedgerEntry[]
+  posDevices                     PosDevice[]
+  posDeviceZReports              PosDeviceZReport[]
+  branches                       Branch[]
+  branchStocks                   BranchStock[]
+  branchRecipes                  BranchRecipe[]
+  purchaseReceipts               PurchaseReceipt[]
+
+  @@map("organization")
+}
+
+/// One physical operating location inside one company (organization). The
+/// company always comes from the verified session; a branch never crosses the
+/// company boundary. Branches are deactivated instead of deleted so stock,
+/// sales, receipts and POS history keep their destination identity.
+model Branch {
+  id             Int              @id @default(autoincrement())
+  uuid           String           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String           @map("organization_id")
+  name           String           @db.VarChar(100)
+  description    String           @default("") @db.VarChar(250)
+  active         Boolean          @default(true)
+  version        Int              @default(0)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  stocks                BranchStock[]
+  itemTracking          ItemTracking[]
+  recipes               Recipe[]
+  branchRecipes         BranchRecipe[]
+  purchaseOrders        PurchaseOrder[]
+  purchaseReceipts      PurchaseReceipt[]
+  builds                Build[]
+  salesBatches          SalesBatch[]
+  salesProductMappings  SalesProductMapping[]
+  posDevices            PosDevice[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, name])
+  @@index([organizationId, active, id])
+  @@map("branch")
+}
+
+/// Exact item balance held by one branch. Part stays the shared company item
+/// catalog; this row is the independent branch balance and its own optimistic
+/// concurrency version. A missing row means an exact zero balance and is never
+/// created by a read.
+model BranchStock {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  branchId       Int          @map("branch_id")
+  itemId         Int          @map("item_id")
+  stock          Decimal      @default(0) @db.Decimal(20, 5)
+  minimumStock   Decimal      @default(0) @db.Decimal(19, 6) @map("minimum_stock")
+  version        Int          @default(0)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch         Branch       @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  item           Part         @relation(fields: [organizationId, itemId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([branchId, itemId])
+  @@index([organizationId, itemId])
+  @@map("branch_stock")
+}
+
+/// Local activation of one company recipe in one branch. The company root
+/// stays globally gated by Recipe.active; this row only says whether the
+/// branch offers it. Branch-specific content lives in a branch-local Recipe
+/// that pins its company source.
+model BranchRecipe {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  branchId       Int          @map("branch_id")
+  recipeId       Int          @map("recipe_id")
+  active         Boolean      @default(false)
+  version        Int          @default(0)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch         Branch       @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  recipe         Recipe       @relation(fields: [organizationId, recipeId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, branchId, recipeId])
+  @@index([recipeId])
+  @@index([branchId, active, id])
+  @@map("branch_recipe")
+}
+
+model Member {
+  id             String       @id
+  organizationId String
+  userId         String
+  role           String       @default("member")
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Invitation {
+  id             String       @id
+  organizationId String
+  email          String
+  role           String?
+  status         String       @default("pending")
+  teamId         String?
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  inviterId      String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  team           Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  inviter        User         @relation(fields: [inviterId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([teamId])
+  @@index([inviterId])
+  @@map("invitation")
+}
+
+model Team {
+  id              String              @id
+  name            String
+  memberCount     Int                 @default(0)
+  organizationId  String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime?           @updatedAt
+  organization    Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  members         TeamMember[]
+  invitations     Invitation[]
+  sessions        Session[]
+  owners          Owner[]
+  primaryProfiles UserProfile[]
+
+  @@unique([organizationId, id])
+  @@map("team")
+}
+
+model TeamMember {
+  id            String    @id
+  teamId        String
+  userId        String
+  membershipKey String?   @unique
+  createdAt     DateTime? @default(now())
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([teamId, userId])
+  @@index([userId])
+  @@map("team_member")
+}
+
+model Owner {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  userId         String?      @map("user_id")
+  teamId         String?      @map("team_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  team           Team?        @relation(fields: [organizationId, teamId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  purchaseOrders    PurchaseOrder[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, userId])
+  @@unique([organizationId, teamId])
+  @@index([userId])
+  @@index([teamId])
+  @@map("owner")
+}
+
+/// Global read-only content-type registry. Not organization business data.
+model ModelType {
+  id       Int            @id @default(autoincrement())
+  uuid     String         @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  appLabel String         @map("app_label") @db.VarChar(100)
+  model    String         @db.VarChar(100)
+  taggedItems           TaggedItem[]
+  notes                 Note[]
+  notificationTargets   NotificationMessage[] @relation("NotificationTargetType")
+  notificationSources   NotificationMessage[] @relation("NotificationSourceType")
+
+  @@unique([appLabel, model])
+  @@map("model_type")
+}
+
+model UserProfile {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  userId         String       @map("user_id")
+  language       String?      @db.VarChar(10)
+  theme          Json?        @db.JsonB
+  widgets        Json?        @db.JsonB
+  displayname    String?      @db.VarChar(255)
+  position       String?      @db.VarChar(255)
+  status         String?      @db.VarChar(2000)
+  location       String?      @db.VarChar(2000)
+  active         Boolean      @default(true)
+  contact        String?      @db.VarChar(255)
+  type           String       @default("internal") @db.VarChar(10)
+  organisation   String?      @db.VarChar(255)
+  primaryTeamId  String?      @map("primary_team_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryTeam    Team?        @relation(fields: [primaryTeamId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, userId])
+  @@index([primaryTeamId])
+  @@map("user_profile")
+}
+
+/// One saved personal dashboard layout per account and context. A null
+/// organizationId is the account's global dashboard; a non-null value is that
+/// account's personal dashboard inside that organization. `definition` is
+/// strict JSON validated by the API, `schemaVersion` versions the JSON shape,
+/// and `revision` is the optimistic-concurrency counter. The database enforces
+/// one global row per user with a partial unique index because PostgreSQL
+/// treats NULL values as distinct in the nullable compound unique.
+model Dashboard {
+  id             Int           @id @default(autoincrement())
+  uuid           String        @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String        @map("user_id")
+  organizationId String?       @map("organization_id")
+  schemaVersion  Int           @default(3) @map("schema_version")
+  revision       Int           @default(1)
+  definition     Json          @db.JsonB
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@map("dashboard")
+}
+
+model Supplier {
+  id                    Int          @id @default(autoincrement())
+  uuid                  String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId        String       @map("organization_id")
+  image                 String?      @db.VarChar(100)
+  name                  String       @db.VarChar(100)
+  description           String       @default("") @db.VarChar(500)
+  phone                 String       @default("") @db.VarChar(50)
+  contact               String       @default("") @db.VarChar(100)
+  contactPhone          String       @default("") @db.VarChar(100) @map("contact_phone")
+  contactRole           String       @default("") @db.VarChar(100) @map("contact_role")
+  active                Boolean      @default(true)
+  taxId                 String       @default("") @db.VarChar(50) @map("tax_id")
+  line1                 String       @default("") @db.VarChar(50)
+  line2                 String       @default("") @db.VarChar(50)
+  postalCode            String       @default("") @db.VarChar(10) @map("postal_code")
+  postalCity            String       @default("") @db.VarChar(50) @map("postal_city")
+  province              String       @default("") @db.VarChar(50)
+  country               String       @default("") @db.VarChar(50)
+  shippingNotes         String       @default("") @db.VarChar(100) @map("shipping_notes")
+  internalShippingNotes String       @default("") @db.VarChar(100) @map("internal_shipping_notes")
+  addressLink           String       @default("") @db.VarChar(2000) @map("address_link")
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  purchaseOrders        PurchaseOrder[]
+  ledgerEntries         SupplierLedgerEntry[]
+  moneyMovements        MoneyMovement[]
+
+  @@unique([organizationId, id])
+  @@map("supplier")
+}
+
+model PartCategory {
+  id                Int                              @id @default(autoincrement())
+  uuid              String                           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String                           @map("organization_id")
+  name              String                           @db.VarChar(100)
+  description       String                           @default("") @db.VarChar(250)
+  parentId          Int?                             @map("parent_id")
+  pathstring        String                           @default("") @db.VarChar(250)
+  structural        Boolean                          @default(false)
+  defaultKeywords   String?                          @db.VarChar(250) @map("default_keywords")
+  icon              String?                          @db.VarChar(100)
+  organization      Organization                     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  parent            PartCategory?                    @relation("PartCategoryParent", fields: [organizationId, parentId], references: [organizationId, id], onDelete: NoAction, onUpdate: NoAction)
+  children          PartCategory[]                   @relation("PartCategoryParent")
+  parts             Part[]
+
+  @@unique([organizationId, id])
+  @@index([parentId])
+  @@map("part_category")
+}
+
+/// Global measurement unit catalog shared by every organization. `code` is the
+/// short label an item stores, so it is globally unique and immutable once any
+/// item references the unit; historical snapshots keep their own copy.
+/// `divisible` records whether the measurement splits into fractions (kg) or
+/// only whole pieces (adet); it is descriptive metadata and does not validate
+/// any quantity.
+model Unit {
+  id        Int     @id @default(autoincrement())
+  uuid      String  @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String  @db.VarChar(100)
+  code      String  @unique @db.VarChar(20)
+  active    Boolean @default(true)
+  divisible Boolean @default(true)
+  version   Int     @default(0)
+  parts     Part[]
+
+  @@index([active, id])
+  @@map("unit")
+}
+
+/// One application-owned global preference row. `key` is a stable singleton
+/// discriminator fixed to `system` by a database check, so at most one row can
+/// exist and a missing row means every preference is unset.
+model SystemPreference {
+  id                  Int     @id @default(autoincrement())
+  uuid                String  @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key                 String  @unique @default("system") @db.VarChar(16)
+  defaultCurrencyCode String? @db.VarChar(3) @map("default_currency_code")
+
+  @@map("system_preference")
+}
+
+/// A physical material: one same-organization item row with a category, a
+/// global catalog unit, minimum stock warning threshold, image and catalog
+/// version. Quantities are never stored here: every branch holds its own exact
+/// balance in BranchStock, and every balance change is recorded in
+/// ItemTracking.
+model Part {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  name           String       @db.VarChar(100)
+  description    String       @default("") @db.VarChar(250)
+  categoryId     Int?         @map("category_id")
+  unitId         Int?         @map("unit_id")
+  image          String?      @db.VarChar(100)
+  ipn            String?      @db.VarChar(100)
+  defaultExpiry  Int          @default(0) @map("default_expiry")
+  active         Boolean      @default(true)
+  creationDate   DateTime?    @default(now()) @db.Date @map("creation_date")
+  creationUserId String?      @map("creation_user_id")
+  version        Int          @default(0)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  category       PartCategory? @relation(fields: [organizationId, categoryId], references: [organizationId, id], onDelete: NoAction, onUpdate: NoAction)
+  unit           Unit?         @relation(fields: [unitId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  creationUser   User?         @relation("PartCreationUser", fields: [creationUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  tracking           ItemTracking[]
+  stockConsumptions  BuildConsumption[]
+  purchaseLines      PurchaseOrderLineItem[]
+  recipeLines        RecipeLine[]
+  buildComponents    BuildComponent[]         @relation("BuildComponentItem")
+  branchStocks       BranchStock[]
+  purchaseReceipts   PurchaseReceipt[]
+
+  @@unique([organizationId, id])
+  @@index([categoryId, active, id])
+  @@index([unitId])
+  @@index([ipn])
+  @@index([creationUserId])
+  @@map("part")
+}
+
+/// Independent restaurant recipe. Each line is a mandatory ingredient amount
+/// for one sold unit; no assembly, BOM checksum, validation, inheritance, or
+/// optional modifier is involved. `branchId` null is a company template; a
+/// non-null branch makes the row a branch-local definition, which either stands
+/// alone (sourceRecipeId null) or is a full customization of one company root
+/// pinned at the source version it was copied from.
+model Recipe {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  branchId       Int?         @map("branch_id")
+  sourceRecipeId Int?         @map("source_recipe_id")
+  /// Company source version copied into this customization. Set exactly when
+  /// sourceRecipeId is set; a reset deletes the customized row explicitly.
+  sourceVersion  Int?         @map("source_version")
+  name           String       @db.VarChar(100)
+  /// Exact external product code (for example a POS product code) shared with
+  /// sales spreadsheets. Trimmed, nullable, and never parsed as a number, so
+  /// leading zeros stay significant. Duplicates are allowed as metadata; a
+  /// batch import refuses an ambiguous active match instead of choosing one.
+  code           String?      @db.VarChar(100)
+  description    String       @default("") @db.VarChar(250)
+  active         Boolean      @default(true)
+  /// Marks a recipe that can be sold directly. Independent of `active` and of
+  /// a branch activation: a shared recipe can be active and still not sold.
+  /// A sellable recipe always carries a selling price and its currency; nested
+  /// ingredient recipes never have to be sellable or priced.
+  sellable       Boolean      @default(false)
+  /// Nullable selling price per one sold unit in the organization's finance
+  /// currency. Null means the recipe is unpriced; it is never treated as zero.
+  sellingPrice   Decimal?     @db.Decimal(19, 6) @map("selling_price")
+  /// Currency snapshot of `sellingPrice`, captured from the organization
+  /// finance currency. Null while unpriced.
+  priceCurrencyCode String?   @db.VarChar(3) @map("price_currency_code")
+  version        Int          @default(0)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime     @updatedAt @db.Timestamptz(6) @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch         Branch?      @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  sourceRecipe   Recipe?      @relation("RecipeCustomization", fields: [organizationId, sourceRecipeId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  customizations Recipe[]     @relation("RecipeCustomization")
+  ingredients    RecipeLine[]
+  childIngredients RecipeLine[] @relation("RecipeChildLines")
+  builds         Build[]
+  salesProductMappings SalesProductMapping[]
+  branchRecipes  BranchRecipe[]
+
+  @@unique([organizationId, id])
+  @@unique([branchId, sourceRecipeId])
+  @@index([organizationId, name])
+  @@index([organizationId, code])
+  @@index([organizationId, active, id])
+  @@index([branchId, id])
+  @@index([sourceRecipeId])
+  @@map("recipe")
+}
+
+/// One ingredient of a recipe: exactly one same-organization active reference,
+/// either an actual stockable item or another recipe, plus the exact quantity
+/// consumed per one unit of the owning recipe. A recipe reference is expanded
+/// recursively into its leaf items when the graph is sold.
+model RecipeLine {
+  id              Int              @id @default(autoincrement())
+  uuid            String           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String           @map("organization_id")
+  recipeId        Int              @map("recipe_id")
+  itemId          Int?             @map("item_id")
+  childRecipeId   Int?             @map("child_recipe_id")
+  quantity        Decimal          @db.Decimal(15, 5)
+  note            String           @default("") @db.VarChar(500)
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  recipe          Recipe           @relation(fields: [organizationId, recipeId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+  item            Part?            @relation(fields: [organizationId, itemId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  childRecipe     Recipe?          @relation("RecipeChildLines", fields: [organizationId, childRecipeId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  buildComponents BuildComponent[] @relation("BuildComponentRecipeLine")
+
+  @@unique([organizationId, id])
+  @@unique([recipeId, itemId])
+  @@unique([recipeId, childRecipeId])
+  @@index([organizationId, recipeId, id])
+  @@index([itemId])
+  @@index([childRecipeId])
+  @@map("recipe_line")
+}
+
+/// One recorded change to one branch's item balance. The immutable event stays
+/// after the item is deleted because itemId is nullable; branchId always names
+/// the affected branch. Public tracking types: 1 created (legacy item-creation
+/// baselines only, no longer written), 5 edited, 10 count, 11 add, 12 remove
+/// (sales), 70 purchase receipt, 71 purchase receipt reversal, 90 migration
+/// baseline. quantityBefore/quantityAfter are the recorded branch balances at
+/// that moment; historic lot events migrated from the legacy stock items keep
+/// both as NULL because per-lot values never described the aggregate balance.
+model ItemTracking {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  branchId       Int          @map("branch_id")
+  itemId         Int?         @map("item_id")
+  trackingType   Int          @map("tracking_type")
+  date           DateTime     @default(now()) @db.Timestamptz(6)
+  notes          String?      @db.VarChar(512)
+  userId         String?      @map("user_id")
+  deltas         Json?        @db.JsonB
+  quantityBefore Decimal?     @db.Decimal(20, 5) @map("quantity_before")
+  quantityAfter  Decimal?     @db.Decimal(20, 5) @map("quantity_after")
+  /// Unit code snapshot at write time; legacy rows stay NULL (unknown).
+  unitCode       String?      @db.VarChar(20) @map("unit_code")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch         Branch       @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  item           Part?        @relation(fields: [itemId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([organizationId, itemId, date])
+  @@index([organizationId, branchId, itemId, date])
+  @@map("item_tracking")
+}
+
+model PurchaseOrder {
+  id                Int       @id @default(autoincrement())
+  uuid              String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String    @map("organization_id")
+  referenceInt      BigInt    @default(0) @map("reference_int")
+  barcodeData       String    @default("") @db.VarChar(500) @map("barcode_data")
+  barcodeHash       String    @default("") @db.VarChar(128) @map("barcode_hash")
+  description       String    @default("") @db.VarChar(250)
+  link              String    @default("") @db.VarChar(2000)
+  startDate         DateTime? @db.Date @map("start_date")
+  targetDate        DateTime? @db.Date @map("target_date")
+  creationDate      DateTime? @db.Date @map("creation_date")
+  createdById       String?   @map("created_by_id")
+  issueDate         DateTime? @db.Date @map("issue_date")
+  updatedAt         DateTime? @db.Timestamptz(6) @map("updated_at")
+  responsibleId     Int?      @map("responsible_id")
+  totalPrice        Decimal?  @db.Decimal(19, 6) @map("total_price")
+  reference         String    @db.VarChar(64)
+  status            Int       @default(10)
+  supplierId        Int?      @map("supplier_id")
+  supplierReference String    @default("") @db.VarChar(64) @map("supplier_reference")
+  receivedById      String?   @map("received_by_id")
+  completeDate      DateTime? @db.Date @map("complete_date")
+  version           Int       @default(0)
+  /// Null is a company-origin order; a non-null value is the branch that
+  /// raised the order. It is never the delivery destination: receipts record
+  /// the destination branch per line.
+  branchId          Int?      @map("branch_id")
+  organization      Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch            Branch?         @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  createdBy         User?           @relation("PurchaseOrderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  responsible       Owner?          @relation(fields: [organizationId, responsibleId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  supplier          Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  receivedBy        User?           @relation("PurchaseOrderReceivedBy", fields: [receivedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  lines             PurchaseOrderLineItem[]
+  extraLines        PurchaseOrderExtraLine[]
+  receipts          PurchaseReceipt[]
+  supplierLedgerEntries SupplierLedgerEntry[]
+  moneyMovements    MoneyMovement[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, reference])
+  @@index([supplierId, status])
+  @@index([status, targetDate])
+  @@index([createdById])
+  @@index([responsibleId])
+  @@index([receivedById])
+  @@index([organizationId, branchId, status])
+  @@map("purchase_order")
+}
+
+model PurchaseOrderLineItem {
+  id                    Int       @id @default(autoincrement())
+  uuid                  String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId        String    @map("organization_id")
+  quantity              Decimal   @default(1) @db.Decimal(15, 5)
+  discount              Decimal   @default(0) @db.Decimal(5, 2)
+  line                  String    @default("") @db.VarChar(20)
+  lineInt               Int       @default(0) @map("line_int")
+  reference             String    @default("") @db.VarChar(100)
+  notes                 String    @default("") @db.VarChar(500)
+  link                  String    @default("") @db.VarChar(2000)
+  targetDate            DateTime? @db.Date @map("target_date")
+  orderId               Int       @map("order_id")
+  itemId                Int?      @map("item_id")
+  received              Decimal   @default(0) @db.Decimal(15, 5)
+  purchasePrice         Decimal?  @db.Decimal(19, 6) @map("purchase_price")
+  packQuantityNative    Decimal?  @default(1) @db.Decimal(20, 10) @map("pack_quantity_native")
+  /// Unit code snapshot at line creation; legacy rows stay NULL (unknown).
+  unitCode              String?   @db.VarChar(20) @map("unit_code")
+  /// ISO 4217 snapshot of `purchasePrice`, taken from the fixed system
+  /// currency when the line is written. Legacy rows keep the code copied from
+  /// the old order header, including a retired code; a header with no code
+  /// copies NULL (unknown). Stored values are never relabelled.
+  currencyCode          String?   @db.VarChar(3) @map("currency_code")
+  organization          Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  order                 PurchaseOrder  @relation(fields: [organizationId, orderId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+  item                  Part?          @relation(fields: [itemId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  receipts              PurchaseReceipt[]
+
+  @@unique([organizationId, id])
+  @@index([itemId])
+  @@index([orderId])
+  @@map("purchase_order_line_item")
+}
+
+model PurchaseOrderExtraLine {
+  id             Int       @id @default(autoincrement())
+  uuid           String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id")
+  quantity       Decimal   @default(1) @db.Decimal(15, 5)
+  discount       Decimal   @default(0) @db.Decimal(5, 2)
+  line           String    @default("") @db.VarChar(20)
+  lineInt        Int       @default(0) @map("line_int")
+  reference      String    @default("") @db.VarChar(100)
+  notes          String    @default("") @db.VarChar(500)
+  link           String    @default("") @db.VarChar(2000)
+  targetDate     DateTime? @db.Date @map("target_date")
+  description    String    @default("") @db.VarChar(250)
+  context        Json?     @db.JsonB
+  price          Decimal?  @db.Decimal(19, 6)
+  /// ISO 4217 snapshot of `price`, taken from the fixed system currency when
+  /// the extra line is written. Legacy rows keep the code copied from the old
+  /// order header, including a retired code; a header with no code copies NULL
+  /// (unknown). Stored values are never relabelled.
+  currencyCode   String?   @db.VarChar(3) @map("currency_code")
+  orderId        Int       @map("order_id")
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  order          PurchaseOrder @relation(fields: [organizationId, orderId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@index([orderId])
+  @@map("purchase_order_extra_line")
+}
+
+/// One immutable delivery event: an exact purchase line quantity received into
+/// one branch. `quantity` is in order units and `stockQuantity` in the branch
+/// stock unit. Corrections insert one compensating negative row through
+/// `reversalOfId`; the original row is preserved and rows are never updated or
+/// deleted. Historic aggregate receipts were migrated as `legacyBaseline` rows
+/// with unknown per-event stock quantity, price, actor and time, because only
+/// the line's aggregate received quantity survived.
+model PurchaseReceipt {
+  id                 Int       @id @default(autoincrement())
+  uuid               String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId     String    @map("organization_id")
+  orderId            Int       @map("order_id")
+  lineId             Int       @map("line_id")
+  branchId           Int       @map("branch_id")
+  itemId             Int?      @map("item_id")
+  /// Immutable item identity snapshot; survives item deletion.
+  itemUuid           String?   @db.Uuid @map("item_uuid")
+  quantity           Decimal   @db.Decimal(15, 5)
+  /// Branch stock quantity the event added. Null only on a legacy baseline.
+  stockQuantity      Decimal?  @db.Decimal(20, 5) @map("stock_quantity")
+  unitCode           String?   @db.VarChar(20) @map("unit_code")
+  packQuantityNative Decimal?  @db.Decimal(20, 10) @map("pack_quantity_native")
+  purchasePrice      Decimal?  @db.Decimal(19, 6) @map("purchase_price")
+  /// Line discount percentage snapshot. Required on a real receipt so the net
+  /// acquisition amount stays exact even after the live line changes; null on
+  /// a legacy baseline whose per-event discount is unknown.
+  discount           Decimal?  @db.Decimal(5, 2)
+  currencyCode       String?   @db.VarChar(3) @map("currency_code")
+  notes              String?   @db.VarChar(512)
+  userId             String?   @map("user_id")
+  /// Event time. Null only on a legacy baseline whose time is unknown.
+  occurredAt         DateTime? @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  /// Client replay key, unique per receipt line. Null on legacy baselines.
+  requestKey         String?   @map("request_key") @db.VarChar(100)
+  legacyBaseline     Boolean   @default(false) @map("legacy_baseline")
+  /// Set on the single compensating event that reverses this receipt.
+  reversalOfId       Int?      @unique @map("reversal_of_id")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  order              PurchaseOrder @relation(fields: [organizationId, orderId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  line               PurchaseOrderLineItem @relation(fields: [organizationId, lineId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  branch             Branch        @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  item               Part?         @relation(fields: [itemId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  user               User?         @relation("PurchaseReceiptCreatedBy", fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  reversalOf         PurchaseReceipt? @relation("PurchaseReceiptReversal", fields: [reversalOfId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  reversal           PurchaseReceipt? @relation("PurchaseReceiptReversal")
+
+  @@unique([organizationId, requestKey, lineId])
+  @@index([organizationId, orderId, id])
+  @@index([organizationId, orderId, branchId])
+  @@index([lineId])
+  @@index([itemId])
+  @@index([userId])
+  @@map("purchase_receipt")
+}
+
+/// Recorded sale: freezes the sold recipe snapshot and each ingredient's
+/// deducted aggregate item balance. The immutable itemRef keeps the ingredient
+/// identity after a live item is deleted; the quantity transitions are the
+/// values recorded at the time of the sale.
+model Build {
+  id                 Int       @id @default(autoincrement())
+  uuid               String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId     String    @map("organization_id")
+  branchId           Int       @map("branch_id")
+  reference          String    @db.VarChar(64)
+  referenceInt       BigInt    @default(0) @map("reference_int")
+  requestKey         String    @db.VarChar(100) @map("request_key")
+  requestedRecipeId  Int       @map("requested_recipe_id")
+  requestedRecipeUuid String   @db.Uuid @map("requested_recipe_uuid")
+  recipeId           Int?      @map("recipe_id")
+  recipeName         String    @db.VarChar(100) @map("recipe_name")
+  recipeVersion      Int       @map("recipe_version")
+  /// Immutable UUID of the recipe definition whose graph and price were
+  /// frozen: the company root UUID when uncustomized, or the branch-local
+  /// customization UUID. Null on historical sales recorded before provenance
+  /// existed.
+  recipeDefinitionUuid String? @db.Uuid @map("recipe_definition_uuid")
+  /// Company root version that a branch customization was pinned at. Null when
+  /// the sale used the company template or a branch-local recipe directly.
+  recipeSourceVersion Int?     @map("recipe_source_version")
+  quantity           Int
+  ingredientCount    Int       @map("component_count")
+  /// Immutable money snapshot of the sold recipe price at recording time.
+  /// Null on historical sales whose monetary value is unknown.
+  unitPrice          Decimal?  @map("unit_price") @db.Decimal(19, 6)
+  totalPrice         Decimal?  @map("total_price") @db.Decimal(19, 6)
+  currencyCode       String?   @db.VarChar(3) @map("currency_code")
+  batchId            Int?      @map("batch_id")
+  channelId          Int?      @map("channel_id")
+  businessDate       DateTime? @map("business_date") @db.Date
+  sourceSheet        String?   @map("source_sheet") @db.VarChar(200)
+  sourceRow          Int?      @map("source_row")
+  sourceChannelText  String?   @map("source_channel_text") @db.VarChar(200)
+  sourceProductText  String?   @map("source_product_text") @db.VarChar(200)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
+  createdById        String?   @map("created_by_id")
+  createdByName      String    @db.Text @map("created_by_name")
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch             Branch       @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  recipe             Recipe?      @relation(fields: [recipeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  createdBy          User?        @relation("BuildCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  batch              SalesBatch?  @relation(fields: [organizationId, batchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  channel            SalesChannel? @relation(fields: [organizationId, channelId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  components         BuildComponent[]
+  consumptions       BuildConsumption[]
+  receipts           MoneyMovement[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, reference])
+  @@unique([organizationId, requestKey])
+  @@index([recipeId])
+  @@index([createdById])
+  @@index([batchId])
+  @@index([channelId])
+  @@index([organizationId, businessDate])
+  @@index([organizationId, branchId, id])
+  @@map("build")
+}
+
+/// One ingredient line frozen into a completed sale.
+model BuildComponent {
+  id               Int      @id @default(autoincrement())
+  uuid             String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id")
+  buildId          Int      @map("build_id")
+  recipeLineRef    Int      @map("recipe_line_ref")
+  componentRef     Int      @map("component_ref")
+  recipeLineUuidRef String  @db.Uuid @map("recipe_line_uuid_ref")
+  componentUuidRef String   @db.Uuid @map("component_uuid_ref")
+  recipeLineId     Int?     @map("recipe_line_id")
+  componentId      Int?     @map("component_id")
+  componentName    String   @db.VarChar(100) @map("component_name")
+  componentIpn     String?  @db.VarChar(100) @map("component_ipn")
+  componentUnits   String   @default("") @db.VarChar(20) @map("component_units")
+  recipeQuantity   Decimal  @db.Decimal(15, 5) @map("recipe_quantity")
+  requiredQuantity Decimal  @db.Decimal(15, 5) @map("required_quantity")
+  consumedQuantity Decimal  @db.Decimal(15, 5) @map("consumed_quantity")
+  note             String   @default("") @db.VarChar(500)
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  build            Build    @relation(fields: [organizationId, buildId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+  recipeLine       RecipeLine? @relation("BuildComponentRecipeLine", fields: [recipeLineId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  component        Part?    @relation("BuildComponentItem", fields: [componentId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  consumptions     BuildConsumption[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, buildId, id])
+  @@index([buildId])
+  @@index([recipeLineId])
+  @@index([componentId])
+  @@map("build_component")
+}
+
+/// One ingredient's deducted aggregate item balance. The item link may become
+/// null after deletion; the quantity transition columns keep the historical
+/// fact intact.
+model BuildConsumption {
+  id                Int      @id @default(autoincrement())
+  uuid              String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String   @map("organization_id")
+  buildId           Int      @map("build_id")
+  buildComponentId  Int      @map("build_component_id")
+  itemRef           Int      @map("item_ref")
+  itemUuidRef       String   @db.Uuid @map("item_uuid_ref")
+  itemId            Int?     @map("item_id")
+  quantity          Decimal  @db.Decimal(20, 5)
+  quantityBefore    Decimal  @db.Decimal(20, 5) @map("quantity_before")
+  quantityAfter     Decimal  @db.Decimal(20, 5) @map("quantity_after")
+  createdAt         DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  createdById       String?  @map("created_by_id")
+  createdByName     String   @db.Text @map("created_by_name")
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  build             Build    @relation(fields: [organizationId, buildId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+  buildComponent    BuildComponent @relation(fields: [organizationId, buildComponentId], references: [organizationId, id], onDelete: NoAction, onUpdate: NoAction)
+  item              Part?    @relation(fields: [itemId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  createdBy         User?    @relation("BuildConsumptionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@index([buildId])
+  @@index([buildComponentId])
+  @@index([itemId])
+  @@index([createdById])
+  @@map("build_consumption")
+}
+
+/// Reusable organization sales channel selected manually or resolved from a
+/// batch's explicit source-value mapping. Never deleted while referenced.
+model SalesChannel {
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id")
+  name           String   @db.VarChar(100)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6) @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  batchChannels  SalesBatchChannel[]
+  mappings       SalesChannelMapping[]
+  builds         Build[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, name])
+  @@index([organizationId, active, id])
+  @@map("sales_channel")
+}
+
+/// Reusable organization mapping from an exact source channel cell value to a
+/// channel. It is written only by an explicit draft mapping and is reused for
+/// later uploads; no fuzzy or automatic resolution happens.
+model SalesChannelMapping {
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id")
+  sourceValue    String   @map("source_value") @db.VarChar(200)
+  channelId      Int      @map("channel_id")
+  createdAt      DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6) @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  channel        SalesChannel @relation(fields: [organizationId, channelId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, sourceValue])
+  @@index([channelId])
+  @@map("sales_channel_mapping")
+}
+
+/// One uploaded sales workbook. There is deliberately no content/date/channel
+/// uniqueness: uploading the same file twice creates independent batches.
+model SalesBatch {
+  id                Int       @id @default(autoincrement())
+  uuid              String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String    @map("organization_id")
+  branchId          Int       @map("branch_id")
+  reference         String    @db.VarChar(64)
+  referenceInt      BigInt    @default(0) @map("reference_int")
+  businessDate      DateTime  @map("business_date") @db.Date
+  /// 10 draft, 20 processed.
+  status            Int       @default(10)
+  sourceFileName    String    @map("source_file_name") @db.VarChar(255)
+  sourceFile        String    @map("source_file") @db.VarChar(100)
+  sourceFileSize    Int       @map("source_file_size")
+  sheetNames        String[]  @default([]) @map("sheet_names")
+  sheetName         String?   @map("sheet_name") @db.VarChar(200)
+  headerRow         Int?      @map("header_row")
+  channelColumn     String?   @map("channel_column") @db.VarChar(3)
+  productColumn     String?   @map("product_column") @db.VarChar(3)
+  quantityColumn    String?   @map("quantity_column") @db.VarChar(3)
+  productCodeColumn String?   @map("product_code_column") @db.VarChar(3)
+  excludedRows      Int[]     @default([]) @map("excluded_rows")
+  rowCount          Int       @default(0) @map("row_count")
+  quantityTotal     Int       @default(0) @map("quantity_total")
+  channelCount      Int       @default(0) @map("channel_count")
+  processedAt       DateTime? @map("processed_at") @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6) @map("created_at")
+  createdById       String?   @map("created_by_id")
+  createdByName     String    @db.Text @map("created_by_name")
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch            Branch       @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  createdBy         User?        @relation("SalesBatchCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  channels          SalesBatchChannel[]
+  builds            Build[]
+  zReports          PosDeviceZReport[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, reference])
+  @@index([organizationId, id])
+  @@index([organizationId, branchId, id])
+  @@index([createdById])
+  @@map("sales_batch")
+}
+
+/// Explicit draft mapping from one exact source channel cell value to an
+/// organization channel. No fuzzy or automatic channel creation.
+model SalesBatchChannel {
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id")
+  batchId        Int      @map("batch_id")
+  sourceValue    String   @map("source_value") @db.VarChar(200)
+  /// NULL is a deliberate batch-local "unmapped" override. It stops the
+  /// reusable organization mapping from silently re-resolving this value.
+  channelId      Int?     @map("channel_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  batch          SalesBatch   @relation(fields: [organizationId, batchId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+  channel        SalesChannel? @relation(fields: [organizationId, channelId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, batchId, sourceValue])
+  @@index([batchId])
+  @@index([channelId])
+  @@map("sales_batch_channel")
+}
+
+/// Reusable branch mapping from a source product text to a recipe.
+/// productKey is "text:<value>" for a workbook without a product code column;
+/// no fuzzy name linking happens here. A product code is matched exactly
+/// against the effective `Recipe.code` of the batch branch instead: existing
+/// "code:<value>" rows stay untouched but are ignored, and a new manual code
+/// mapping is rejected.
+model SalesProductMapping {
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id")
+  branchId       Int      @map("branch_id")
+  productKey     String   @map("product_key") @db.VarChar(250)
+  productLabel   String   @map("product_label") @db.VarChar(200)
+  sourceCode     String?  @map("source_code") @db.VarChar(100)
+  sourceText     String?  @map("source_text") @db.VarChar(200)
+  recipeId       Int      @map("recipe_id")
+  createdAt      DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6) @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch         Branch       @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  recipe         Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, branchId, productKey])
+  @@index([recipeId])
+  @@map("sales_product_mapping")
+}
+
+/// One bank POS terminal owned by one branch. This is a card-terminal device
+/// record, not a fiscal receipt printer: no hardware protocol, certificate,
+/// payment or settlement integration exists. Devices are deactivated instead
+/// of deleted so historical Z reports keep their device link, and the owning
+/// branch is fixed once the device has reports.
+model PosDevice {
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id")
+  branchId       Int      @map("branch_id")
+  name           String   @db.VarChar(100)
+  bankName       String   @map("bank_name") @db.VarChar(100)
+  terminalId     String   @map("terminal_id") @db.VarChar(100)
+  active         Boolean  @default(true)
+  version        Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  branch         Branch       @relation(fields: [organizationId, branchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  zReports       PosDeviceZReport[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, active, id])
+  @@index([organizationId, branchId, id])
+  @@map("pos_device")
+}
+
+/// One bank POS end-of-day (Z) report. It is reconciliation evidence only: it
+/// may cover part of exactly one processed sales batch, never links individual
+/// sales, and writes no finance row. `currencyCode` is the creation-time
+/// system currency snapshot and is never rewritten, so an edit keeps it even
+/// after the system default changes.
+model PosDeviceZReport {
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id")
+  posDeviceId    Int      @map("pos_device_id")
+  /// Nullable because an unmatched report is allowed; at most one batch.
+  salesBatchId   Int?     @map("sales_batch_id")
+  reportNumber   String   @map("report_number") @db.VarChar(100)
+  businessDate   DateTime @map("business_date") @db.Date
+  closedAt       DateTime @map("closed_at") @db.Timestamptz(6)
+  totalAmount    Decimal  @map("total_amount") @db.Decimal(19, 6)
+  currencyCode   String   @map("currency_code") @db.VarChar(3)
+  note           String   @db.VarChar(500)
+  version        Int      @default(0)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6) @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  posDevice      PosDevice    @relation(fields: [organizationId, posDeviceId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+  salesBatch     SalesBatch?  @relation(fields: [organizationId, salesBatchId], references: [organizationId, id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, posDeviceId, reportNumber], map: "pos_device_z_report_identity_key")
+  @@index([organizationId, posDeviceId, id])
+  @@index([organizationId, salesBatchId])
+  @@map("pos_device_z_report")
+}
+
+/// Dormant common helper. Organization delete is restricted while rows exist.
+model Tag {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  name           String       @db.VarChar(100)
+  slug           String       @db.VarChar(100)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  items          TaggedItem[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, name], map: "tag_name_key")
+  @@unique([organizationId, slug], map: "tag_slug_key")
+  @@map("tag")
+}
+
+model TaggedItem {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  tagId          Int          @map("tag_id")
+  contentTypeId  Int          @map("content_type_id")
+  objectId       Int          @map("object_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  tag            Tag          @relation(fields: [organizationId, tagId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+  contentType    ModelType    @relation(fields: [contentTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@unique([contentTypeId, objectId, tagId])
+  @@index([tagId])
+  @@index([objectId])
+  @@map("tagged_item")
+}
+
+model SelectionList {
+  id             Int                  @id @default(autoincrement())
+  uuid           String               @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String               @map("organization_id")
+  name           String               @db.VarChar(100)
+  description    String               @default("") @db.VarChar(250)
+  locked         Boolean              @default(false)
+  active         Boolean              @default(true)
+  sourceString   String               @default("") @db.VarChar(1000) @map("source_string")
+  defaultId      Int?                 @map("default_id")
+  created        DateTime             @default(now()) @db.Timestamptz(6)
+  lastUpdated    DateTime             @default(now()) @db.Timestamptz(6) @map("last_updated")
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  defaultEntry   SelectionListEntry?  @relation("SelectionListDefault", fields: [defaultId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  entries        SelectionListEntry[] @relation("SelectionListEntries")
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, name], map: "selection_list_name_key")
+  @@index([defaultId])
+  @@map("selection_list")
+}
+
+model SelectionListEntry {
+  id             Int            @id @default(autoincrement())
+  uuid           String         @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String         @map("organization_id")
+  listId         Int?           @map("list_id")
+  value          String         @db.VarChar(255)
+  label          String         @db.VarChar(255)
+  description    String         @default("") @db.VarChar(250)
+  active         Boolean        @default(true)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  list           SelectionList? @relation("SelectionListEntries", fields: [organizationId, listId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+  defaultFor     SelectionList[] @relation("SelectionListDefault")
+
+  @@unique([organizationId, id])
+  @@unique([listId, value])
+  @@map("selection_list_entry")
+}
+
+model Note {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  updated        DateTime?    @db.Timestamptz(6)
+  updatedById    String?      @map("updated_by_id")
+  template       Boolean      @default(false)
+  modelTypeId    Int?         @map("model_type_id")
+  modelId        Int?         @map("model_id")
+  primary        Boolean      @default(false)
+  title          String       @db.VarChar(100)
+  description    String       @default("") @db.VarChar(250)
+  content        String       @default("") @db.Text
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  updatedBy      User?        @relation("NoteUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  modelType      ModelType?   @relation(fields: [modelTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  images         NotesImage[]
+
+  @@unique([organizationId, id])
+  @@index([modelTypeId, modelId])
+  @@index([updatedById])
+  @@map("note")
+}
+
+model NotesImage {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  image          String       @db.VarChar(100)
+  userId         String?      @map("user_id")
+  date           DateTime     @default(now()) @db.Timestamptz(6)
+  noteId         Int          @map("note_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  note           Note         @relation(fields: [organizationId, noteId], references: [organizationId, id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@index([userId])
+  @@index([noteId])
+  @@map("notes_image")
+}
+
+model Attachment {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  modelType      String       @map("model_type") @db.VarChar(100)
+  modelId        Int          @map("model_id")
+  attachment     String?      @db.VarChar(100)
+  thumbnail      String?      @db.VarChar(100)
+  link           String?      @db.VarChar(2000)
+  comment        String       @default("") @db.VarChar(250)
+  uploadUserId   String?      @map("upload_user_id")
+  uploadDate     DateTime?    @default(now()) @db.Date @map("upload_date")
+  isImage        Boolean      @default(false) @map("is_image")
+  fileSize       Int          @default(0) @map("file_size")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  uploadUser     User?        @relation("AttachmentUploadUser", fields: [uploadUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@index([modelType, modelId])
+  @@index([uploadUserId])
+  @@map("attachment")
+}
+
+/// One stored binary object. The row is the complete index of what lives on
+/// the private media root: `storageKey` is a server-generated relative path
+/// (`<purpose>/<uuid>.<ext>`), never client text, and the public identity is
+/// the UUID. No bytes, base64, or absolute path are stored here. Lifecycle
+/// status: 10 temporary (uploader-owned, unclaimed, expires), 20 attached
+/// (claimed and bound by the reference; `organizationId` is the owner while it
+/// exists and becomes null when the organization is deleted, which deferred
+/// cleanup then collects), 30 deleting (deferred cleanup claimed it; the row
+/// survives until the file is gone so a failed filesystem delete can be
+/// retried with `deleteAttempts` and `lastDeleteError`).
+model MediaFile {
+  id              Int           @id @default(autoincrement())
+  uuid            String        @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  storageKey      String        @unique @map("storage_key") @db.VarChar(160)
+  originalName    String        @map("original_name") @db.VarChar(255)
+  contentType     String        @map("content_type") @db.VarChar(80)
+  byteSize        Int           @map("byte_size")
+  purpose         String        @db.VarChar(32)
+  status          Int           @default(10)
+  organizationId  String?       @map("organization_id")
+  uploaderId      String?       @map("uploader_id")
+  /// Exact binding written on claim, for example `/media/<uuid>` for the
+  /// organization logo.
+  reference       String?       @db.VarChar(160)
+  expiresAt       DateTime?     @map("expires_at") @db.Timestamptz(6)
+  claimedAt       DateTime?     @map("claimed_at") @db.Timestamptz(6)
+  deleteStartedAt DateTime?     @map("delete_started_at") @db.Timestamptz(6)
+  deleteAttempts  Int           @default(0) @map("delete_attempts")
+  lastDeleteError String?       @map("last_delete_error") @db.VarChar(500)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  uploader        User?         @relation("MediaFileUploader", fields: [uploaderId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([status, expiresAt])
+  @@index([status, deleteStartedAt])
+  @@index([organizationId, status])
+  @@index([uploaderId, status])
+  @@unique([organizationId, purpose, reference])
+  @@map("media_file")
+}
+
+model NotificationEntry {
+  id             Int       @id @default(autoincrement())
+  uuid           String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id")
+  updated        DateTime? @default(now()) @db.Timestamptz(6)
+  key            String    @db.VarChar(250)
+  uid            String    @db.VarChar(255)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, key, uid], map: "notification_entry_key_uid_key")
+  @@map("notification_entry")
+}
+
+model NotificationMessage {
+  id                  Int          @id @default(autoincrement())
+  uuid                String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId      String       @map("organization_id")
+  targetContentTypeId Int          @map("target_content_type_id")
+  targetObjectId      String       @map("target_object_id") @db.VarChar(255)
+  sourceContentTypeId Int?         @map("source_content_type_id")
+  sourceObjectId      String?      @map("source_object_id") @db.VarChar(255)
+  userId              String?      @map("user_id")
+  category            String       @db.VarChar(250)
+  name                String       @db.VarChar(250)
+  message             String?      @db.VarChar(250)
+  link                String?      @db.VarChar(500)
+  creation            DateTime     @default(now()) @db.Timestamptz(6)
+  read                Boolean      @default(false)
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  targetContentType   ModelType    @relation("NotificationTargetType", fields: [targetContentTypeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sourceContentType   ModelType?   @relation("NotificationSourceType", fields: [sourceContentTypeId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  user                User?        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@index([userId, read, creation])
+  @@index([sourceContentTypeId])
+  @@index([targetContentTypeId])
+  @@map("notification_message")
+}
+
+model WebhookEndpoint {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  endpointId     String       @map("endpoint_id") @db.VarChar(255)
+  name           String?      @db.VarChar(255)
+  active         Boolean      @default(true)
+  userId         String?      @map("user_id")
+  token          String?      @db.VarChar(255)
+  secret         String?      @db.VarChar(255)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  messages       WebhookMessage[]
+
+  @@unique([organizationId, id])
+  @@index([userId])
+  @@map("webhook_endpoint")
+}
+
+model WebhookMessage {
+  id             Int              @id @default(autoincrement())
+  uuid           String           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String           @map("organization_id")
+  host           String           @db.VarChar(255)
+  header         String?          @db.VarChar(255)
+  body           Json?            @db.JsonB
+  endpointId     Int?             @map("endpoint_id")
+  workedOn       Boolean          @default(false) @map("worked_on")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  endpoint       WebhookEndpoint? @relation(fields: [endpointId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@index([endpointId, workedOn])
+  @@map("webhook_message")
+}
+
+/// One persistent money configuration per organization. The canonical currency
+/// is captured from the configured system default on the first explicit
+/// financial action and never by a read; a later system-default change never
+/// relabels recorded history.
+model OrganizationFinance {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @unique @map("organization_id")
+  currencyCode   String       @db.VarChar(3) @map("currency_code")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@map("organization_finance")
+}
+
+/// One cash movement in the organization finance currency. A positive amount is
+/// cash inflow and a negative amount is cash outflow; the balance is the exact
+/// sum of posted rows, never a mutable balance field. Kinds: 20 income, 30
+/// expense, 40 supplier payment, 50 sale receipt, 60 purchase, 90 reversal. Only
+/// a purchase row carries a reservation lifecycle: `status` 10 is reserved on
+/// hold, 20 posted and 30 cancelled, and every other kind stays at 20. A
+/// reversal row carries the negated amount, the same source links and a unique
+/// `reversalOfId`, so an original entry is reversed at most once and net sums
+/// stay exact.
+model MoneyMovement {
+  id             Int          @id @default(autoincrement())
+  uuid           String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id")
+  entryKind      Int          @map("entry_kind")
+  status         Int          @default(20)
+  currencyCode   String       @db.VarChar(3) @map("currency_code")
+  amount         Decimal      @db.Decimal(19, 6)
+  occurredAt     DateTime     @map("occurred_at") @db.Date
+  note           String       @default("") @db.VarChar(500)
+  requestKey     String?      @map("request_key") @db.VarChar(100)
+  reversalOfId   Int?         @unique @map("reversal_of_id")
+  buildId        Int?         @map("build_id")
+  supplierId     Int?         @map("supplier_id")
+  /// The single purchase order this row reserves or posts. Unique per
+  /// organization for the purchase kind, so one order has one lifecycle row.
+  purchaseOrderId Int?        @map("purchase_order_id")
+  /// True while the reservation cannot be summed exactly: no priced line yet,
+  /// a missing or unknown price, or a line in another currency.
+  pricingIncomplete Boolean   @default(false) @map("pricing_incomplete")
+  /// Lines of the order that cannot contribute an exact amount to the hold.
+  pricingIssueCount Int       @default(0) @map("pricing_issue_count")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdById    String?      @map("created_by_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  build          Build?       @relation(fields: [buildId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  supplier       Supplier?    @relation(fields: [supplierId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  purchaseOrder  PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  reversalOf     MoneyMovement? @relation("MoneyMovementReversal", fields: [reversalOfId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  reversal       MoneyMovement? @relation("MoneyMovementReversal")
+  supplierEntry  SupplierLedgerEntry?
+  createdBy      User?        @relation("MoneyMovementCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@index([organizationId, occurredAt, id])
+  @@index([organizationId, status])
+  @@index([buildId])
+  @@index([supplierId])
+  @@index([purchaseOrderId])
+  @@map("money_movement")
+}
+
+/// One posted supplier ledger entry in the organization finance currency.
+/// Positive amounts increase what we owe the supplier (debt) and negative
+/// amounts reduce it (credit / advance); the outstanding balance is the exact
+/// sum of posted rows and may stay negative. Kinds: 20 purchase,
+/// 30 payment, 90 reversal.
+model SupplierLedgerEntry {
+  id              Int          @id @default(autoincrement())
+  uuid            String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String       @map("organization_id")
+  supplierId      Int          @map("supplier_id")
+  entryKind       Int          @map("entry_kind")
+  currencyCode    String       @db.VarChar(3) @map("currency_code")
+  amount          Decimal      @db.Decimal(19, 6)
+  occurredAt      DateTime     @map("occurred_at") @db.Date
+  note            String       @default("") @db.VarChar(500)
+  requestKey      String?      @map("request_key") @db.VarChar(100)
+  reversalOfId    Int?         @unique @map("reversal_of_id")
+  purchaseOrderId Int?         @map("purchase_order_id")
+  moneyMovementId Int?         @unique @map("money_movement_id")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdById     String?      @map("created_by_id")
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  supplier        Supplier     @relation(fields: [supplierId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  moneyMovement   MoneyMovement? @relation(fields: [moneyMovementId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  reversalOf      SupplierLedgerEntry? @relation("SupplierLedgerEntryReversal", fields: [reversalOfId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  reversal        SupplierLedgerEntry? @relation("SupplierLedgerEntryReversal")
+  createdBy       User?        @relation("SupplierLedgerEntryCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([organizationId, id])
+  @@index([organizationId, supplierId, occurredAt, id])
+  @@index([purchaseOrderId])
+  @@map("supplier_ledger_entry")
+}

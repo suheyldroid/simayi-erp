@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { useQuery } from '@tanstack/react-query'
 import { XIcon } from 'lucide-react'
+import { locale, t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,13 +21,27 @@ import {
 } from '@/components/ui/popover'
 import { currencyApi, errorMessage } from '../api'
 
+const currencyDisplayNames = new Intl.DisplayNames(locale, {
+  type: 'currency',
+})
+
+/** Localized display name for a code; the API name is the fallback. */
+const currencyName = (currency: { code: string; name: string }) => {
+  const localized = currencyDisplayNames.of(currency.code)
+  // An unknown code comes back unchanged, which is not a display name.
+  return localized === undefined || localized === currency.code
+    ? currency.name
+    : localized
+}
+
 /**
  * Currency picker over the server-owned currency catalog. No currency list is
- * hard-coded here: options, names, and fraction digits come from the API.
+ * hard-coded here: options and fraction digits come from the API; names are
+ * localized for display by code, with the API name as fallback.
  */
 export function CurrencySelect({
   value,
-  label = 'Currency',
+  label = t('catalog:currency.select.label'),
   disabled = false,
   allowClear = true,
   onChange,
@@ -44,12 +59,12 @@ export function CurrencySelect({
     queryKey: ['currency', 'catalog'],
     queryFn: () => currencyApi.currencies(),
   })
-  const query = search.trim().toLowerCase()
+  const query = search.trim().toLocaleLowerCase(locale)
   const items = (catalog.data?.items ?? []).filter(
     (currency) =>
       query === '' ||
       currency.code.toLowerCase().includes(query) ||
-      currency.name.toLowerCase().includes(query)
+      currencyName(currency).toLocaleLowerCase(locale).includes(query)
   )
   const selected =
     catalog.data?.items.find((currency) => currency.code === value) ?? null
@@ -75,7 +90,7 @@ export function CurrencySelect({
               title={
                 selected == null
                   ? undefined
-                  : `${selected.code} · ${selected.name}`
+                  : `${selected.code} · ${currencyName(selected)}`
               }
               className={cn(
                 'relative w-full min-w-0 justify-start ps-3',
@@ -89,8 +104,8 @@ export function CurrencySelect({
                 )}
               >
                 {selected == null
-                  ? (value ?? 'Select currency')
-                  : `${selected.code} · ${selected.name}`}
+                  ? (value ?? t('catalog:currency.select.select'))
+                  : `${selected.code} · ${currencyName(selected)}`}
               </span>
               <span
                 aria-hidden='true'
@@ -109,8 +124,8 @@ export function CurrencySelect({
           >
             <Command shouldFilter={false} loop>
               <CommandInput
-                aria-label='Search currencies'
-                placeholder='Search code or name…'
+                aria-label={t('catalog:currency.select.searchLabel')}
+                placeholder={t('catalog:currency.select.searchPlaceholder')}
                 value={search}
                 onValueChange={setSearch}
                 maxLength={60}
@@ -122,7 +137,7 @@ export function CurrencySelect({
                     role='status'
                     className='p-3 text-sm text-muted-foreground'
                   >
-                    Loading currencies…
+                    {t('catalog:currency.select.loading')}
                   </p>
                 ) : catalog.isError ? (
                   <div
@@ -137,16 +152,18 @@ export function CurrencySelect({
                       disabled={disabled}
                       onClick={() => void catalog.refetch()}
                     >
-                      Retry
+                      {t('catalog:common.retry')}
                     </Button>
                   </div>
                 ) : catalog.data?.items.length === 0 ? (
                   <p className='p-3 text-sm text-muted-foreground'>
-                    The server returned no currencies.
+                    {t('catalog:currency.select.serverEmpty')}
                   </p>
                 ) : (
                   <>
-                    <CommandEmpty>No currencies found.</CommandEmpty>
+                    <CommandEmpty>
+                      {t('catalog:currency.select.empty')}
+                    </CommandEmpty>
                     <CommandGroup>
                       {items.map((currency) => (
                         <CommandItem
@@ -170,7 +187,7 @@ export function CurrencySelect({
                             {currency.code}
                           </span>
                           <span className='min-w-0 flex-1 truncate'>
-                            {currency.name}
+                            {currencyName(currency)}
                           </span>
                         </CommandItem>
                       ))}
@@ -186,7 +203,7 @@ export function CurrencySelect({
             type='button'
             variant='ghost'
             size='icon'
-            aria-label={`Clear ${label.toLowerCase()}`}
+            aria-label={t('catalog:common.clearSelection', { label })}
             disabled={disabled}
             className='absolute end-1 top-1/2 size-7 -translate-y-1/2 rounded-sm text-muted-foreground'
             onClick={(event) => {

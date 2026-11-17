@@ -3,11 +3,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { authClient, sessionQuery } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SheetFooter } from '@/components/ui/sheet'
 import { PasswordInput } from '@/components/password-input'
+import { nativeErrorText } from '../api'
 import type { User } from '../model'
 
 type CredentialsInput = { name: string; email: string; password: string }
@@ -42,7 +44,10 @@ export function UserCredentialsForm({
           })
       if (error) {
         form.setError('root', {
-          message: error.message ?? 'Could not save user.',
+          message: nativeErrorText(
+            error.message,
+            t('global:users.credentials.saveFailed')
+          ),
         })
         return
       }
@@ -50,18 +55,21 @@ export function UserCredentialsForm({
       if (!creating && currentUser?.user.id === target.id) {
         queryClient.clear()
         await navigate({ to: '/sign-in', replace: true })
-        toast.success('Password reset. Sign in with your new password.')
+        toast.success(t('global:users.credentials.passwordResetSignedOut'))
       } else {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['users'] }),
           queryClient.invalidateQueries({ queryKey: ['user-options'] }),
         ])
-        toast.success(creating ? 'User created.' : 'Password reset.')
+        toast.success(
+          creating
+            ? t('global:users.credentials.userCreated')
+            : t('global:users.credentials.passwordReset')
+        )
       }
     } catch {
       form.setError('root', {
-        message:
-          'Could not save. Check the values, email uniqueness, and your connection.',
+        message: t('global:users.credentials.genericSaveFailed'),
       })
     }
   }
@@ -78,7 +86,9 @@ export function UserCredentialsForm({
         {creating && (
           <>
             <div className='space-y-2'>
-              <Label htmlFor='user-name'>Name</Label>
+              <Label htmlFor='user-name'>
+                {t('global:users.credentials.nameLabel')}
+              </Label>
               <Input
                 id='user-name'
                 autoComplete='name'
@@ -89,10 +99,14 @@ export function UserCredentialsForm({
                   validate: (value) => !!value.trim(),
                 })}
               />
-              {form.formState.errors.name && <p role='alert'>Enter a name.</p>}
+              {form.formState.errors.name && (
+                <p role='alert'>{t('global:users.credentials.nameRequired')}</p>
+              )}
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='user-email'>Email</Label>
+              <Label htmlFor='user-email'>
+                {t('global:users.credentials.emailLabel')}
+              </Label>
               <Input
                 id='user-email'
                 type='email'
@@ -106,7 +120,9 @@ export function UserCredentialsForm({
         )}
         <div className='space-y-2'>
           <Label htmlFor='user-password'>
-            {creating ? 'Initial password' : 'New password'}
+            {creating
+              ? t('global:users.credentials.initialPassword')
+              : t('global:users.credentials.newPassword')}
           </Label>
           <PasswordInput
             id='user-password'
@@ -121,8 +137,7 @@ export function UserCredentialsForm({
             })}
           />
           <p className='text-sm text-muted-foreground'>
-            12–128 characters. Share this password with the user through a
-            secure channel.
+            {t('global:users.credentials.passwordHint')}
           </p>
         </div>
         {form.formState.errors.root && (
@@ -133,7 +148,9 @@ export function UserCredentialsForm({
       </fieldset>
       <SheetFooter>
         <Button disabled={form.formState.isSubmitting}>
-          {creating ? 'Create user' : 'Reset password'}
+          {creating
+            ? t('global:users.credentials.createUser')
+            : t('global:users.credentials.resetPassword')}
         </Button>
       </SheetFooter>
     </form>

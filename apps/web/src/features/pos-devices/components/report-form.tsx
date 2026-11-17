@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,18 +38,22 @@ function localParts(value: Date) {
 }
 
 /**
- * Z report form. The linked sales batch is a single optional choice; the
- * device comes from the route and cannot be changed here. No finance entry is
- * written by this form.
+ * Z report form. The linked sales batch is a single optional choice from the
+ * same branch; the device comes from the route and cannot be changed here. No
+ * finance entry is written by this form.
  */
 export function ReportForm({
   report,
+  branchUuid,
+  branchName,
   pending,
   error,
   onClose,
   onSubmit,
 }: {
   report: ZReport | 'new'
+  branchUuid: string
+  branchName: string
   pending: boolean
   error: unknown
   onClose: () => void
@@ -98,7 +103,7 @@ export function ReportForm({
     } else {
       const closed = new Date(closedAt)
       if (Number.isNaN(closed.getTime())) {
-        setValidationError('Enter the local date and time the report closed.')
+        setValidationError(t('operations:zReports.form.invalidClosedAt'))
         return
       }
       closedIso = closed.toISOString()
@@ -113,7 +118,8 @@ export function ReportForm({
     })
     if (!parsed.success) {
       setValidationError(
-        parsed.error.issues[0]?.message ?? 'Check the Z report details.'
+        parsed.error.issues[0]?.message ??
+          t('operations:zReports.form.checkDetails')
       )
       return
     }
@@ -139,19 +145,27 @@ export function ReportForm({
       >
         <SheetHeader>
           <SheetTitle>
-            {creating ? 'Create Z report' : 'Edit Z report'}
+            {creating
+              ? t('operations:zReports.form.createTitle')
+              : t('operations:zReports.form.editTitle')}
           </SheetTitle>
           <SheetDescription>
             {creating
-              ? 'A Z report is the bank POS end-of-day evidence for this device. It records no sale and writes no finance entry.'
-              : 'Attach, detach or reassign one processed sales batch. Linking is evidence only: it may cover only part of the batch and never settles, collects or moves money.'}
+              ? t('operations:zReports.form.createDescription', {
+                  branch: branchName,
+                })
+              : t('operations:zReports.form.editDescription', {
+                  branch: branchName,
+                })}
           </SheetDescription>
         </SheetHeader>
         <form className='flex min-h-0 flex-1 flex-col' onSubmit={submit}>
           <div className='flex-1 space-y-4 overflow-y-auto px-4 pb-4'>
             <fieldset disabled={pending} className='space-y-4'>
               <div className='space-y-2'>
-                <Label htmlFor={numberId}>Report number</Label>
+                <Label htmlFor={numberId}>
+                  {t('operations:zReports.form.reportNumber')}
+                </Label>
                 <Input
                   id={numberId}
                   name='reportNumber'
@@ -159,12 +173,16 @@ export function ReportForm({
                   onChange={(event) => setReportNumber(event.target.value)}
                   maxLength={100}
                   required
-                  placeholder='Report number printed by the terminal'
+                  placeholder={t(
+                    'operations:zReports.form.reportNumberPlaceholder'
+                  )}
                 />
               </div>
               <div className='grid gap-3 sm:grid-cols-2'>
                 <div className='space-y-2'>
-                  <Label htmlFor={businessDateId}>Business date</Label>
+                  <Label htmlFor={businessDateId}>
+                    {t('operations:zReports.form.businessDate')}
+                  </Label>
                   <Input
                     id={businessDateId}
                     name='businessDate'
@@ -175,7 +193,9 @@ export function ReportForm({
                   />
                 </div>
                 <div className='space-y-2'>
-                  <Label htmlFor={closedAtId}>Closed at (local time)</Label>
+                  <Label htmlFor={closedAtId}>
+                    {t('operations:zReports.form.closedAt')}
+                  </Label>
                   <Input
                     id={closedAtId}
                     name='closedAt'
@@ -190,13 +210,15 @@ export function ReportForm({
                 </div>
               </div>
               <p className='text-xs text-muted-foreground'>
-                The closing time is stored as a timezone-aware timestamp; the
-                business date stays a plain day.
+                {t('operations:zReports.form.closedAtHint')}
               </p>
               <div className='space-y-2'>
                 <Label htmlFor={amountId}>
-                  Total amount
-                  {currencyCode ? ` (${currencyCode})` : ''}
+                  {currencyCode
+                    ? t('operations:zReports.form.totalAmountWithCurrency', {
+                        currency: currencyCode,
+                      })
+                    : t('operations:zReports.form.totalAmount')}
                 </Label>
                 <Input
                   id={amountId}
@@ -206,21 +228,23 @@ export function ReportForm({
                   inputMode='decimal'
                   maxLength={20}
                   required
-                  placeholder='e.g. 2450.75'
+                  placeholder={t('operations:zReports.form.amountPlaceholder')}
                 />
                 <p className='text-xs text-muted-foreground'>
-                  The amount printed on the report, with up to 6 decimals. It is
-                  an evidence figure, not a finance posting.
+                  {t('operations:zReports.form.amountHint')}
                 </p>
               </div>
               <BatchSelect
-                label='Sales batch (optional)'
+                label={t('operations:zReports.form.batch')}
+                branchUuid={branchUuid}
                 value={batch}
                 disabled={pending}
                 onChange={setBatch}
               />
               <div className='space-y-2'>
-                <Label htmlFor={noteId}>Note</Label>
+                <Label htmlFor={noteId}>
+                  {t('operations:zReports.form.note')}
+                </Label>
                 <Textarea
                   id={noteId}
                   name='note'
@@ -228,7 +252,7 @@ export function ReportForm({
                   onChange={(event) => setNote(event.target.value)}
                   maxLength={500}
                   rows={3}
-                  placeholder='Optional note'
+                  placeholder={t('operations:zReports.form.notePlaceholder')}
                 />
               </div>
             </fieldset>
@@ -245,10 +269,14 @@ export function ReportForm({
               disabled={pending}
               onClick={onClose}
             >
-              Cancel
+              {t('operations:common.cancel')}
             </Button>
             <Button type='submit' disabled={pending}>
-              {pending ? 'Saving…' : creating ? 'Create report' : 'Save report'}
+              {pending
+                ? t('operations:common.saving')
+                : creating
+                  ? t('operations:zReports.form.submitCreate')
+                  : t('operations:zReports.form.submitSave')}
             </Button>
           </SheetFooter>
         </form>

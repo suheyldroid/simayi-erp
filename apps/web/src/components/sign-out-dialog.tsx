@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { authClient } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface SignOutDialogProps {
@@ -29,7 +30,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
         replace: true,
       })
     } catch {
-      toast.error('Unable to sign out. Please try again.')
+      toast.error(t('common:account.signOutFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -39,9 +40,9 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title='Sign out'
-      desc='Are you sure you want to sign out? You will need to sign in again to access your account.'
-      confirmText='Sign out'
+      title={t('common:account.signOutTitle')}
+      desc={t('common:account.signOutDescription')}
+      confirmText={t('common:account.signOut')}
       destructive
       isLoading={isLoading}
       handleConfirm={handleSignOut}

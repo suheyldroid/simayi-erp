@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { sessionQuery } from '@/lib/auth'
+import { locale, t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Header } from '@/components/layout/header'
@@ -22,12 +23,15 @@ export function Organizations() {
   const [search, setSearch] = useState('')
   const organizations = useOrganizationMemberships()
   const filtered = useMemo(() => {
-    const needle = search.trim().toLowerCase()
+    const needle = search.trim().toLocaleLowerCase(locale)
+    // Slugs stay in their canonical ASCII form, so they match on the ASCII
+    // needle only.
+    const slugNeedle = search.trim().toLowerCase()
     if (!needle) return organizations.data ?? []
     return (organizations.data ?? []).filter(
       (organization) =>
-        organization.name.toLowerCase().includes(needle) ||
-        organization.slug.toLowerCase().includes(needle)
+        organization.name.toLocaleLowerCase(locale).includes(needle) ||
+        organization.slug.toLowerCase().includes(slugNeedle)
     )
   }, [organizations.data, search])
   const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
@@ -41,10 +45,11 @@ export function Organizations() {
       </Header>
       <Main className='space-y-6'>
         <div>
-          <h1 className='text-2xl font-bold'>Organizations</h1>
+          <h1 className='text-2xl font-bold'>
+            {t('global:organizations.title')}
+          </h1>
           <p className='text-muted-foreground'>
-            Every organization you belong to across this account. Open one to
-            work inside it with its own records, members, teams, and roles.
+            {t('global:organizations.description')}
           </p>
         </div>
         <section className='space-y-4'>
@@ -58,49 +63,51 @@ export function Organizations() {
               }}
             >
               <Input
-                aria-label='Search organizations'
-                placeholder='Search by name or slug'
+                aria-label={t('global:organizations.searchLabel')}
+                placeholder={t('global:organizations.searchPlaceholder')}
                 maxLength={100}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
               />
-              <Button variant='outline'>Find</Button>
+              <Button variant='outline'>
+                {t('global:organizations.find')}
+              </Button>
             </form>
             <CreateOrganizationSheet />
           </div>
           {organizations.isPending ? (
-            <p role='status'>Loading organizations…</p>
+            <p role='status'>{t('global:organizations.loading')}</p>
           ) : null}
           {organizations.isError ? (
             <p role='alert'>
-              Could not load organizations.{' '}
+              {t('global:organizations.loadFailed')}{' '}
               <Button
                 variant='outline'
                 onClick={() => void organizations.refetch()}
               >
-                Retry
+                {t('global:shared.retry')}
               </Button>
             </p>
           ) : null}
           {organizations.isSuccess ? (
             <>
               <p className='text-sm text-muted-foreground'>
-                {filtered.length} of {organizations.data.length} organizations.
-                Pagination covers your complete membership list; sorting applies
-                to this page only.
+                {t('global:organizations.count', {
+                  filtered: filtered.length,
+                  total: organizations.data.length,
+                })}
               </p>
               <p className='text-sm text-muted-foreground'>
-                Select Details to open an organization&apos;s own page. Opening
-                a page never changes your active organization.
+                {t('global:organizations.detailsHint')}
               </p>
               <MembershipOrganizationsTable
                 organizations={pageRows}
                 activeOrganizationId={activeOrganizationId}
-                caption='Your organizations'
+                caption={t('global:organizations.caption')}
                 emptyMessage={
                   organizations.data.length === 0
-                    ? 'You do not belong to an organization yet. Create one to get started.'
-                    : 'No organizations match this search.'
+                    ? t('global:organizations.emptyNone')
+                    : t('global:organizations.emptyFiltered')
                 }
               />
               <PageControls

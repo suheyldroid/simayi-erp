@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { XIcon } from 'lucide-react'
+import { locale, t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -42,6 +43,7 @@ type RowErrors = {
 
 type FieldErrors = {
   name?: string
+  code?: string
   price?: string
   description?: string
   ingredients?: string
@@ -67,6 +69,9 @@ function createRow(
         ? {
             uuid: ingredient.recipe.uuid,
             name: ingredient.recipe.name,
+            code: ingredient.recipe.code,
+            active: ingredient.recipe.active,
+            sellable: ingredient.recipe.sellable,
             version: ingredient.recipe.version,
             ingredientCount: ingredient.recipe.ingredientCount,
             sellingPrice: ingredient.recipe.sellingPrice,
@@ -79,26 +84,49 @@ function createRow(
   }
 }
 
+export type RecipeDraft = {
+  name: string
+  code: string
+  description: string
+  sellingPrice: string | null
+  active: boolean
+  /** Direct-sale flag; a sellable recipe must carry a price. */
+  sellable: boolean
+  ingredients: RecipeCreateInput['ingredients']
+}
+
 export function RecipeSheet({
   recipe,
+  variant = 'create',
+  showActive = true,
+  sourceLabel,
   pending,
   error,
   onClose,
   onReload,
   onSubmit,
 }: {
+  /** Existing record used to prefill the form; absent for a new recipe. */
   recipe?: RecipeDetail
+  /** create = company template or branch-local recipe; edit = content update; customize = branch copy. */
+  variant?: 'create' | 'edit' | 'customize'
+  /** False when the scope gates activity elsewhere (company gate or branch activation). */
+  showActive?: boolean
+  /** Explains the source/version this sheet reads or copies. */
+  sourceLabel?: string
   pending: boolean
   error: unknown
   onClose: () => void
   onReload?: () => void
-  onSubmit: (body: RecipeCreateInput) => void
+  onSubmit: (draft: RecipeDraft) => void
 }) {
   const editing = recipe !== undefined
   const [name, setName] = useState(recipe?.name ?? '')
+  const [code, setCode] = useState(recipe?.code ?? '')
   const [description, setDescription] = useState(recipe?.description ?? '')
   const [sellingPrice, setSellingPrice] = useState(recipe?.sellingPrice ?? '')
   const [active, setActive] = useState(recipe?.active ?? true)
+  const [sellable, setSellable] = useState(recipe?.sellable ?? false)
   const [rows, setRows] = useState<DraftRow[]>(() =>
     recipe
       ? recipe.ingredients.map((ingredient) =>
@@ -114,10 +142,11 @@ export function RecipeSheet({
   const bodyRef = useRef<HTMLDivElement>(null)
   const addActionsRef = useRef<HTMLDivElement>(null)
 
-  const clearFieldError = (field: 'name' | 'price' | 'description') =>
+  const clearFieldError = (field: 'name' | 'code' | 'price' | 'description') =>
     setErrors((current) => {
       if (current[field] === undefined) return current
       if (field === 'name') return { ...current, name: undefined }
+      if (field === 'code') return { ...current, code: undefined }
       if (field === 'price') return { ...current, price: undefined }
       return { ...current, description: undefined }
     })
@@ -208,7 +237,7 @@ export function RecipeSheet({
           addRowError(
             row.key,
             'selection',
-            'Choose an item for this ingredient.'
+            t('catalog:recipes.sheet.errors.chooseItem')
           )
           return
         }
@@ -216,7 +245,9 @@ export function RecipeSheet({
           addRowError(
             row.key,
             'selection',
-            `${row.item.name} has no unit. Assign a unit in Items before using it in a recipe.`
+            t('catalog:recipes.sheet.errors.itemNoUnit', {
+              name: row.item.name,
+            })
           )
           return
         }
@@ -224,7 +255,9 @@ export function RecipeSheet({
           addRowError(
             row.key,
             'selection',
-            `${row.item.name} is listed more than once.`
+            t('catalog:recipes.sheet.errors.duplicateItem', {
+              name: row.item.name,
+            })
           )
         } else {
           seenItems.add(row.item.uuid)
@@ -242,7 +275,7 @@ export function RecipeSheet({
           addRowError(
             row.key,
             issue?.path[0] === 'quantity' ? 'quantity' : 'selection',
-            issue?.message ?? 'Invalid value.'
+            issue?.message ?? t('catalog:recipes.sheet.errors.invalidValue')
           )
         }
         return
@@ -251,7 +284,7 @@ export function RecipeSheet({
         addRowError(
           row.key,
           'selection',
-          'Choose a recipe for this ingredient.'
+          t('catalog:recipes.sheet.errors.chooseRecipe')
         )
         return
       }
@@ -259,14 +292,27 @@ export function RecipeSheet({
         addRowError(
           row.key,
           'selection',
-          `${row.recipe.name} is this recipe; a recipe cannot include itself.`
+          t('catalog:recipes.sheet.errors.selfRecipe', {
+            name: row.recipe.name,
+          })
         )
       } else if (seenRecipes.has(row.recipe.uuid)) {
         addRowError(
           row.key,
           'selection',
-          `${row.recipe.name} is listed more than once.`
+          t('catalog:recipes.sheet.errors.duplicateRecipe', {
+            name: row.recipe.name,
+          })
         )
+      } else if (!row.recipe.active) {
+        addRowError(
+          row.key,
+          'selection',
+          t('catalog:recipes.sheet.errors.recipeInactive', {
+            name: row.recipe.name,
+          })
+        )
+        return
       }
       seenRecipes.add(row.recipe.uuid)
       const parsed = RecipesModel.ingredientInput.safeParse({
@@ -282,21 +328,25 @@ export function RecipeSheet({
         addRowError(
           row.key,
           issue?.path[0] === 'quantity' ? 'quantity' : 'selection',
-          issue?.message ?? 'Invalid value.'
+          issue?.message ?? t('catalog:recipes.sheet.errors.invalidValue')
         )
       }
     })
     if (rows.length === 0) {
-      nextErrors.ingredients = 'Add at least one ingredient.'
+      nextErrors.ingredients = t(
+        'catalog:recipes.sheet.errors.ingredientsRequired'
+      )
     } else if (rows.length > 500) {
-      nextErrors.ingredients = 'A recipe supports up to 500 ingredients.'
+      nextErrors.ingredients = t('catalog:recipes.sheet.errors.ingredientsMax')
     }
     // Still parse so name and price errors surface together with row errors;
     // ingredient issues are already reported against their row.
     const parsed = RecipesModel.createInput.safeParse({
       name,
+      code: code.trim() === '' ? null : code.trim(),
       description,
       active,
+      sellable,
       sellingPrice: sellingPrice.trim() === '' ? null : sellingPrice,
       ingredients,
     })
@@ -304,12 +354,15 @@ export function RecipeSheet({
       for (const issue of parsed.error.issues) {
         const [head] = issue.path
         if (head === 'name') {
-          nextErrors.name ??= 'Enter a recipe name.'
+          nextErrors.name ??= t('catalog:recipes.sheet.errors.nameRequired')
+        } else if (head === 'code') {
+          nextErrors.code ??= t('catalog:recipes.sheet.errors.codeLength')
         } else if (head === 'sellingPrice') {
           nextErrors.price ??= issue.message
         } else if (head === 'description') {
-          nextErrors.description ??=
-            'Keep the description to 250 characters or fewer.'
+          nextErrors.description ??= t(
+            'catalog:recipes.sheet.errors.descriptionLength'
+          )
           setDetailsOpen(true)
         } else if (head !== 'ingredients') {
           nextErrors.form ??= issue.message
@@ -318,6 +371,7 @@ export function RecipeSheet({
     }
     const hasErrors =
       nextErrors.name !== undefined ||
+      nextErrors.code !== undefined ||
       nextErrors.price !== undefined ||
       nextErrors.description !== undefined ||
       nextErrors.ingredients !== undefined ||
@@ -328,7 +382,15 @@ export function RecipeSheet({
       focusFirstInvalid(rows.length === 0)
       return
     }
-    onSubmit(parsed.data)
+    onSubmit({
+      name: parsed.data.name,
+      code: parsed.data.code ?? '',
+      description: parsed.data.description ?? '',
+      sellingPrice: parsed.data.sellingPrice ?? null,
+      active: parsed.data.active ?? active,
+      sellable: parsed.data.sellable ?? sellable,
+      ingredients: parsed.data.ingredients,
+    })
   }
 
   return (
@@ -340,11 +402,21 @@ export function RecipeSheet({
     >
       <SheetContent className='flex w-full flex-col gap-0 sm:max-w-2xl'>
         <SheetHeader>
-          <SheetTitle>{editing ? 'Edit recipe' : 'New recipe'}</SheetTitle>
+          <SheetTitle>
+            {variant === 'customize'
+              ? t('catalog:recipes.sheet.customizeTitle')
+              : editing
+                ? t('catalog:recipes.sheet.editTitle')
+                : t('catalog:recipes.sheet.createTitle')}
+          </SheetTitle>
           <SheetDescription>
-            List the items and nested recipes one recipe unit needs, then set an
-            optional selling price.
+            {variant === 'customize'
+              ? t('catalog:recipes.sheet.customizeDescription')
+              : t('catalog:recipes.sheet.createDescription')}
           </SheetDescription>
+          {sourceLabel !== undefined && (
+            <p className='text-xs text-muted-foreground'>{sourceLabel}</p>
+          )}
         </SheetHeader>
         <form
           noValidate
@@ -361,7 +433,9 @@ export function RecipeSheet({
           >
             <fieldset disabled={pending} className='space-y-6'>
               <div className='space-y-2'>
-                <Label htmlFor='recipe-name'>Name</Label>
+                <Label htmlFor='recipe-name'>
+                  {t('catalog:recipes.sheet.nameLabel')}
+                </Label>
                 <Input
                   id='recipe-name'
                   value={name}
@@ -371,7 +445,7 @@ export function RecipeSheet({
                   }}
                   maxLength={100}
                   required
-                  placeholder='e.g. Cheeseburger'
+                  placeholder={t('catalog:recipes.sheet.namePlaceholder')}
                   aria-invalid={errors.name === undefined ? undefined : true}
                   aria-describedby={
                     errors.name === undefined ? undefined : 'recipe-name-error'
@@ -387,18 +461,60 @@ export function RecipeSheet({
                 )}
               </div>
 
+              <div className='space-y-2'>
+                <Label htmlFor='recipe-code'>
+                  {t('catalog:recipes.sheet.codeLabel')}
+                </Label>
+                <Input
+                  id='recipe-code'
+                  value={code}
+                  onChange={(event) => {
+                    setCode(event.target.value)
+                    clearFieldError('code')
+                  }}
+                  maxLength={100}
+                  placeholder={t('catalog:recipes.sheet.codePlaceholder')}
+                  aria-invalid={errors.code === undefined ? undefined : true}
+                  aria-describedby={
+                    errors.code === undefined
+                      ? 'recipe-code-hint'
+                      : 'recipe-code-hint recipe-code-error'
+                  }
+                />
+                <p
+                  id='recipe-code-hint'
+                  className='text-xs text-muted-foreground'
+                >
+                  {t('catalog:recipes.sheet.codeHint')}
+                </p>
+                {errors.code !== undefined && (
+                  <p
+                    id='recipe-code-error'
+                    className='text-xs text-destructive'
+                  >
+                    {errors.code}
+                  </p>
+                )}
+              </div>
+
               <section className='space-y-3'>
                 <div className='flex flex-wrap items-baseline justify-between gap-2'>
-                  <h3 className='text-sm font-medium'>Ingredients</h3>
+                  <h3 className='text-sm font-medium'>
+                    {t('catalog:recipes.sheet.ingredientsHeading')}
+                  </h3>
                   <p className='text-xs text-muted-foreground'>
-                    {rows.length} of 500
+                    {t('catalog:recipes.sheet.rowsCount', {
+                      n: rows.length.toLocaleString(locale),
+                    })}
                   </p>
                 </div>
                 <p className='text-xs text-muted-foreground'>
-                  Quantities are for one unit of{' '}
-                  {name.trim() === '' ? 'this recipe' : name.trim()}. A nested
-                  recipe amount is in its recipe units, so 0.5 uses half of that
-                  recipe.
+                  {t('catalog:recipes.sheet.quantitiesNote', {
+                    target:
+                      name.trim() === ''
+                        ? t('catalog:recipes.sheet.thisRecipe')
+                        : name.trim(),
+                  })}
                 </p>
                 <div ref={addActionsRef} className='flex flex-wrap gap-2'>
                   <Button
@@ -408,7 +524,7 @@ export function RecipeSheet({
                     disabled={pending || rows.length >= 500}
                     onClick={() => addRow('item')}
                   >
-                    Add item
+                    {t('catalog:recipes.sheet.addItem')}
                   </Button>
                   <Button
                     type='button'
@@ -417,7 +533,7 @@ export function RecipeSheet({
                     disabled={pending || rows.length >= 500}
                     onClick={() => addRow('recipe')}
                   >
-                    Add recipe
+                    {t('catalog:recipes.sheet.addRecipe')}
                   </Button>
                 </div>
                 {errors.ingredients !== undefined && (
@@ -427,10 +543,11 @@ export function RecipeSheet({
                 )}
                 {rows.length === 0 ? (
                   <div className='rounded-md border border-dashed border-border p-4'>
-                    <p className='text-sm font-medium'>No ingredients yet</p>
+                    <p className='text-sm font-medium'>
+                      {t('catalog:recipes.sheet.noIngredientsTitle')}
+                    </p>
                     <p className='text-sm text-muted-foreground'>
-                      Add an item or a nested recipe to say what one recipe unit
-                      needs.
+                      {t('catalog:recipes.sheet.noIngredientsDescription')}
                     </p>
                   </div>
                 ) : (
@@ -489,45 +606,76 @@ export function RecipeSheet({
                 )}
               </section>
 
-              <div className='space-y-2'>
-                <Label htmlFor='recipe-price'>Selling price (optional)</Label>
-                <Input
-                  id='recipe-price'
-                  value={sellingPrice}
-                  onChange={(event) => {
-                    setSellingPrice(event.target.value)
-                    clearFieldError('price')
+              <div className='space-y-2 rounded-md border border-border p-3'>
+                <FlagInput
+                  name='sellable'
+                  label={t('catalog:recipes.sheet.sellableLabel')}
+                  checked={sellable}
+                  onChange={(next) => {
+                    setSellable(next)
+                    if (!next) clearFieldError('price')
                   }}
-                  inputMode='decimal'
-                  maxLength={20}
-                  placeholder='e.g. 12.50 or 12,50'
-                  aria-invalid={errors.price === undefined ? undefined : true}
-                  aria-describedby={
-                    errors.price === undefined
-                      ? 'recipe-price-hint'
-                      : 'recipe-price-hint recipe-price-error'
-                  }
+                  disabled={pending}
                 />
-                <p
-                  id='recipe-price-hint'
-                  className='text-xs text-muted-foreground'
-                >
-                  {recipe?.priceCurrencyCode
-                    ? `Stored in ${recipe.priceCurrencyCode}; leaving the amount unchanged keeps it, a changed amount uses the fixed system currency. `
-                    : 'Quoted in the fixed system currency. '}
-                  A recipe can stay unpriced as a nested ingredient, but a sale
-                  requires a price. Decimals accept a comma or a dot, up to 6
-                  places.
+                <p className='text-xs text-muted-foreground'>
+                  {t('catalog:recipes.sheet.sellableHint')}
                 </p>
-                {errors.price !== undefined && (
-                  <p
-                    id='recipe-price-error'
-                    className='text-xs text-destructive'
-                  >
-                    {errors.price}
-                  </p>
-                )}
               </div>
+
+              {sellable ? (
+                <div className='space-y-2'>
+                  <Label htmlFor='recipe-price'>
+                    {t('catalog:recipes.sheet.priceLabel')}
+                  </Label>
+                  <Input
+                    id='recipe-price'
+                    value={sellingPrice}
+                    onChange={(event) => {
+                      setSellingPrice(event.target.value)
+                      clearFieldError('price')
+                    }}
+                    inputMode='decimal'
+                    maxLength={20}
+                    required
+                    placeholder={t('catalog:recipes.sheet.pricePlaceholder')}
+                    aria-invalid={errors.price === undefined ? undefined : true}
+                    aria-describedby={
+                      errors.price === undefined
+                        ? 'recipe-price-hint'
+                        : 'recipe-price-hint recipe-price-error'
+                    }
+                  />
+                  <p
+                    id='recipe-price-hint'
+                    className='text-xs text-muted-foreground'
+                  >
+                    {recipe?.priceCurrencyCode
+                      ? t('catalog:recipes.sheet.priceHintStored', {
+                          code: recipe.priceCurrencyCode,
+                        })
+                      : t('catalog:recipes.sheet.priceHintFixed')}
+                    {t('catalog:recipes.sheet.priceHintRest')}
+                  </p>
+                  {errors.price !== undefined && (
+                    <p
+                      id='recipe-price-error'
+                      className='text-xs text-destructive'
+                    >
+                      {errors.price}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                sellingPrice.trim() !== '' && (
+                  <p className='text-xs text-muted-foreground'>
+                    {t('catalog:recipes.sheet.priceRetained', {
+                      price: `${sellingPrice} ${
+                        recipe?.priceCurrencyCode ?? ''
+                      }`.trim(),
+                    })}
+                  </p>
+                )
+              )}
 
               <details
                 open={detailsOpen}
@@ -535,11 +683,13 @@ export function RecipeSheet({
                 className='rounded-md border border-border p-3'
               >
                 <summary className='w-fit cursor-pointer rounded-sm text-sm font-medium focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'>
-                  Recipe details
+                  {t('catalog:recipes.sheet.detailsSummary')}
                 </summary>
                 <div className='mt-3 space-y-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='recipe-description'>Description</Label>
+                    <Label htmlFor='recipe-description'>
+                      {t('catalog:recipes.sheet.descriptionLabel')}
+                    </Label>
                     <Textarea
                       id='recipe-description'
                       value={description}
@@ -549,7 +699,9 @@ export function RecipeSheet({
                       }}
                       maxLength={250}
                       rows={3}
-                      placeholder='Optional description'
+                      placeholder={t(
+                        'catalog:recipes.sheet.descriptionPlaceholder'
+                      )}
                       aria-invalid={
                         errors.description === undefined ? undefined : true
                       }
@@ -568,13 +720,21 @@ export function RecipeSheet({
                       </p>
                     )}
                   </div>
-                  <FlagInput
-                    name='active'
-                    label='Active recipe'
-                    checked={active}
-                    onChange={setActive}
-                    disabled={pending}
-                  />
+                  {showActive ? (
+                    <FlagInput
+                      name='active'
+                      label={t('catalog:recipes.sheet.activeLabel')}
+                      checked={active}
+                      onChange={setActive}
+                      disabled={pending}
+                    />
+                  ) : (
+                    <p className='text-xs text-muted-foreground'>
+                      {sourceLabel === undefined
+                        ? t('catalog:recipes.sheet.activityExternal')
+                        : t('catalog:recipes.sheet.activityNotPart')}
+                    </p>
+                  )}
                 </div>
               </details>
             </fieldset>
@@ -590,7 +750,7 @@ export function RecipeSheet({
                     onClick={onReload}
                     disabled={pending}
                   >
-                    Discard changes and reload
+                    {t('catalog:recipes.sheet.discardReload')}
                   </Button>
                 )}
               </div>
@@ -603,10 +763,16 @@ export function RecipeSheet({
               onClick={onClose}
               disabled={pending}
             >
-              Cancel
+              {t('catalog:common.cancel')}
             </Button>
             <Button type='submit' disabled={pending}>
-              {pending ? 'Saving…' : editing ? 'Save recipe' : 'Create recipe'}
+              {pending
+                ? t('catalog:common.saving')
+                : variant === 'customize'
+                  ? t('catalog:recipes.sheet.createCustomization')
+                  : editing
+                    ? t('catalog:recipes.sheet.saveRecipe')
+                    : t('catalog:recipes.sheet.createRecipe')}
             </Button>
           </SheetFooter>
         </form>
@@ -643,10 +809,10 @@ function IngredientRow({
   const selectedName = row.kind === 'item' ? row.item?.name : row.recipe?.name
   const unit =
     row.kind === 'recipe'
-      ? 'recipe units'
+      ? t('catalog:recipes.sheet.unitRecipe')
       : row.item === null
         ? ''
-        : row.item.units || 'no unit'
+        : row.item.units || t('catalog:recipes.sheet.unitNoUnit')
   return (
     <li
       data-row-key={row.key}
@@ -655,10 +821,12 @@ function IngredientRow({
       <div className='flex items-center justify-between gap-2'>
         <div className='flex min-w-0 items-center gap-2'>
           <span className='shrink-0 rounded-sm border border-border px-1.5 py-0.5 text-xs font-medium text-muted-foreground'>
-            {row.kind === 'item' ? 'Item' : 'Recipe'}
+            {row.kind === 'item'
+              ? t('catalog:recipes.sheet.kindItem')
+              : t('catalog:recipes.sheet.kindRecipe')}
           </span>
           <p className='min-w-0 truncate text-sm text-muted-foreground'>
-            Ingredient {index + 1}
+            {t('catalog:recipes.sheet.ingredientIndex', { index: index + 1 })}
             {selectedName ? ` · ${selectedName}` : ''}
           </p>
         </div>
@@ -667,9 +835,16 @@ function IngredientRow({
           variant='ghost'
           size='icon'
           disabled={pending}
-          aria-label={`Remove ingredient ${index + 1}${
-            selectedName ? ` (${selectedName})` : ''
-          }`}
+          aria-label={
+            selectedName
+              ? t('catalog:recipes.sheet.removeIngredientNamed', {
+                  index: index + 1,
+                  name: selectedName,
+                })
+              : t('catalog:recipes.sheet.removeIngredient', {
+                  index: index + 1,
+                })
+          }
           onClick={onRemove}
         >
           <XIcon className='size-4' />
@@ -679,7 +854,9 @@ function IngredientRow({
         <div className='min-w-0 space-y-1'>
           {row.kind === 'item' ? (
             <ItemSelect
-              label={`Ingredient ${index + 1} item`}
+              label={t('catalog:recipes.sheet.itemSelectLabel', {
+                index: index + 1,
+              })}
               value={row.item}
               excludeIds={itemExcludes}
               disabled={pending}
@@ -691,7 +868,9 @@ function IngredientRow({
             />
           ) : (
             <RecipeSelect
-              label={`Ingredient ${index + 1} recipe`}
+              label={t('catalog:recipes.sheet.recipeSelectLabel', {
+                index: index + 1,
+              })}
               value={row.recipe}
               excludeIds={recipeExcludes}
               disabled={pending}
@@ -703,6 +882,15 @@ function IngredientRow({
               onChange={(recipe) => onChange({ recipe })}
             />
           )}
+          {row.kind === 'recipe' &&
+            row.recipe !== null &&
+            !row.recipe.active && (
+              <p className='text-xs text-destructive'>
+                {t('catalog:recipes.sheet.errors.recipeInactive', {
+                  name: row.recipe.name,
+                })}
+              </p>
+            )}
           {errors?.selection !== undefined && (
             <p id={selectionErrorId} className='text-xs text-destructive'>
               {errors.selection}
@@ -711,7 +899,7 @@ function IngredientRow({
         </div>
         <div className='space-y-2'>
           <Label htmlFor={quantityId}>
-            Quantity per unit
+            {t('catalog:recipes.sheet.quantityLabel')}
             {unit === '' ? null : <span className='sr-only'> ({unit})</span>}
           </Label>
           <div className='relative'>
@@ -722,7 +910,7 @@ function IngredientRow({
               inputMode='decimal'
               maxLength={20}
               required
-              placeholder='e.g. 0.25'
+              placeholder={t('catalog:recipes.sheet.quantityPlaceholder')}
               className='pe-24'
               aria-invalid={errors?.quantity === undefined ? undefined : true}
               aria-describedby={
@@ -748,16 +936,18 @@ function IngredientRow({
         onToggle={(event) => onNoteOpenChange(event.currentTarget.open)}
       >
         <summary className='w-fit cursor-pointer rounded-sm text-xs text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'>
-          Note
+          {t('catalog:recipes.sheet.noteSummary')}
         </summary>
         <div className='mt-2 space-y-2'>
-          <Label htmlFor={noteId}>Note for ingredient {index + 1}</Label>
+          <Label htmlFor={noteId}>
+            {t('catalog:recipes.sheet.noteLabel', { index: index + 1 })}
+          </Label>
           <Input
             id={noteId}
             value={row.note}
             onChange={(event) => onChange({ note: event.target.value })}
             maxLength={500}
-            placeholder='Optional note'
+            placeholder={t('catalog:recipes.sheet.notePlaceholder')}
           />
         </div>
       </details>

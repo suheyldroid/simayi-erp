@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 
 export function PageControls({
@@ -19,16 +20,18 @@ export function PageControls({
         disabled={page === 0 || loading}
         onClick={() => onChange(page - 1)}
       >
-        Previous
+        {t('global:users.pageControls.previous')}
       </Button>
-      <span className='text-sm'>Page {page + 1}</span>
+      <span className='text-sm'>
+        {t('global:users.pageControls.page', { page: page + 1 })}
+      </span>
       <Button
         type='button'
         variant='outline'
         disabled={!hasNext || loading}
         onClick={() => onChange(page + 1)}
       >
-        Next
+        {t('global:users.pageControls.next')}
       </Button>
     </div>
   )

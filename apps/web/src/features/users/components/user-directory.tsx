@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { isAdministrator } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -41,35 +42,42 @@ export function UserDirectory() {
     () => [
       {
         id: 'name',
-        header: 'Name',
+        header: t('global:users.directory.columns.name'),
         accessorFn: (user) => user.name || user.email,
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'email',
-        header: 'Email',
+        header: t('global:users.directory.columns.email'),
         accessorFn: (user) => user.email,
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'role',
-        header: 'Role',
+        header: t('global:users.directory.columns.role'),
         accessorFn: (user) =>
-          isAdministrator(user) ? 'Administrator' : 'User',
+          isAdministrator(user)
+            ? t('global:users.roleKind.administrator')
+            : t('global:users.roleKind.user'),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'status',
-        header: 'Status',
+        header: t('global:users.directory.columns.status'),
         accessorFn: (user) =>
-          user.isActive && !user.banned ? 'Active' : 'Inactive',
+          user.isActive && !user.banned
+            ? t('global:users.status.active')
+            : t('global:users.status.inactive'),
         cell: ({ getValue }) => String(getValue() ?? ''),
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: t('global:users.directory.columns.actions'),
         enableSorting: false,
-        meta: { label: 'Actions', width: 110 },
+        meta: {
+          label: t('global:users.directory.columns.actions'),
+          width: 110,
+        },
         cell: ({ row }) => {
           const user = row.original
           const label = user.name || user.email
@@ -77,10 +85,12 @@ export function UserDirectory() {
             <Link
               to='/settings/system/users/$userId'
               params={{ userId: user.id }}
-              aria-label={`Details for ${label}`}
+              aria-label={t('global:users.directory.detailsLabel', {
+                name: label,
+              })}
               className='inline-flex items-center rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
             >
-              Details
+              {t('global:shared.details')}
             </Link>
           )
         },
@@ -100,8 +110,10 @@ export function UserDirectory() {
           }}
         >
           <Input
-            aria-label='Search directory'
-            placeholder={`Search by ${field}`}
+            aria-label={t('global:users.directory.searchLabel')}
+            placeholder={t('global:users.directory.searchPlaceholder', {
+              field: t(`global:users.directory.fields.${field}`),
+            })}
             maxLength={150}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -115,38 +127,49 @@ export function UserDirectory() {
               }
             }}
           >
-            <SelectTrigger className='w-32' aria-label='Search field'>
+            <SelectTrigger
+              className='w-32'
+              aria-label={t('global:users.directory.searchFieldLabel')}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='name'>Name</SelectItem>
-              <SelectItem value='email'>Email</SelectItem>
+              <SelectItem value='name'>
+                {t('global:users.directory.columns.name')}
+              </SelectItem>
+              <SelectItem value='email'>
+                {t('global:users.directory.columns.email')}
+              </SelectItem>
             </SelectContent>
           </Select>
-          <Button variant='outline'>Find</Button>
+          <Button variant='outline'>{t('global:users.directory.find')}</Button>
         </form>
-        <Button onClick={() => setCreating(true)}>Create user</Button>
+        <Button onClick={() => setCreating(true)}>
+          {t('global:users.directory.createUser')}
+        </Button>
       </div>
-      {users.isPending && <p role='status'>Loading users…</p>}
+      {users.isPending && (
+        <p role='status'>{t('global:users.directory.loading')}</p>
+      )}
       {users.isError && (
         <p role='alert'>
-          Unable to load users.{' '}
+          {t('global:users.directory.loadFailed')}{' '}
           <Button variant='outline' onClick={() => void users.refetch()}>
-            Retry
+            {t('global:shared.retry')}
           </Button>
         </p>
       )}
       {users.data && (
         <>
           <p className='text-sm text-muted-foreground'>
-            {users.data.total} users. Sorting applies to this page only.
+            {t('global:users.directory.count', { count: users.data.total })}
           </p>
           <SortableDataTable
             data={users.data.users}
             columns={columns}
             getRowId={(user) => user.id}
-            caption='Platform accounts'
-            emptyMessage='No users match this search.'
+            caption={t('global:users.directory.caption')}
+            emptyMessage={t('global:users.directory.empty')}
           />
         </>
       )}
@@ -161,10 +184,9 @@ export function UserDirectory() {
       <Sheet open={creating} onOpenChange={setCreating}>
         <SheetContent className='flex w-full flex-col sm:max-w-md'>
           <SheetHeader>
-            <SheetTitle>Create user</SheetTitle>
+            <SheetTitle>{t('global:users.directory.createUser')}</SheetTitle>
             <SheetDescription>
-              Create a regular user through Better Auth. This does not add the
-              user to an organization.
+              {t('global:users.directory.createDescription')}
             </SheetDescription>
           </SheetHeader>
           {creating ? (

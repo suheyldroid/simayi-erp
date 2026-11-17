@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { imageUrl } from '@/lib/image-url'
 import { invalidateItemStockCaches } from '@/lib/item-stock-cache'
 import { organizationCacheScope } from '@/lib/tenant'
@@ -22,7 +23,7 @@ import {
 } from '@/features/units/components/unit-select'
 import { errorMessage, itemApi } from '../api'
 import { itemImageApi, itemImagePrefix } from '../image-api'
-import { ItemsModel, canonicalStock, type Item, type ItemInput } from '../model'
+import { ItemsModel, type Item, type ItemInput } from '../model'
 import {
   ItemCategorySelect,
   type ItemCategoryOption,
@@ -103,11 +104,29 @@ function ItemFormSheet({
     },
     onSuccess: async (item, input) => {
       await invalidateItemStockCaches(client, input.scope)
-      await client.invalidateQueries({ queryKey: ['item-category'] })
+      // Branch balances embed the shared item name/unit: the catalog change is
+      // company-wide, so refresh every branch stock view of this company.
       await client.invalidateQueries({
-        queryKey: ['recipe', 'recipes', input.scope],
+        predicate: (query) =>
+          query.queryKey[0] === 'stock' &&
+          typeof query.queryKey[1] === 'string' &&
+          query.queryKey[1].startsWith(`${input.scope}::`),
       })
-      toast.success(editing ? 'Item updated' : 'Item created')
+      await client.invalidateQueries({ queryKey: ['item-category'] })
+      // Recipe catalog/picker keys are branch-scoped as
+      // ['recipe', '<organization scope>::<branch>', ...]. A shared item edit
+      // affects every branch definition and picker of this company only.
+      await client.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'recipe' &&
+          typeof query.queryKey[1] === 'string' &&
+          query.queryKey[1].startsWith(`${input.scope}::`),
+      })
+      toast.success(
+        editing
+          ? t('catalog:items.form.updatedToast')
+          : t('catalog:items.form.createdToast')
+      )
       onSaved?.(item)
       onOpenChange(false)
     },
@@ -132,11 +151,13 @@ function ItemFormSheet({
         }}
       >
         <SheetHeader>
-          <SheetTitle>{editing ? 'Edit item' : 'New item'}</SheetTitle>
+          <SheetTitle>
+            {editing
+              ? t('catalog:items.form.editTitle')
+              : t('catalog:items.form.createTitle')}
+          </SheetTitle>
           <SheetDescription>
-            Items are physical stock materials. Each item keeps one stock
-            balance in a single system unit from the global catalog, with a
-            recorded history of every change.
+            {t('catalog:items.form.description')}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -149,7 +170,7 @@ function ItemFormSheet({
             const form = new FormData(event.currentTarget)
             const chosenUnitUuid = unit?.uuid ?? null
             if (!editing && chosenUnitUuid == null) {
-              setError('Choose a unit for the item.')
+              setError(t('catalog:items.form.unitRequired'))
               return
             }
             const unitChanged =
@@ -164,20 +185,9 @@ function ItemFormSheet({
                 ...(unitChanged ? { unitUuid: chosenUnitUuid } : {}),
                 ipn: String(form.get('ipn') ?? ''),
                 defaultExpiry: Number(form.get('defaultExpiry') ?? 0),
-                minimumStock: String(form.get('minimumStock') ?? '0'),
-                stock: String(form.get('stock') ?? '0'),
                 active: form.has('active'),
                 ...(editing && source ? { version: source.version } : {}),
               })
-              // A metadata-only edit must not record a redundant stock count.
-              if (
-                editing &&
-                source &&
-                body.stock !== undefined &&
-                canonicalStock(body.stock) === canonicalStock(source.stock)
-              ) {
-                delete body.stock
-              }
               save.mutate({
                 uuid: editing ? source?.uuid : undefined,
                 file,
@@ -202,14 +212,18 @@ function ItemFormSheet({
               <FieldInput
                 field={{
                   name: 'name',
-                  label: 'Name',
+                  label: t('catalog:items.form.nameLabel'),
                   required: true,
                   maxLength: 100,
                 }}
                 value={text(source, source?.name)}
               />
               <FieldInput
-                field={{ name: 'ipn', label: 'IPN', maxLength: 100 }}
+                field={{
+                  name: 'ipn',
+                  label: t('catalog:items.form.ipnLabel'),
+                  maxLength: 100,
+                }}
                 value={text(source, source?.ipn)}
               />
               <ItemCategorySelect
@@ -232,44 +246,23 @@ function ItemFormSheet({
               />
               {editing && source?.unitUuid == null && (
                 <p className='text-xs text-muted-foreground sm:col-span-2'>
-                  This item has no unit assigned yet. Choose one to resolve it;
-                  existing stock history is kept unchanged.
+                  {t('catalog:items.form.noUnitAssigned')}
                 </p>
               )}
               {editing && source?.unitUuid != null && (
                 <p className='text-xs text-muted-foreground sm:col-span-2'>
-                  Changing an assigned unit is refused while the item has a
-                  stock balance, recipe, order, or sale link, or meaningful
-                  stock history.
+                  {t('catalog:items.form.unitChangeBlocked')}
                 </p>
               )}
               {unit != null && !unit.active && (
                 <p className='text-xs text-muted-foreground sm:col-span-2'>
-                  This unit is inactive. It stays assigned until you choose an
-                  active unit.
+                  {t('catalog:items.form.unitInactive')}
                 </p>
               )}
               <FieldInput
                 field={{
-                  name: 'minimumStock',
-                  label: 'Minimum stock',
-                  pattern: '\\d+(\\.\\d{1,6})?',
-                }}
-                value={source?.minimumStock ?? '0'}
-              />
-              <FieldInput
-                field={{
-                  name: 'stock',
-                  label: editing ? 'Stock' : 'Initial stock',
-                  required: true,
-                  pattern: '\\d*[.,]\\d{1,5}|\\d+',
-                }}
-                value={source ? source.stock : '0'}
-              />
-              <FieldInput
-                field={{
                   name: 'defaultExpiry',
-                  label: 'Default expiry days',
+                  label: t('catalog:items.form.defaultExpiryLabel'),
                   type: 'number',
                   min: 0,
                 }}
@@ -282,7 +275,7 @@ function ItemFormSheet({
               disabled={save.isPending}
               resolveImage={imageUrl}
               credentialImagePrefix={itemImagePrefix}
-              alt='Item image preview'
+              alt={t('catalog:items.form.imageAlt')}
               onChange={(next) => {
                 setImage(next.image)
                 setFile(next.file)
@@ -291,7 +284,7 @@ function ItemFormSheet({
             <FieldInput
               field={{
                 name: 'description',
-                label: 'Description',
+                label: t('catalog:items.form.descriptionLabel'),
                 type: 'textarea',
                 maxLength: 250,
               }}
@@ -299,7 +292,7 @@ function ItemFormSheet({
             />
             <FlagInput
               name='active'
-              label='Active'
+              label={t('catalog:items.form.activeLabel')}
               defaultChecked={source ? source.active : true}
             />
           </fieldset>
@@ -310,10 +303,10 @@ function ItemFormSheet({
               disabled={save.isPending}
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('catalog:common.cancel')}
             </Button>
             <Button type='submit' disabled={!canSubmit || save.isPending}>
-              Save
+              {t('catalog:common.save')}
             </Button>
           </SheetFooter>
         </form>

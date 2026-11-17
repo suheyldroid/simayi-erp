@@ -1,0 +1,1 @@
+ALTER TABLE "exchange_backend" ADD COLUMN "version" INTEGER NOT NULL DEFAULT 1;

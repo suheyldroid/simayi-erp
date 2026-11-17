@@ -2,7 +2,8 @@ import { useId, useState } from 'react'
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { useQuery } from '@tanstack/react-query'
 import { XIcon } from 'lucide-react'
-import { organizationCacheScope } from '@/lib/tenant'
+import { branchCacheScope } from '@/lib/branch-scope'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,17 +25,21 @@ import { errorMessage } from '../api'
 import type { ZReportBatch } from '../model'
 
 /**
- * Optional single sales batch selection over the real paginated batch list.
- * Only processed batches (status 20) can be linked; the already linked row is
- * kept visible even when it is not on the current page or search result.
+ * Optional single sales batch selection over the real paginated batch list of
+ * the selected branch. Only processed batches (status 20) can be linked; the
+ * already linked row is kept visible even when it is not on the current page or
+ * search result. A batch from another branch never appears here, and the API
+ * rejects cross-branch attachments.
  */
 export function BatchSelect({
   label,
+  branchUuid,
   value,
   disabled = false,
   onChange,
 }: {
   label: string
+  branchUuid: string
   value: ZReportBatch | null
   disabled?: boolean
   onChange: (next: ZReportBatch | null) => void
@@ -46,13 +51,13 @@ export function BatchSelect({
   const options = useQuery({
     queryKey: [
       'sales',
-      organizationCacheScope(),
+      branchCacheScope(branchUuid),
       'batches',
       'select',
       page,
       search,
     ],
-    queryFn: () => salesBatchesApi.list({ page, search }),
+    queryFn: () => salesBatchesApi.list({ branchUuid, page, search }),
     enabled: open,
   })
   const limit = options.data?.limit ?? 20
@@ -97,7 +102,7 @@ export function BatchSelect({
                 )}
               >
                 {value === null
-                  ? 'No sales batch linked'
+                  ? t('operations:zReports.batchSelect.none')
                   : value.reference || value.uuid}
               </span>
               <span
@@ -117,8 +122,10 @@ export function BatchSelect({
           >
             <Command shouldFilter={false} loop>
               <CommandInput
-                aria-label='Search sales batches'
-                placeholder='Search sales batches…'
+                aria-label={t('operations:zReports.batchSelect.searchLabel')}
+                placeholder={t(
+                  'operations:zReports.batchSelect.searchPlaceholder'
+                )}
                 value={search}
                 onValueChange={(next) => {
                   setSearch(next)
@@ -133,7 +140,7 @@ export function BatchSelect({
                     role='status'
                     className='p-3 text-sm text-muted-foreground'
                   >
-                    Loading sales batches…
+                    {t('operations:zReports.batchSelect.loading')}
                   </p>
                 ) : options.isError ? (
                   <div
@@ -148,14 +155,13 @@ export function BatchSelect({
                       disabled={disabled}
                       onClick={() => void options.refetch()}
                     >
-                      Retry
+                      {t('operations:common.retry')}
                     </Button>
                   </div>
                 ) : (
                   <>
                     <CommandEmpty>
-                      No processed batch on this page. Search or page through
-                      the batch list to find one.
+                      {t('operations:zReports.batchSelect.empty')}
                     </CommandEmpty>
                     <CommandGroup>
                       {rows.map((batch) => (
@@ -196,15 +202,16 @@ export function BatchSelect({
                   disabled={page === 0 || options.isFetching || disabled}
                   onClick={() => setPage((current) => Math.max(0, current - 1))}
                 >
-                  Previous
+                  {t('operations:zReports.batchSelect.previous')}
                 </Button>
                 <span className='text-xs text-muted-foreground'>
                   {total === 0
-                    ? 'No batches'
-                    : `${page * limit + 1}–${Math.min(
-                        (page + 1) * limit,
-                        total
-                      )} of ${total} batches`}
+                    ? t('operations:zReports.batchSelect.noneFound')
+                    : t('operations:zReports.batchSelect.range', {
+                        from: page * limit + 1,
+                        to: Math.min((page + 1) * limit, total),
+                        total,
+                      })}
                 </span>
                 <Button
                   type='button'
@@ -213,7 +220,7 @@ export function BatchSelect({
                   disabled={!hasNext || options.isFetching || disabled}
                   onClick={() => setPage((current) => current + 1)}
                 >
-                  Next
+                  {t('operations:zReports.batchSelect.next')}
                 </Button>
               </div>
             </Command>
@@ -224,7 +231,7 @@ export function BatchSelect({
             type='button'
             variant='ghost'
             size='icon'
-            aria-label='Clear linked sales batch'
+            aria-label={t('operations:zReports.batchSelect.clear')}
             disabled={disabled}
             className='absolute end-1 top-1/2 size-7 -translate-y-1/2 rounded-sm text-muted-foreground'
             onClick={(event) => {
@@ -238,8 +245,7 @@ export function BatchSelect({
         )}
       </div>
       <p className='text-xs text-muted-foreground'>
-        Only processed batches can be linked. The page counter follows every
-        batch, so a page can show fewer entries.
+        {t('operations:zReports.batchSelect.hint')}
       </p>
     </div>
   )

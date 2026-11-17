@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 import { resourceUuid } from '@/lib/resource-uuid'
 import { UnitsModel } from '@/features/units/model'
 
@@ -17,10 +18,6 @@ const formUuid = z.preprocess(
   (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
   resourceUuid.nullable()
 )
-const quantity = z
-  .string()
-  .trim()
-  .regex(/^\d+(?:\.\d{1,6})?$/)
 export const stockQuantity = z
   .string()
   .trim()
@@ -31,19 +28,9 @@ export const stockQuantity = z
   .pipe(
     z
       .string()
-      .regex(
-        /^\d+(?:\.\d{1,5})?$/,
-        'Use a number with up to 5 decimals, like 0.25 or 0,25.'
-      )
+      .regex(/^\d+(?:\.\d{1,5})?$/, t('catalog:validation.quantityDecimals5'))
   )
 
-/** Canonical comparison form of a validated stock decimal string. */
-export function canonicalStock(value: string): string {
-  return value
-    .replace(/^0+(?=\d)/, '')
-    .replace(/(\.\d*?)0+$/, '$1')
-    .replace(/\.$/, '')
-}
 const optionalText = (maxLength: number) =>
   z.preprocess(
     (value) =>
@@ -61,8 +48,7 @@ const item = z.object({
   image: z.string().nullable(),
   ipn: z.string().nullable(),
   defaultExpiry: z.number().int().nonnegative(),
-  minimumStock: z.string(),
-  stock: z.string(),
+  hasReceipts: z.boolean(),
   active: z.boolean(),
   creationDate: z.string().nullable(),
   creationUserId: z.string().nullable(),
@@ -84,8 +70,6 @@ export const ItemsModel = {
     unitUuid: resourceUuid.optional(),
     ipn: optionalText(100).optional(),
     defaultExpiry: z.number().int().nonnegative().optional(),
-    minimumStock: quantity.optional(),
-    stock: stockQuantity.optional(),
     active: z.boolean().optional(),
     version: z.number().int().nonnegative().optional(),
   }),

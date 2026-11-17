@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { type Table } from '@tanstack/react-table'
 import { AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import { t } from '@/lib/i18n'
 import { sleep } from '@/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
@@ -16,6 +17,7 @@ type UserMultiDeleteDialogProps<TData> = {
   table: Table<TData>
 }
 
+// Typed confirmation token: the user must enter this exact word.
 const CONFIRM_WORD = 'DELETE'
 
 export function UsersMultiDeleteDialog<TData>({
@@ -29,22 +31,24 @@ export function UsersMultiDeleteDialog<TData>({
 
   const handleDelete = () => {
     if (value.trim() !== CONFIRM_WORD) {
-      toast.error(`Please type "${CONFIRM_WORD}" to confirm.`)
+      toast.error(
+        t('global:users.management.confirmWordError', { word: CONFIRM_WORD })
+      )
       return
     }
 
     onOpenChange(false)
 
     toast.promise(sleep(2000), {
-      loading: 'Deleting users...',
+      loading: t('global:users.management.deleting'),
       success: () => {
         setValue('')
         table.resetRowSelection()
-        return `Deleted ${selectedRows.length} ${
-          selectedRows.length > 1 ? 'users' : 'user'
-        }`
+        return t('global:users.management.deleted', {
+          count: selectedRows.length,
+        })
       },
-      error: 'Error',
+      error: t('global:shared.error'),
     })
   }
 
@@ -60,8 +64,9 @@ export function UsersMultiDeleteDialog<TData>({
             className='me-1 inline-block stroke-destructive'
             size={18}
           />{' '}
-          Delete {selectedRows.length}{' '}
-          {selectedRows.length > 1 ? 'users' : 'user'}
+          {t('global:users.management.deleteSelectedTitle', {
+            count: selectedRows.length,
+          })}
         </span>
       }
       desc={
@@ -74,29 +79,34 @@ export function UsersMultiDeleteDialog<TData>({
           className='space-y-4'
         >
           <p className='mb-2'>
-            Are you sure you want to delete the selected users? <br />
-            This action cannot be undone.
+            {t('global:users.management.deleteSelectedQuestion')}
           </p>
 
           <Label className='my-4 flex flex-col items-start gap-1.5'>
-            <span className=''>Confirm by typing "{CONFIRM_WORD}":</span>
+            <span className=''>
+              {t('global:users.management.confirmByTyping', {
+                word: CONFIRM_WORD,
+              })}
+            </span>
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder={`Type "${CONFIRM_WORD}" to confirm.`}
+              placeholder={t('global:users.management.typeToConfirm', {
+                word: CONFIRM_WORD,
+              })}
               autoFocus
             />
           </Label>
 
           <Alert variant='destructive'>
-            <AlertTitle>Warning!</AlertTitle>
+            <AlertTitle>{t('global:users.management.warningTitle')}</AlertTitle>
             <AlertDescription>
-              Please be careful, this operation can not be rolled back.
+              {t('global:users.management.warningBody')}
             </AlertDescription>
           </Alert>
         </form>
       }
-      confirmText='Delete'
+      confirmText={t('global:users.management.delete')}
       destructive
     />
   )

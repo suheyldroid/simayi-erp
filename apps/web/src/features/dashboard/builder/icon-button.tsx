@@ -1,4 +1,5 @@
 import type { ComponentProps, ReactNode } from 'react'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -59,13 +60,15 @@ export function TooltipIconButton({
       <TooltipTrigger asChild>
         <span
           tabIndex={0}
-          aria-label={`${label} (unavailable)`}
+          aria-label={t('dashboard:common.unavailableLabel', { label })}
           className='inline-flex rounded-md'
         >
           {button}
         </span>
       </TooltipTrigger>
-      <TooltipContent>{tooltip} Unavailable right now.</TooltipContent>
+      <TooltipContent>
+        {t('dashboard:common.unavailableTooltip', { tooltip })}
+      </TooltipContent>
     </Tooltip>
   )
 }

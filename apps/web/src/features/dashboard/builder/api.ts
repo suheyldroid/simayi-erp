@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { errorMessage } from '@/lib/api-error'
-import { api, globalApi } from '@/lib/auth'
+import { api, branchApi, globalApi } from '@/lib/auth'
 import {
   dashboardCatalogSchema,
   dashboardDataSchema,
@@ -58,10 +58,20 @@ export const dashboardBuilderApi = {
   ): Promise<DashboardData> {
     if (widgets.length === 0)
       return { asOf: new Date().toISOString(), results: [] }
-    const { data } = await client(scope).post<unknown>(
-      endpoint(scope, 'data'),
-      { widgets }
-    )
+    const path = endpoint(scope, 'data')
+    // Only organization business data is branch-filtered. Layout and catalog
+    // stay company-wide, and global data is never branch-scoped.
+    const request =
+      scope.kind === 'organization' && scope.branchUuid
+        ? branchApi.post<unknown>(
+            path,
+            { widgets },
+            {
+              branchUuid: scope.branchUuid,
+            }
+          )
+        : client(scope).post<unknown>(path, { widgets })
+    const { data } = await request
     return dashboardDataSchema.parse(data)
   },
 }

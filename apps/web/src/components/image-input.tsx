@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,8 +22,8 @@ export function ImageInput({
   onChange,
   resolveImage,
   credentialImagePrefix,
-  label = 'Image',
-  alt = 'Image preview',
+  label = t('common:image.label'),
+  alt = t('common:image.alt'),
 }: {
   image: string | null
   file: File | null
@@ -72,15 +73,15 @@ export function ImageInput({
 
   function select(next: File) {
     if (!allowedTypes.has(next.type)) {
-      setError('Choose a PNG, JPEG, or WebP image.')
+      setError(t('common:image.invalidType'))
       return
     }
     if (next.size === 0) {
-      setError('The selected image is empty.')
+      setError(t('common:image.emptyFile'))
       return
     }
     if (next.size > imageMaxBytes) {
-      setError('Images must be 1 MB or smaller.')
+      setError(t('common:image.tooLarge'))
       return
     }
     dropSelection()
@@ -123,7 +124,9 @@ export function ImageInput({
             />
           ) : (
             <span className='px-2 text-center text-xs text-muted-foreground'>
-              {loadFailed ? 'Preview unavailable' : 'No image'}
+              {loadFailed
+                ? t('common:image.previewUnavailable')
+                : t('common:image.none')}
             </span>
           )}
         </div>
@@ -136,7 +139,7 @@ export function ImageInput({
               disabled={disabled}
               onClick={() => inputRef.current?.click()}
             >
-              {hasImage ? 'Replace image' : 'Choose image'}
+              {hasImage ? t('common:image.replace') : t('common:image.choose')}
             </Button>
             {hasImage && (
               <Button
@@ -146,16 +149,16 @@ export function ImageInput({
                 disabled={disabled}
                 onClick={clear}
               >
-                Remove
+                {t('common:image.remove')}
               </Button>
             )}
           </div>
           <p id={hintId} className='text-xs text-muted-foreground'>
             {file
-              ? `New file: ${file.name}`
+              ? t('common:image.newFile', { name: file.name })
               : image
-                ? 'Current image. A new file uploads when you save.'
-                : 'PNG, JPEG, or WebP up to 1 MB.'}
+                ? t('common:image.current')
+                : t('common:image.hint')}
           </p>
           {error && (
             <p id={errorId} role='alert' className='text-sm text-destructive'>
@@ -164,7 +167,7 @@ export function ImageInput({
           )}
           {loadFailed && (
             <p role='alert' className='text-sm text-destructive'>
-              The image could not be loaded.
+              {t('common:image.loadFailed')}
             </p>
           )}
           <Input
@@ -174,7 +177,7 @@ export function ImageInput({
             accept={imageAccept}
             className='sr-only'
             disabled={disabled}
-            aria-label='Choose image file'
+            aria-label={t('common:image.chooseFile')}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : hintId}
             onChange={(event) => {

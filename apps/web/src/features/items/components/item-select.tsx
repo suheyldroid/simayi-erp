@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { useQuery } from '@tanstack/react-query'
 import { XIcon } from 'lucide-react'
+import { locale, t } from '@/lib/i18n'
 import { organizationCacheScope } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -107,8 +108,13 @@ export function ItemSelect({
                 value == null
                   ? undefined
                   : value.units
-                    ? `${value.name} · ${value.units}`
-                    : `${value.name} · no unit`
+                    ? t('catalog:items.select.titleWithUnits', {
+                        name: value.name,
+                        units: value.units,
+                      })
+                    : t('catalog:items.select.titleNoUnit', {
+                        name: value.name,
+                      })
               }
               className={cn(
                 'relative w-full min-w-0 justify-start ps-3',
@@ -121,7 +127,7 @@ export function ItemSelect({
                   value == null && 'text-muted-foreground'
                 )}
               >
-                {value == null ? 'Select item' : value.name}
+                {value == null ? t('catalog:items.select.select') : value.name}
               </span>
               <span
                 aria-hidden='true'
@@ -140,9 +146,11 @@ export function ItemSelect({
           >
             <Command shouldFilter={false} loop>
               <CommandInput
-                aria-label='Search items'
+                aria-label={t('catalog:items.searchLabel')}
                 placeholder={
-                  activeOnly ? 'Search active items…' : 'Search items…'
+                  activeOnly
+                    ? t('catalog:items.select.searchActivePlaceholder')
+                    : t('catalog:items.select.searchPlaceholder')
                 }
                 value={search}
                 onValueChange={(next) => {
@@ -158,7 +166,7 @@ export function ItemSelect({
                     role='status'
                     className='p-3 text-sm text-muted-foreground'
                   >
-                    Loading items…
+                    {t('catalog:items.loading')}
                   </p>
                 ) : options.isError ? (
                   <div
@@ -173,15 +181,15 @@ export function ItemSelect({
                       disabled={disabled}
                       onClick={() => void options.refetch()}
                     >
-                      Retry
+                      {t('catalog:common.retry')}
                     </Button>
                   </div>
                 ) : (
                   <>
                     <CommandEmpty>
                       {activeOnly
-                        ? 'No active items found.'
-                        : 'No items found.'}
+                        ? t('catalog:items.select.emptyActive')
+                        : t('catalog:items.select.empty')}
                     </CommandEmpty>
                     <CommandGroup>
                       {items.map((item) => {
@@ -217,12 +225,12 @@ export function ItemSelect({
                               </span>
                             ) : (
                               <span className='shrink-0 text-xs text-muted-foreground'>
-                                no unit
+                                {t('catalog:items.select.noUnit')}
                               </span>
                             )}
                             {alreadyAdded ? (
                               <span className='shrink-0 text-xs text-muted-foreground'>
-                                Already added
+                                {t('catalog:items.select.alreadyAdded')}
                               </span>
                             ) : null}
                           </CommandItem>
@@ -240,15 +248,19 @@ export function ItemSelect({
                   disabled={page === 0 || options.isFetching || disabled}
                   onClick={() => setPage((current) => Math.max(0, current - 1))}
                 >
-                  Previous
+                  {t('catalog:common.previous')}
                 </Button>
                 <span className='text-xs text-muted-foreground'>
                   {total === 0
-                    ? 'No items'
-                    : `${page * PAGE_SIZE + 1}–${Math.min(
-                        (page + 1) * PAGE_SIZE,
-                        total
-                      )} of ${total}`}
+                    ? t('catalog:items.select.noItems')
+                    : t('catalog:common.range', {
+                        from: (page * PAGE_SIZE + 1).toLocaleString(locale),
+                        to: Math.min(
+                          (page + 1) * PAGE_SIZE,
+                          total
+                        ).toLocaleString(locale),
+                        total: total.toLocaleString(locale),
+                      })}
                 </span>
                 <Button
                   type='button'
@@ -257,7 +269,7 @@ export function ItemSelect({
                   disabled={!hasNext || options.isFetching || disabled}
                   onClick={() => setPage((current) => current + 1)}
                 >
-                  Next
+                  {t('catalog:common.next')}
                 </Button>
               </div>
             </Command>
@@ -268,7 +280,7 @@ export function ItemSelect({
             type='button'
             variant='ghost'
             size='icon'
-            aria-label={`Clear ${label.toLowerCase()}`}
+            aria-label={t('catalog:common.clearSelection', { label })}
             disabled={disabled}
             className='absolute end-1 top-1/2 size-7 -translate-y-1/2 rounded-sm text-muted-foreground'
             onClick={(event) => {

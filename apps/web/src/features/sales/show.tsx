@@ -1,12 +1,22 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getRouteApi, Link } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { useOptionalBranch } from '@/lib/branch-boundary'
+import {
+  branchCacheScope,
+  captureBranchScope,
+  isBranchScopeCurrent,
+} from '@/lib/branch-scope'
 import { isPositiveDecimal } from '@/lib/decimal-string'
+import { locale, t } from '@/lib/i18n'
 import { useOrganizationSlug } from '@/lib/organization-boundary'
+import {
+  organizationLocation,
+  useOrganizationResourceParams,
+} from '@/lib/organization-navigation'
 import { parseResourceUuid } from '@/lib/resource-uuid'
-import { organizationCacheScope } from '@/lib/tenant'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -17,6 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { BranchInactiveNotice } from '@/components/layout/branch-gate'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
@@ -26,54 +37,82 @@ import {
 } from '@/features/finance/api'
 import { MoneyForm } from '@/features/finance/components/money-form'
 import { errorMessage, salesApi } from './api'
-import type { SaleIngredient, SaleReceipt } from './model'
-
-const saleRoute = getRouteApi(
-  '/_authenticated/o/$organizationSlug/_workspace/sales/$saleId'
-)
+import type { SaleIngredient, SaleReceipt, SaleReceiptInput } from './model'
 
 export function SaleDetail() {
-  const { saleId } = saleRoute.useParams()
+  const { saleId } = useOrganizationResourceParams()
+  const uuid = saleId === undefined ? null : parseResourceUuid(saleId)
+  return <SaleDetailView key={uuid ?? 'invalid'} uuid={uuid} />
+}
+
+function SaleDetailView({ uuid }: { uuid: string | null }) {
+  const branch = useOptionalBranch()
   const organizationSlug = useOrganizationSlug()
   const client = useQueryClient()
-  const scope = organizationCacheScope()
-  const uuid = parseResourceUuid(saleId)
+  const branchUuid = branch?.branchUuid ?? null
+  const scopeKey = branchCacheScope(branchUuid)
+  const captured = captureBranchScope(branchUuid)
+  const writable = branch?.branch.active ?? false
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [reversalTarget, setReversalTarget] = useState<SaleReceipt | null>(null)
   const sale = useQuery({
-    queryKey: ['sales', organizationCacheScope(), 'detail', uuid],
+    queryKey: ['sales', scopeKey, 'detail', uuid, branchUuid],
     queryFn: () => {
-      if (uuid === null) throw new Error('Sale uuid is required')
-      return salesApi.get(uuid)
+      if (uuid === null)
+        throw new Error(t('operations:common.errors.uuidRequired'))
+      return salesApi.get(branchUuid, uuid)
     },
     enabled: uuid !== null,
   })
   const receipt = useMutation({
-    mutationFn: (input: {
-      uuid: string
-      body: Parameters<typeof salesApi.receipt>[1]
-    }) => salesApi.receipt(input.uuid, input.body),
-    onSuccess: async () => {
-      setReceiptOpen(false)
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ['sales', scope] }),
-        client.invalidateQueries({ queryKey: ['finance', scope] }),
-      ])
-      toast.success('Receipt recorded')
+    mutationFn: (input: { uuid: string; body: SaleReceiptInput }) => {
+      if (branchUuid === null)
+        throw new Error(t('operations:common.errors.branchRequired'))
+      return salesApi.receipt(branchUuid, input.uuid, input.body)
     },
-    onError: (caught) => toast.error(errorMessage(caught)),
+    onSuccess: async () => {
+      // Receipts change the sale's payment state, so the company aggregate of
+      // the same organization goes stale with the branch scope. The key is
+      // derived from the captured organization scope, never the ambient one.
+      const companyScope = `${captured.organizationScope}::company`
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ['sales', captured.scope] }),
+        client.invalidateQueries({ queryKey: ['sales', companyScope] }),
+        client.invalidateQueries({
+          queryKey: ['finance', captured.organizationScope],
+        }),
+      ])
+      if (!isBranchScopeCurrent(captured)) return
+      setReceiptOpen(false)
+      toast.success(t('operations:sales.detail.receiptRecorded'))
+    },
+    onError: (caught) => {
+      if (!isBranchScopeCurrent(captured)) return
+      toast.error(errorMessage(caught))
+    },
   })
   const reversal = useMutation({
     mutationFn: (movementUuid: string) => financeApi.reverse(movementUuid),
     onSuccess: async () => {
-      setReversalTarget(null)
+      // A reversal changes the sale's payment state and the company finance
+      // projection, so the same-organization aggregate list is invalidated
+      // together with the captured branch keys.
+      const companyScope = `${captured.organizationScope}::company`
       await Promise.all([
-        client.invalidateQueries({ queryKey: ['sales', scope] }),
-        client.invalidateQueries({ queryKey: ['finance', scope] }),
+        client.invalidateQueries({ queryKey: ['sales', captured.scope] }),
+        client.invalidateQueries({ queryKey: ['sales', companyScope] }),
+        client.invalidateQueries({
+          queryKey: ['finance', captured.organizationScope],
+        }),
       ])
-      toast.success('Receipt reversed')
+      if (!isBranchScopeCurrent(captured)) return
+      setReversalTarget(null)
+      toast.success(t('operations:sales.detail.receiptReversed'))
     },
-    onError: (caught) => toast.error(financeErrorMessage(caught)),
+    onError: (caught) => {
+      if (!isBranchScopeCurrent(captured)) return
+      toast.error(financeErrorMessage(caught))
+    },
   })
   const detailStatus =
     sale.error && axios.isAxiosError(sale.error)
@@ -96,57 +135,90 @@ export function SaleDetail() {
       <Main className='space-y-6'>
         <div>
           <Link
-            to='/o/$organizationSlug/sales'
-            params={{ organizationSlug }}
+            {...organizationLocation(organizationSlug, branchUuid, '/sales')}
             className='rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
           >
-            Back to sales
+            {t('operations:sales.detail.back')}
           </Link>
           <h1 className='mt-2 text-2xl font-bold'>
             {record && !sale.isError
-              ? `Sale ${record.reference || record.referenceInt}`
-              : 'Sale'}
+              ? t('operations:sales.detail.titleWithReference', {
+                  reference: record.reference || record.referenceInt,
+                })
+              : t('operations:sales.detail.title')}
           </h1>
         </div>
-        {uuid === null && <p role='alert'>Sale not found.</p>}
-        {uuid !== null && sale.isPending && <p role='status'>Loading sale…</p>}
+        {branch !== null && !branch.branch.active && (
+          <BranchInactiveNotice branchName={branch.branch.name} />
+        )}
+        {uuid === null && (
+          <p role='alert'>{t('operations:sales.detail.notFound')}</p>
+        )}
+        {uuid !== null && sale.isPending && (
+          <p role='status'>{t('operations:sales.detail.loading')}</p>
+        )}
         {uuid !== null && sale.isError && detailStatus === 404 && (
-          <p role='alert'>Sale not found.</p>
+          <p role='alert'>{t('operations:sales.detail.notFound')}</p>
         )}
         {uuid !== null && sale.isError && detailStatus !== 404 && (
           <p role='alert'>
-            Could not load this sale.{' '}
+            {t('operations:sales.detail.loadError')}{' '}
             <Button variant='outline' onClick={() => void sale.refetch()}>
-              Retry
+              {t('operations:common.retry')}
             </Button>
           </p>
         )}
         {record && !sale.isError && (
           <>
             <section className='space-y-2 rounded-md border border-border p-4'>
-              <h2 className='text-xl font-semibold'>Sale details</h2>
+              <h2 className='text-xl font-semibold'>
+                {t('operations:sales.detail.sectionTitle')}
+              </h2>
               <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
-                <dt>Reference</dt>
+                <dt>{t('operations:sales.detail.fields.reference')}</dt>
                 <dd>{record.reference || record.referenceInt || '—'}</dd>
-                <dt>Recipe</dt>
+                <dt>{t('operations:sales.detail.fields.branch')}</dt>
+                <dd>
+                  {record.branch.name}
+                  {record.branch.uuid === branchUuid
+                    ? ''
+                    : t('operations:sales.detail.sourceBranchSuffix')}
+                </dd>
+                <dt>{t('operations:sales.detail.fields.recipe')}</dt>
                 <dd>{record.recipeName || '—'}</dd>
-                <dt>Recipe version</dt>
+                <dt>{t('operations:sales.detail.fields.recipeVersion')}</dt>
                 <dd>{record.recipeVersion}</dd>
-                <dt>Channel</dt>
+                {record.recipeDefinitionUuid !== null && (
+                  <>
+                    <dt>
+                      {t('operations:sales.detail.fields.recipeDefinition')}
+                    </dt>
+                    <dd className='break-all'>
+                      {record.recipeDefinitionUuid}
+                      {record.recipeSourceVersion === null
+                        ? ''
+                        : t('operations:sales.detail.customization', {
+                            version: record.recipeSourceVersion,
+                          })}
+                    </dd>
+                  </>
+                )}
+                <dt>{t('operations:sales.detail.fields.channel')}</dt>
                 <dd>{record.channelName ?? '—'}</dd>
-                <dt>Sale date</dt>
+                <dt>{t('operations:sales.detail.fields.businessDate')}</dt>
                 <dd>{record.businessDate ?? '—'}</dd>
-                <dt>Batch</dt>
+                <dt>{t('operations:sales.detail.fields.batch')}</dt>
                 <dd>
                   {record.batchUuid == null ? (
                     '—'
                   ) : (
                     <Link
-                      to='/o/$organizationSlug/sales/batches/$batchId'
-                      params={{
+                      {...organizationLocation(
                         organizationSlug,
-                        batchId: record.batchUuid,
-                      }}
+                        record.branch.uuid,
+                        '/sales/batches/$batchId',
+                        { batchId: record.batchUuid }
+                      )}
                       className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                     >
                       {record.batchReference ?? record.batchUuid}
@@ -155,9 +227,14 @@ export function SaleDetail() {
                 </dd>
                 {record.sourceRow != null && (
                   <>
-                    <dt>Source</dt>
+                    <dt>{t('operations:sales.detail.fields.source')}</dt>
                     <dd>
-                      {record.sourceSheet ?? 'Sheet'} row {record.sourceRow}
+                      {t('operations:sales.detail.sourceRow', {
+                        sheet:
+                          record.sourceSheet ??
+                          t('operations:sales.detail.sheet'),
+                        row: record.sourceRow,
+                      })}
                       {record.sourceChannelText
                         ? ` · ${record.sourceChannelText}`
                         : ''}
@@ -167,42 +244,42 @@ export function SaleDetail() {
                     </dd>
                   </>
                 )}
-                <dt>Quantity</dt>
+                <dt>{t('operations:sales.detail.fields.quantity')}</dt>
                 <dd>{record.quantity}</dd>
-                <dt>Recorded</dt>
-                <dd>{new Date(record.createdAt).toLocaleString()}</dd>
-                <dt>Staff</dt>
+                <dt>{t('operations:sales.detail.fields.recorded')}</dt>
+                <dd>{new Date(record.createdAt).toLocaleString(locale)}</dd>
+                <dt>{t('operations:sales.detail.fields.staff')}</dt>
                 <dd>{record.createdByName}</dd>
-                <dt>Ingredients</dt>
+                <dt>{t('operations:sales.detail.fields.ingredients')}</dt>
                 <dd>{record.ingredientCount}</dd>
               </dl>
             </section>
             <section className='space-y-3 rounded-md border border-border p-4'>
-              <h2 className='text-xl font-semibold'>Payment</h2>
+              <h2 className='text-xl font-semibold'>
+                {t('operations:sales.detail.paymentTitle')}
+              </h2>
               {!priced ? (
                 <p className='text-sm text-muted-foreground'>
-                  This sale has no recorded price, so no receipt can be
-                  recorded. Only priced sales created after finance was
-                  configured can receive payments.
+                  {t('operations:sales.detail.noPrice')}
                 </p>
               ) : (
                 <>
                   <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
-                    <dt>Currency</dt>
+                    <dt>{t('operations:sales.detail.fields.currency')}</dt>
                     <dd>{record.currencyCode}</dd>
-                    <dt>Unit price</dt>
+                    <dt>{t('operations:sales.detail.fields.unitPrice')}</dt>
                     <dd>
                       {record.unitPrice ?? '—'} {record.currencyCode}
                     </dd>
-                    <dt>Sale total</dt>
+                    <dt>{t('operations:sales.detail.fields.saleTotal')}</dt>
                     <dd>
                       {record.totalPrice} {record.currencyCode}
                     </dd>
-                    <dt>Collected</dt>
+                    <dt>{t('operations:sales.detail.fields.collected')}</dt>
                     <dd>
                       {record.collectedAmount} {record.currencyCode}
                     </dd>
-                    <dt>Outstanding</dt>
+                    <dt>{t('operations:sales.detail.fields.outstanding')}</dt>
                     <dd className='font-medium'>
                       {record.outstandingAmount} {record.currencyCode}
                     </dd>
@@ -211,6 +288,7 @@ export function SaleDetail() {
                     <Button
                       type='button'
                       disabled={
+                        !writable ||
                         !isPositiveDecimal(record.outstandingAmount ?? '0')
                       }
                       onClick={() => {
@@ -218,21 +296,33 @@ export function SaleDetail() {
                         setReceiptOpen(true)
                       }}
                     >
-                      Record receipt
+                      {t('operations:sales.detail.recordReceipt')}
                     </Button>
                   </div>
                   <Table>
                     <caption className='sr-only'>
-                      Receipts posted for this sale
+                      {t('operations:sales.detail.receiptsCaption')}
                     </caption>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Note</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>
+                          {t('operations:sales.detail.receipts.date')}
+                        </TableHead>
+                        <TableHead>
+                          {t('operations:sales.detail.receipts.type')}
+                        </TableHead>
+                        <TableHead>
+                          {t('operations:sales.detail.receipts.amount')}
+                        </TableHead>
+                        <TableHead>
+                          {t('operations:sales.detail.receipts.note')}
+                        </TableHead>
+                        <TableHead>
+                          {t('operations:sales.detail.receipts.status')}
+                        </TableHead>
+                        <TableHead>
+                          {t('operations:sales.detail.receipts.actions')}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -240,7 +330,9 @@ export function SaleDetail() {
                         <TableRow key={entry.uuid}>
                           <TableCell>{entry.occurredAt}</TableCell>
                           <TableCell>
-                            {entry.kind === 'reversal' ? 'Reversal' : 'Receipt'}
+                            {entry.kind === 'reversal'
+                              ? t('operations:sales.detail.receipts.reversal')
+                              : t('operations:sales.detail.receipts.receipt')}
                           </TableCell>
                           <TableCell>
                             {entry.amount} {record.currencyCode}
@@ -248,36 +340,43 @@ export function SaleDetail() {
                           <TableCell>{entry.note || '—'}</TableCell>
                           <TableCell>
                             {entry.kind === 'reversal'
-                              ? 'Reversal'
+                              ? t('operations:sales.detail.receipts.reversal')
                               : entry.reversed
-                                ? 'Reversed'
-                                : 'Posted'}
+                                ? t('operations:sales.detail.receipts.reversed')
+                                : t('operations:sales.detail.receipts.posted')}
                           </TableCell>
                           <TableCell>
                             <div className='flex flex-wrap items-center gap-2'>
                               <Link
-                                to='/o/$organizationSlug/finance/$movementId'
-                                params={{
+                                {...organizationLocation(
                                   organizationSlug,
-                                  movementId: entry.uuid,
-                                }}
-                                aria-label='Details for this receipt'
+                                  null,
+                                  '/finance/$movementId',
+                                  { movementId: entry.uuid }
+                                )}
+                                aria-label={t(
+                                  'operations:sales.detail.receiptDetailsLabel'
+                                )}
                                 className='rounded-sm text-sm font-medium text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                               >
-                                Details
+                                {t('operations:sales.detail.receipts.details')}
                               </Link>
-                              {entry.kind === 'receipt' && !entry.reversed && (
-                                <Button
-                                  type='button'
-                                  variant='outline'
-                                  onClick={() => {
-                                    reversal.reset()
-                                    setReversalTarget(entry)
-                                  }}
-                                >
-                                  Reverse
-                                </Button>
-                              )}
+                              {entry.kind === 'receipt' &&
+                                !entry.reversed &&
+                                writable && (
+                                  <Button
+                                    type='button'
+                                    variant='outline'
+                                    onClick={() => {
+                                      reversal.reset()
+                                      setReversalTarget(entry)
+                                    }}
+                                  >
+                                    {t(
+                                      'operations:sales.detail.receipts.reverse'
+                                    )}
+                                  </Button>
+                                )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -285,7 +384,7 @@ export function SaleDetail() {
                       {record.receipts.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={6}>
-                            No receipts have been recorded for this sale.
+                            {t('operations:sales.detail.receipts.empty')}
                           </TableCell>
                         </TableRow>
                       )}
@@ -295,19 +394,35 @@ export function SaleDetail() {
               )}
             </section>
             <section className='space-y-2'>
-              <h2 className='text-xl font-semibold'>Ingredient snapshot</h2>
+              <h2 className='text-xl font-semibold'>
+                {t('operations:sales.detail.ingredientsTitle')}
+              </h2>
               <Table>
                 <caption className='sr-only'>
-                  Ingredients recorded for this sale
+                  {t('operations:sales.detail.ingredientsCaption')}
                 </caption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Ingredient</TableHead>
-                    <TableHead>Per recipe</TableHead>
-                    <TableHead>Required</TableHead>
-                    <TableHead>Consumed</TableHead>
-                    <TableHead>Units</TableHead>
-                    <TableHead>Note</TableHead>
+                    <TableHead>
+                      {t(
+                        'operations:sales.detail.ingredientColumns.ingredient'
+                      )}
+                    </TableHead>
+                    <TableHead>
+                      {t('operations:sales.detail.ingredientColumns.perRecipe')}
+                    </TableHead>
+                    <TableHead>
+                      {t('operations:sales.detail.ingredientColumns.required')}
+                    </TableHead>
+                    <TableHead>
+                      {t('operations:sales.detail.ingredientColumns.consumed')}
+                    </TableHead>
+                    <TableHead>
+                      {t('operations:sales.detail.ingredientColumns.units')}
+                    </TableHead>
+                    <TableHead>
+                      {t('operations:sales.detail.ingredientColumns.note')}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -320,7 +435,7 @@ export function SaleDetail() {
                   {record.ingredients.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6}>
-                        No ingredients were recorded.
+                        {t('operations:sales.detail.ingredientsEmpty')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -328,24 +443,44 @@ export function SaleDetail() {
               </Table>
             </section>
             <section className='space-y-2'>
-              <h2 className='text-xl font-semibold'>Item stock consumption</h2>
+              <h2 className='text-xl font-semibold'>
+                {t('operations:sales.detail.consumptionTitle')}
+              </h2>
               {record.consumptions.length === 0 ? (
                 <p className='text-sm text-muted-foreground'>
-                  No item stock was consumed for this sale.
+                  {t('operations:sales.detail.consumptionEmpty')}
                 </p>
               ) : (
                 <>
                   <Table>
                     <caption className='sr-only'>
-                      Item stock consumed by this sale
+                      {t('operations:sales.detail.consumptionCaption')}
                     </caption>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Ingredient</TableHead>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Before</TableHead>
-                        <TableHead>After</TableHead>
+                        <TableHead>
+                          {t(
+                            'operations:sales.detail.ingredientColumns.ingredient'
+                          )}
+                        </TableHead>
+                        <TableHead>
+                          {t('operations:sales.detail.consumptionColumns.item')}
+                        </TableHead>
+                        <TableHead>
+                          {t(
+                            'operations:sales.detail.ingredientColumns.consumed'
+                          )}
+                        </TableHead>
+                        <TableHead>
+                          {t(
+                            'operations:sales.detail.consumptionColumns.before'
+                          )}
+                        </TableHead>
+                        <TableHead>
+                          {t(
+                            'operations:sales.detail.consumptionColumns.after'
+                          )}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -354,16 +489,18 @@ export function SaleDetail() {
                           <TableCell>
                             {ingredientNames.get(
                               consumption.buildComponentUuid
-                            ) ?? 'Ingredient'}
+                            ) ??
+                              t('operations:sales.detail.ingredientFallback')}
                           </TableCell>
                           <TableCell className='break-all'>
                             {consumption.itemUuid != null ? (
                               <Link
-                                to='/o/$organizationSlug/stock/$itemId'
-                                params={{
+                                {...organizationLocation(
                                   organizationSlug,
-                                  itemId: consumption.itemUuid,
-                                }}
+                                  record.branch.uuid,
+                                  '/stock/$itemId',
+                                  { itemId: consumption.itemUuid }
+                                )}
                                 className='rounded-sm text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
                               >
                                 {consumption.itemUuid}
@@ -385,13 +522,16 @@ export function SaleDetail() {
           </>
         )}
       </Main>
-      {receiptOpen && record && (
+      {receiptOpen && record && writable && (
         <MoneyForm
-          title='Record sale receipt'
-          description='A receipt posts a cash inflow against this sale. It cannot exceed the outstanding amount, and a retry with the same request key never posts twice.'
+          title={t('operations:sales.detail.receiptFormTitle')}
+          description={t('operations:sales.detail.receiptFormDescription')}
           currencyCode={record.currencyCode}
-          hint={`Outstanding ${record.outstandingAmount} ${record.currencyCode ?? ''}`.trim()}
-          submitLabel='Record receipt'
+          hint={t('operations:sales.detail.receiptFormHint', {
+            amount: record.outstandingAmount,
+            currency: record.currencyCode ?? '',
+          }).trim()}
+          submitLabel={t('operations:sales.detail.recordReceipt')}
           pending={receipt.isPending}
           error={receipt.error}
           onClose={() => {
@@ -403,17 +543,17 @@ export function SaleDetail() {
         />
       )}
       <ConfirmDialog
-        open={reversalTarget !== null}
+        open={reversalTarget !== null && writable}
         onOpenChange={(open) => {
           if (!open && !reversal.isPending) {
             setReversalTarget(null)
             reversal.reset()
           }
         }}
-        title='Reverse sale receipt'
-        desc='Reversing posts one linked cash outflow, frees the outstanding amount again and keeps the original receipt immutable. This cannot be undone or repeated.'
-        cancelBtnText='Keep receipt'
-        confirmText='Reverse receipt'
+        title={t('operations:sales.detail.reversalTitle')}
+        desc={t('operations:sales.detail.reversalDescription')}
+        cancelBtnText={t('operations:sales.detail.keepReceipt')}
+        confirmText={t('operations:sales.detail.reversalConfirm')}
         destructive
         isLoading={reversal.isPending}
         handleConfirm={() => {
@@ -440,7 +580,9 @@ function IngredientRow({ ingredient }: { ingredient: SaleIngredient }) {
       <TableCell>{ingredient.quantityPerRecipe}</TableCell>
       <TableCell>{ingredient.requiredQuantity}</TableCell>
       <TableCell>{ingredient.consumedQuantity}</TableCell>
-      <TableCell>{ingredient.itemUnits || 'Unknown unit'}</TableCell>
+      <TableCell>
+        {ingredient.itemUnits || t('operations:common.unknownUnit')}
+      </TableCell>
       <TableCell>{ingredient.note || '—'}</TableCell>
     </TableRow>
   )

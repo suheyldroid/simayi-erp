@@ -2,7 +2,9 @@ import { useId, useState } from 'react'
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { useQuery } from '@tanstack/react-query'
 import { XIcon } from 'lucide-react'
-import { organizationCacheScope } from '@/lib/tenant'
+import { useOptionalBranch } from '@/lib/branch-boundary'
+import { branchCacheScope } from '@/lib/branch-scope'
+import { locale, t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,6 +30,9 @@ export type RecipeOption = Pick<
   RecipeSummary,
   | 'uuid'
   | 'name'
+  | 'code'
+  | 'active'
+  | 'sellable'
   | 'version'
   | 'ingredientCount'
   | 'sellingPrice'
@@ -35,47 +40,91 @@ export type RecipeOption = Pick<
 >
 
 function ingredientCountLabel(count: number) {
-  return `${count} ingredient${count === 1 ? '' : 's'}`
+  return t('catalog:recipes.select.ingredientCount', {
+    n: count.toLocaleString(locale),
+  })
 }
 
+/**
+ * Effective recipe picker shared by sales, batch mapping and nested recipe
+ * ingredient rows. It reads the verified branch context (or Company context in
+ * settings), lists only effective active recipes, and returns the effective
+ * selector UUID: the company root UUID for shared/customized recipes and the
+ * local UUID for branch-local recipes. Never send a customization row UUID.
+ */
 export function RecipeSelect({
   label,
   value,
+  branchUuid: fixedBranchUuid,
   excludeIds = [],
   disabled = false,
   showPrice = true,
+  sellableOnly = false,
   invalid = false,
   describedBy,
   onChange,
 }: {
   label: string
   value: RecipeOption | null
+  /**
+   * Fixed branch to read. Defaults to the verified selected branch. Batch
+   * product mapping passes the batch's branch so the offered rows exactly match
+   * the branch the backend validates.
+   */
+  branchUuid?: string | null
   /** Recipes already chosen elsewhere; they stay visible but cannot be picked. */
   excludeIds?: readonly string[]
   disabled?: boolean
   /** Show the recorded price/unpriced badge next to each result. */
   showPrice?: boolean
+  /**
+   * Direct-sale pickers keep only sellable definitions, because a recipe sold
+   * on its own must be sellable and priced. An ingredient picker leaves it off:
+   * a nested recipe never has to be sellable.
+   */
+  sellableOnly?: boolean
   /** Marks the combobox invalid when a field-level message explains why. */
   invalid?: boolean
   describedBy?: string
   onChange: (next: RecipeOption | null) => void
 }) {
   const triggerId = useId()
+  const selectedBranch = useOptionalBranch()
+  const branchUuid =
+    fixedBranchUuid !== undefined
+      ? fixedBranchUuid
+      : (selectedBranch?.branchUuid ?? null)
+  // Company context edits a company template, so its ingredient picker must
+  // offer canonical company templates only: a branch-local recipe can never
+  // become a company-template ingredient. A branch path keeps its full
+  // effective catalog (shared, customized and local).
+  const templateOnly = branchUuid === null
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
   const options = useQuery({
     queryKey: [
       'recipe',
-      'recipes',
-      organizationCacheScope(),
+      branchCacheScope(branchUuid),
       'select',
-      'active',
+      templateOnly ? 'templates' : 'active',
+      sellableOnly ? 'sellable' : 'all',
       page,
       search,
+      branchUuid,
     ],
     queryFn: () =>
-      recipeApi.recipes({ page, search, active: true, limit: PAGE_SIZE }),
+      recipeApi.recipes(
+        {
+          page,
+          search,
+          active: true,
+          limit: PAGE_SIZE,
+          templates: templateOnly || undefined,
+          sellable: sellableOnly ? true : undefined,
+        },
+        branchUuid
+      ),
     enabled: open,
   })
   const recipes = options.data?.items ?? []
@@ -107,9 +156,11 @@ export function RecipeSelect({
               title={
                 value == null
                   ? undefined
-                  : `${value.name} · v${value.version} · ${ingredientCountLabel(
-                      value.ingredientCount
-                    )}`
+                  : t('catalog:recipes.select.title', {
+                      name: value.name,
+                      version: value.version,
+                      ingredients: ingredientCountLabel(value.ingredientCount),
+                    }) + (value.code === null ? '' : ` · ${value.code}`)
               }
               className={cn(
                 'relative w-full min-w-0 justify-start ps-3',
@@ -122,7 +173,11 @@ export function RecipeSelect({
                   value == null && 'text-muted-foreground'
                 )}
               >
-                {value == null ? 'Select recipe' : value.name}
+                {value == null
+                  ? t('catalog:recipes.select.select')
+                  : value.code === null
+                    ? value.name
+                    : `${value.code} · ${value.name}`}
               </span>
               <span
                 aria-hidden='true'
@@ -141,8 +196,8 @@ export function RecipeSelect({
           >
             <Command shouldFilter={false} loop>
               <CommandInput
-                aria-label='Search recipes'
-                placeholder='Search active recipes…'
+                aria-label={t('catalog:recipes.select.searchLabel')}
+                placeholder={t('catalog:recipes.select.searchPlaceholder')}
                 value={search}
                 onValueChange={(next) => {
                   setSearch(next)
@@ -157,7 +212,7 @@ export function RecipeSelect({
                     role='status'
                     className='p-3 text-sm text-muted-foreground'
                   >
-                    Loading recipes…
+                    {t('catalog:recipes.select.loading')}
                   </p>
                 ) : options.isError ? (
                   <div
@@ -172,12 +227,14 @@ export function RecipeSelect({
                       disabled={disabled}
                       onClick={() => void options.refetch()}
                     >
-                      Retry
+                      {t('catalog:common.retry')}
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <CommandEmpty>No recipes found.</CommandEmpty>
+                    <CommandEmpty>
+                      {t('catalog:recipes.select.empty')}
+                    </CommandEmpty>
                     <CommandGroup>
                       {recipes.map((recipe) => {
                         const alreadyAdded = excluded.has(recipe.uuid)
@@ -190,6 +247,9 @@ export function RecipeSelect({
                               onChange({
                                 uuid: recipe.uuid,
                                 name: recipe.name,
+                                code: recipe.code,
+                                active: recipe.active,
+                                sellable: recipe.sellable,
                                 version: recipe.version,
                                 ingredientCount: recipe.ingredientCount,
                                 sellingPrice: recipe.sellingPrice,
@@ -209,11 +269,16 @@ export function RecipeSelect({
                             <span className='min-w-0 flex-1 truncate'>
                               {recipe.name}
                             </span>
+                            {recipe.code !== null && (
+                              <span className='shrink-0 text-xs text-muted-foreground'>
+                                {recipe.code}
+                              </span>
+                            )}
                             <span className='shrink-0 text-xs text-muted-foreground'>
                               {showPrice
                                 ? `${
                                     recipe.sellingPrice === null
-                                      ? 'Unpriced'
+                                      ? t('catalog:recipes.select.unpriced')
                                       : `${recipe.sellingPrice} ${recipe.priceCurrencyCode ?? ''}`.trim()
                                   } · `
                                 : ''}
@@ -221,7 +286,7 @@ export function RecipeSelect({
                             </span>
                             {alreadyAdded ? (
                               <span className='shrink-0 text-xs text-muted-foreground'>
-                                Already used
+                                {t('catalog:recipes.select.alreadyUsed')}
                               </span>
                             ) : null}
                           </CommandItem>
@@ -239,15 +304,19 @@ export function RecipeSelect({
                   disabled={page === 0 || options.isFetching || disabled}
                   onClick={() => setPage((current) => Math.max(0, current - 1))}
                 >
-                  Previous
+                  {t('catalog:common.previous')}
                 </Button>
                 <span className='text-xs text-muted-foreground'>
                   {total === 0
-                    ? 'No recipes'
-                    : `${page * PAGE_SIZE + 1}–${Math.min(
-                        (page + 1) * PAGE_SIZE,
-                        total
-                      )} of ${total}`}
+                    ? t('catalog:recipes.select.none')
+                    : t('catalog:common.range', {
+                        from: (page * PAGE_SIZE + 1).toLocaleString(locale),
+                        to: Math.min(
+                          (page + 1) * PAGE_SIZE,
+                          total
+                        ).toLocaleString(locale),
+                        total: total.toLocaleString(locale),
+                      })}
                 </span>
                 <Button
                   type='button'
@@ -256,7 +325,7 @@ export function RecipeSelect({
                   disabled={!hasNext || options.isFetching || disabled}
                   onClick={() => setPage((current) => current + 1)}
                 >
-                  Next
+                  {t('catalog:common.next')}
                 </Button>
               </div>
             </Command>
@@ -267,7 +336,7 @@ export function RecipeSelect({
             type='button'
             variant='ghost'
             size='icon'
-            aria-label={`Clear ${label.toLowerCase()}`}
+            aria-label={t('catalog:common.clearSelection', { label })}
             disabled={disabled}
             className='absolute end-1 top-1/2 size-7 -translate-y-1/2 rounded-sm text-muted-foreground'
             onClick={(event) => {

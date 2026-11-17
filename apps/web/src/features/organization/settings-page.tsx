@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { organizationSessionQuery } from '@/lib/auth'
+import { t } from '@/lib/i18n'
 import { useOrganizationBoundary } from '@/lib/organization-boundary'
 import { Button } from '@/components/ui/button'
 import { organizationApi } from './api'
@@ -77,7 +78,8 @@ export function OrganizationSettingsPage({
           <div className='flex flex-wrap items-baseline gap-2'>
             <h2 className='text-2xl font-bold'>{organization.name}</h2>
             <span className='text-xs text-muted-foreground'>
-              ID: <span className='font-mono break-all'>{organization.id}</span>
+              {t('global:organizationGate.idPrefix')}{' '}
+              <span className='font-mono break-all'>{organization.id}</span>
             </span>
           </div>
         </div>
@@ -96,32 +98,33 @@ export function OrganizationSettingsPage({
           </div>
         ) : null}
       </header>
-      {session.isPending ? <p role='status'>Loading your membership…</p> : null}
+      {session.isPending ? (
+        <p role='status'>{t('global:organizationGate.loadingMembership')}</p>
+      ) : null}
       {session.isError ? (
         <p role='alert'>
-          Could not load your organization membership.{' '}
+          {t('global:organizationGate.sessionLoadFailed')}{' '}
           <Button variant='outline' onClick={() => void session.refetch()}>
-            Retry
+            {t('global:shared.retry')}
           </Button>
         </p>
       ) : null}
       {membership.isPending ? (
-        <p role='status'>Loading your membership…</p>
+        <p role='status'>{t('global:organizationGate.loadingMembership')}</p>
       ) : null}
       {membership.isError ? (
         <p role='alert'>
-          Could not load your membership.{' '}
+          {t('global:organizationGate.membershipLoadFailed')}{' '}
           <Button variant='outline' onClick={() => void membership.refetch()}>
-            Retry
+            {t('global:shared.retry')}
           </Button>
         </p>
       ) : null}
       {membershipMismatch ? (
         <p role='alert'>
-          Your membership no longer matches the active session for this
-          organization. Reload the page to verify your access again.{' '}
+          {t('global:organizationGate.mismatch')}{' '}
           <Button variant='outline' onClick={() => window.location.reload()}>
-            Reload
+            {t('global:organizationGate.reload')}
           </Button>
         </p>
       ) : null}

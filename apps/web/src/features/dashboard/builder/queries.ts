@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
+import { branchCacheScope } from '@/lib/branch-scope'
 import { organizationCacheScope } from '@/lib/tenant'
 import { dashboardBuilderApi } from './api'
 import { dashboardDataSignature } from './definition'
@@ -8,6 +9,8 @@ import type { DashboardBuilderScope, DashboardWidget } from './model'
  * Cache namespace for the current account and context. Global keys include the
  * native membership signature so a membership change refetches aggregates;
  * organization keys include the organization and the pinned tenant scope.
+ * A selected branch is deliberately absent: it filters data, never the saved
+ * layout or the server catalog.
  */
 export function builderScopeKey(scope: DashboardBuilderScope): string[] {
   return scope.kind === 'global'
@@ -18,6 +21,17 @@ export function builderScopeKey(scope: DashboardBuilderScope): string[] {
         organizationCacheScope(),
         scope.accountId,
       ]
+}
+
+/**
+ * Business data is the only branch-sensitive dashboard read: a selected branch
+ * filters it, while the same saved layout is reused. Company mode (no branch)
+ * keeps the company-wide rollup.
+ */
+function dataScopeKey(scope: DashboardBuilderScope): string[] {
+  return scope.kind === 'organization'
+    ? [branchCacheScope(scope.branchUuid)]
+    : []
 }
 
 export function dashboardCatalogQueryOptions(scope: DashboardBuilderScope) {
@@ -51,6 +65,7 @@ export function dashboardDataQueryOptions(
       'dashboard',
       'builder',
       ...builderScopeKey(scope),
+      ...dataScopeKey(scope),
       'data',
       dashboardDataSignature(widgets),
     ],

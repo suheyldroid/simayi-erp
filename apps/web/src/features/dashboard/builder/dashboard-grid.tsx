@@ -9,6 +9,7 @@ import {
   type Layout,
 } from '@snapgridjs/react'
 import { Pencil, Trash2 } from 'lucide-react'
+import { t } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import {
@@ -141,7 +142,11 @@ function DashboardCardStack({
   onRetry,
 }: CardProps) {
   return (
-    <div role='group' aria-label='Dashboard cards' className='space-y-3'>
+    <div
+      role='group'
+      aria-label={t('dashboard:grid.cards')}
+      className='space-y-3'
+    >
       {readingOrder(widgets).map((widget) => (
         <div key={widget.id} style={{ height: widgetPixelHeight(widget) }}>
           <WidgetCard
@@ -308,7 +313,7 @@ function DashboardGridEditor(props: GridProps) {
     <div
       role='region'
       tabIndex={0}
-      aria-label='Dashboard editing grid; scroll sideways to reach every column'
+      aria-label={t('dashboard:grid.editingRegion')}
       className='overflow-x-auto pb-2 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
     >
       {canvas}
@@ -360,16 +365,16 @@ const DashboardTile = memo(function DashboardTile({
   const actions: ReactNode = (
     <>
       <TooltipIconButton
-        label={`Edit ${widget.title}`}
-        tooltip='Edit card'
+        label={t('dashboard:grid.editLabel', { title: widget.title })}
+        tooltip={t('dashboard:grid.editTooltip')}
         disabled={busy || !canEdit}
         onClick={() => onEdit(widget)}
       >
         <Pencil aria-hidden='true' />
       </TooltipIconButton>
       <TooltipIconButton
-        label={`Remove ${widget.title}`}
-        tooltip='Remove card'
+        label={t('dashboard:grid.removeLabel', { title: widget.title })}
+        tooltip={t('dashboard:grid.removeTooltip')}
         disabled={busy}
         onClick={() => onRemove(widget)}
       >

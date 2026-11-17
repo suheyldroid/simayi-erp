@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { invalidateItemStockCaches } from '@/lib/item-stock-cache'
-import { organizationCacheScope } from '@/lib/tenant'
+import {
+  captureBranchScope,
+  isBranchScopeCurrent,
+  type CapturedBranchScope,
+} from '@/lib/branch-scope'
+import { t } from '@/lib/i18n'
+import { invalidateBranchStockCaches } from '@/lib/item-stock-cache'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -13,56 +18,66 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { FieldInput } from '@/components/field-input'
-import { errorMessage, itemApi } from '@/features/items/api'
+import { errorMessage } from '@/features/items/api'
 import {
   ItemSelect,
   type ItemOption,
 } from '@/features/items/components/item-select'
 import { stockApi } from '../api'
+import { branchStockBalanceKey } from '../cache'
 import { StockPageModel } from '../model'
+import type { BranchStockContext } from './stock-panel'
 
 type AddRequest = {
   itemUuid: string
+  branchUuid: string
   version: number
   quantity: string
   notes?: string
-  scope: string
+  captured: CapturedBranchScope
 }
 
 /**
- * Root stock entry form. The picked item is only an option; one real item read
- * captures the snapshot (uuid, balance, version) used for the submit intent. A
- * failed submission retries with that same captured version instead of reading
- * a newer version that could double-add a committed adjustment.
+ * Branch stock entry form. The picked item is only an option; one real branch
+ * balance read captures the uuid, balance and branch version used for the
+ * submit intent. A failed submission retries with that same captured version
+ * instead of reading a newer version that could double-add a committed
+ * adjustment.
  */
-export function StockAddSheet({ onClose }: { onClose: () => void }) {
+export function StockAddSheet({
+  branch,
+  onClose,
+}: {
+  branch: BranchStockContext
+  onClose: () => void
+}) {
   const client = useQueryClient()
   const [selected, setSelected] = useState<ItemOption | null>(null)
   const [submittedVersion, setSubmittedVersion] = useState<number | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
   const detail = useQuery({
-    queryKey: [
-      'item',
-      'items',
-      organizationCacheScope(),
-      'detail',
-      selected?.uuid,
-    ],
-    queryFn: () => itemApi.item(selected?.uuid as string),
+    queryKey: branchStockBalanceKey(branch.uuid, selected?.uuid ?? 'none'),
+    queryFn: () => stockApi.balance(selected?.uuid as string, branch.uuid),
     enabled: selected != null,
     refetchOnWindowFocus: false,
   })
   const addition = useMutation({
     mutationFn: (request: AddRequest) =>
-      stockApi.adjust(request.itemUuid, 'add', {
+      stockApi.adjust(request.itemUuid, request.branchUuid, 'add', {
         version: request.version,
         quantity: request.quantity,
         ...(request.notes === undefined ? {} : { notes: request.notes }),
       }),
     onSuccess: async (next, request) => {
-      await invalidateItemStockCaches(client, request.scope)
+      await invalidateBranchStockCaches(client, request.captured)
+      if (!isBranchScopeCurrent(request.captured)) return
       onClose()
-      toast.success(`Stock added to ${next.name}`)
+      toast.success(
+        t('catalog:stock.addSheet.addedToast', {
+          item: next.name,
+          branch: branch.name,
+        })
+      )
     },
   })
   const live = detail.data
@@ -86,11 +101,9 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
         }}
       >
         <SheetHeader>
-          <SheetTitle>Add stock</SheetTitle>
+          <SheetTitle>{t('catalog:stock.addSheet.title')}</SheetTitle>
           <SheetDescription>
-            Add a quantity to a real item's current balance. The form reads the
-            item once and reuses that captured version if the submission is
-            retried.
+            {t('catalog:stock.addSheet.description', { branch: branch.name })}
           </SheetDescription>
         </SheetHeader>
         <form
@@ -110,10 +123,11 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
               setSubmittedVersion(version)
               setValidationError(null)
               addition.mutate({
-                itemUuid: live.uuid,
+                itemUuid: live.itemUuid,
+                branchUuid: branch.uuid,
                 version,
                 quantity: parsed.quantity,
-                scope: organizationCacheScope(),
+                captured: captureBranchScope(branch.uuid),
                 ...(parsed.notes === undefined ? {} : { notes: parsed.notes }),
               })
             } catch (error) {
@@ -123,7 +137,7 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
         >
           <div className='flex-1 space-y-4 overflow-y-auto px-4 pb-4'>
             <ItemSelect
-              label='Item'
+              label={t('catalog:stock.addSheet.itemLabel')}
               value={selected}
               activeOnly={false}
               disabled={addition.isPending}
@@ -137,27 +151,33 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
               }}
             />
             {selected != null && detail.isPending && (
-              <p role='status'>Loading item…</p>
+              <p role='status'>{t('catalog:stock.panel.loadingBalance')}</p>
             )}
             {selected != null && detail.isError && (
               <p role='alert'>
                 {errorMessage(detail.error)}{' '}
                 <Button variant='outline' onClick={() => void detail.refetch()}>
-                  Retry
+                  {t('catalog:common.retry')}
                 </Button>
               </p>
             )}
             {live && !detail.isError && (
               <p className='text-sm text-muted-foreground'>
-                {live.name} · current stock {live.stock}
-                {live.units ? ` ${live.units}` : ' (unit unresolved)'} · version{' '}
-                {live.version}
+                {t('catalog:stock.addSheet.balanceLine', {
+                  item: live.name,
+                  branch: branch.name,
+                  stock: live.stock,
+                  unit: live.units
+                    ? ` ${live.units}`
+                    : t('catalog:stock.addSheet.unitUnresolvedSuffix'),
+                  minimum: live.minimumStock,
+                  version: live.version,
+                })}
               </p>
             )}
             {live && !detail.isError && unitUnresolved && (
               <p role='alert' className='text-sm text-destructive'>
-                This item has no unit assigned. Assign a unit in Items before
-                adding stock.
+                {t('catalog:stock.addSheet.unitUnresolvedAlert')}
               </p>
             )}
             {addition.error != null && (
@@ -174,7 +194,7 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
                     void detail.refetch()
                   }}
                 >
-                  Reload item balance
+                  {t('catalog:stock.addSheet.reloadBalance')}
                 </Button>
               </div>
             )}
@@ -185,13 +205,17 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
               <FieldInput
                 field={{
                   name: 'quantity',
-                  label: 'Quantity to add',
+                  label: t('catalog:stock.addSheet.quantityToAdd'),
                   required: true,
                   pattern: '\\d*[.,]\\d{1,5}|\\d+',
                 }}
               />
               <FieldInput
-                field={{ name: 'notes', label: 'Notes', maxLength: 512 }}
+                field={{
+                  name: 'notes',
+                  label: t('catalog:stock.actions.notes'),
+                  maxLength: 512,
+                }}
               />
             </fieldset>
             {validationError != null && (
@@ -207,13 +231,13 @@ export function StockAddSheet({ onClose }: { onClose: () => void }) {
               onClick={onClose}
               disabled={addition.isPending}
             >
-              Cancel
+              {t('catalog:common.cancel')}
             </Button>
             <Button
               type='submit'
               disabled={addition.isPending || unavailable || unitUnresolved}
             >
-              Add stock
+              {t('catalog:stock.addSheet.title')}
             </Button>
           </SheetFooter>
         </form>

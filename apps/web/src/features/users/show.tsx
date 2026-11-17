@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { isAdministrator, sessionQuery } from '@/lib/auth'
+import { locale, t } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -14,7 +15,7 @@ import { UserRequestError, usersApi } from './api'
 import { AccountProfileForm } from './components/account-profile-form'
 import { UserCredentialsForm } from './components/user-credentials-form'
 import { UserStatusDialog } from './components/user-status-dialog'
-import type { User } from './model'
+import { userRoleLabel, type User } from './model'
 
 export function UserDetail() {
   const { userId } = getRouteApi(
@@ -41,40 +42,46 @@ export function UserDetail() {
           to='/settings/system/users'
           className='rounded-sm text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none'
         >
-          Back to users
+          {t('global:users.detail.backToUsers')}
         </Link>
-        <h2 className='mt-2 text-2xl font-bold'>User details</h2>
+        <h2 className='mt-2 text-2xl font-bold'>
+          {t('global:users.detail.title')}
+        </h2>
       </div>
-      {session.isPending ? <p role='status'>Loading account…</p> : null}
+      {session.isPending ? (
+        <p role='status'>{t('global:shared.accountLoading')}</p>
+      ) : null}
       {session.isError ? (
         <p role='alert'>
-          Could not load your account.{' '}
+          {t('global:shared.accountLoadFailed')}{' '}
           <Button variant='outline' onClick={() => void session.refetch()}>
-            Retry
+            {t('global:shared.retry')}
           </Button>
         </p>
       ) : null}
       {session.isSuccess && session.data && !platformAdmin ? (
-        <p role='alert'>Platform administrators only.</p>
+        <p role='alert'>{t('global:users.directory.adminOnly')}</p>
       ) : null}
-      {platformAdmin && invalidId ? <p role='alert'>User not found.</p> : null}
+      {platformAdmin && invalidId ? (
+        <p role='alert'>{t('global:users.detail.notFound')}</p>
+      ) : null}
       {platformAdmin && !invalidId && details.isPending ? (
-        <p role='status'>Loading user…</p>
+        <p role='status'>{t('global:users.detail.loadingUser')}</p>
       ) : null}
       {platformAdmin && details.isError && detailStatus === 404 ? (
-        <p role='alert'>User not found.</p>
+        <p role='alert'>{t('global:users.detail.notFound')}</p>
       ) : null}
       {platformAdmin && details.isError && detailStatus === 403 ? (
-        <p role='alert'>You do not have access to this account.</p>
+        <p role='alert'>{t('global:users.detail.forbidden')}</p>
       ) : null}
       {platformAdmin &&
       details.isError &&
       detailStatus !== 404 &&
       detailStatus !== 403 ? (
         <p role='alert'>
-          Could not load this user.{' '}
+          {t('global:users.detail.loadFailed')}{' '}
           <Button variant='outline' onClick={() => void details.refetch()}>
-            Retry
+            {t('global:shared.retry')}
           </Button>
         </p>
       ) : null}
@@ -96,36 +103,48 @@ function AccountPanel({ user }: { user: User }) {
     <>
       <section className='space-y-4 rounded-md border border-border p-4'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
-          <h3 className='text-xl font-semibold'>Account details</h3>
+          <h3 className='text-xl font-semibold'>
+            {t('global:users.detail.accountDetails')}
+          </h3>
           <Button variant='outline' onClick={() => setSheet('profile')}>
-            Edit profile
+            {t('global:users.detail.editProfile')}
           </Button>
         </div>
         <dl className='grid gap-2 text-sm sm:grid-cols-[auto_1fr]'>
-          <dt>Email</dt>
+          <dt>{t('global:shared.email')}</dt>
           <dd className='break-all'>{user.email}</dd>
-          <dt>Role</dt>
-          <dd>{user.role ?? '—'}</dd>
-          <dt>Status</dt>
+          <dt>{t('global:users.detail.role')}</dt>
+          <dd>{userRoleLabel(user.role)}</dd>
+          <dt>{t('global:users.detail.status')}</dt>
           <dd>
-            {user.banned ? 'Banned' : user.isActive ? 'Active' : 'Inactive'}
+            {user.banned
+              ? t('global:users.status.banned')
+              : user.isActive
+                ? t('global:users.status.active')
+                : t('global:users.status.inactive')}
           </dd>
-          <dt>Email verified</dt>
-          <dd>{user.emailVerified ? 'Yes' : 'No'}</dd>
-          <dt>Created</dt>
-          <dd>{new Date(user.createdAt).toLocaleString()}</dd>
-          <dt>Updated</dt>
-          <dd>{new Date(user.updatedAt).toLocaleString()}</dd>
+          <dt>{t('global:users.detail.emailVerified')}</dt>
+          <dd>
+            {user.emailVerified
+              ? t('global:shared.yes')
+              : t('global:shared.no')}
+          </dd>
+          <dt>{t('global:users.detail.created')}</dt>
+          <dd>{new Date(user.createdAt).toLocaleString(locale)}</dd>
+          <dt>{t('global:users.detail.updated')}</dt>
+          <dd>{new Date(user.updatedAt).toLocaleString(locale)}</dd>
           {user.banReason ? (
             <>
-              <dt>Ban reason</dt>
+              <dt>{t('global:users.detail.banReason')}</dt>
               <dd>{user.banReason}</dd>
             </>
           ) : null}
         </dl>
       </section>
       <section className='space-y-4'>
-        <h3 className='text-xl font-semibold'>Account actions</h3>
+        <h3 className='text-xl font-semibold'>
+          {t('global:users.detail.accountActions')}
+        </h3>
         <div className='flex flex-wrap gap-2'>
           <Button
             variant='outline'
@@ -133,14 +152,16 @@ function AccountPanel({ user }: { user: User }) {
             disabled={deactivating && isAdministrator(user)}
             title={
               deactivating && isAdministrator(user)
-                ? 'Administrator accounts cannot be deactivated here'
+                ? t('global:users.detail.adminDeactivateBlocked')
                 : undefined
             }
           >
-            {deactivating ? 'Deactivate' : 'Activate'}
+            {deactivating
+              ? t('global:users.detail.deactivate')
+              : t('global:users.detail.activate')}
           </Button>
           <Button variant='outline' onClick={() => setSheet('password')}>
-            Reset password
+            {t('global:users.detail.resetPassword')}
           </Button>
         </div>
       </section>
@@ -165,9 +186,11 @@ function AccountPanel({ user }: { user: User }) {
           }}
         >
           <SheetHeader>
-            <SheetTitle>Edit account profile</SheetTitle>
+            <SheetTitle>{t('global:users.detail.editProfileTitle')}</SheetTitle>
             <SheetDescription>
-              Update the name or upload an avatar for {user.email}.
+              {t('global:users.detail.editProfileDescription', {
+                email: user.email,
+              })}
             </SheetDescription>
           </SheetHeader>
           {sheet === 'profile' ? (
@@ -189,9 +212,13 @@ function AccountPanel({ user }: { user: User }) {
       >
         <SheetContent className='flex w-full flex-col sm:max-w-md'>
           <SheetHeader>
-            <SheetTitle>Reset password</SheetTitle>
+            <SheetTitle>
+              {t('global:users.detail.resetPasswordTitle')}
+            </SheetTitle>
             <SheetDescription>
-              Set a new password for {user.email} through Better Auth.
+              {t('global:users.detail.resetPasswordDescription', {
+                email: user.email,
+              })}
             </SheetDescription>
           </SheetHeader>
           {sheet === 'password' ? (

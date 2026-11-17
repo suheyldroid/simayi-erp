@@ -1,13 +1,21 @@
 import { z } from 'zod'
+import { t } from '@/lib/i18n'
 import { resourceUuid } from '@/lib/resource-uuid'
 
 const id = z.number().int().positive()
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 
+const branchSummary = z.object({
+  uuid: resourceUuid,
+  name: z.string(),
+})
+
 const summary = z.object({
   uuid: resourceUuid,
   reference: z.string(),
   referenceInt: z.string(),
+  /** Immutable branch attribution of this sale. */
+  branch: branchSummary,
   recipeUuid: resourceUuid,
   recipeName: z.string(),
   recipeVersion: z.number().int().nonnegative(),
@@ -71,6 +79,10 @@ const receipt = z.object({
 })
 
 const sale = summary.extend({
+  /** Effective definition UUID frozen at sale time; null on pre-cutover history. */
+  recipeDefinitionUuid: resourceUuid.nullable(),
+  /** Pinned company version when the frozen definition was a customization. */
+  recipeSourceVersion: z.number().int().nonnegative().nullable(),
   unitPrice: z.string().nullable(),
   collectedAmount: z.string().nullable(),
   outstandingAmount: z.string().nullable(),
@@ -125,7 +137,7 @@ export const SalesPageModel = {
           .string()
           .regex(
             /^(?!0+(?:\.0+)?$)\d{1,13}(?:\.\d{1,6})?$/,
-            'Use a nonzero amount with up to 6 decimals, like 120 or 120,50.'
+            t('operations:common.positiveAmountHint')
           )
       ),
     date: day,

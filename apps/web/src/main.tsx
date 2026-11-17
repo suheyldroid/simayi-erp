@@ -9,7 +9,11 @@ import {
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { isOrganizationMismatch } from '@/lib/auth'
+import { registerBranchQueryClient } from '@/lib/branch-scope'
 import { handleServerError } from '@/lib/handle-server-error'
+// Initializes i18n and the Turkish Zod locale before the generated route tree,
+// whose feature modules build schemas and translated labels at module scope.
+import { t } from '@/lib/i18n'
 import { registerOrganizationQueryClient } from '@/lib/tenant'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
@@ -44,7 +48,7 @@ const queryClient = new QueryClient({
 
         if (error instanceof AxiosError) {
           if (error.response?.status === 304) {
-            toast.error('Content not modified!')
+            toast.error(t('common:errors.contentNotModified'))
           }
         }
       },
@@ -58,13 +62,13 @@ const queryClient = new QueryClient({
           return
         }
         if (error.response?.status === 401) {
-          toast.error('Session expired!')
+          toast.error(t('common:errors.sessionExpired'))
           queryClient.clear()
           const redirect = `${router.history.location.href}`
           router.navigate({ to: '/sign-in', search: { redirect } })
         }
         if (error.response?.status === 500) {
-          toast.error('Internal Server Error!')
+          toast.error(t('common:errors.internalServer'))
           // Only navigate to error page in production to avoid disrupting HMR in development
           if (import.meta.env.PROD) {
             router.navigate({ to: '/500' })
@@ -78,6 +82,7 @@ const queryClient = new QueryClient({
   }),
 })
 registerOrganizationQueryClient(queryClient)
+registerBranchQueryClient(queryClient)
 
 // Create a new router instance
 const router = createRouter({
